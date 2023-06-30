@@ -49,12 +49,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+ssh://git@gitlab.com:splitwise/splitwise-services.git"
+        "url": "git+ssh://git@gitlab.com:priyankjain360/palspay-services.git"
     },
     "author": "Priyank Jain",
     "license": "ISC",
     "bugs": {
-        "url": "https://gitlab.com/splitwise"
+        "url": "https://gitlab.com/priyankjain360/palspay-services/-/issues"
     },
-    "homepage": "https://gitlab.com/splitwise"
+    "homepage": "https://gitlab.com/priyankjain360/palspay-services/-/blob/main/README.md"
 }
