@@ -1,0 +1,60 @@
+{
+    "name": "palspay-services",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "dependencies": {
+        "aws-sdk": "^2.957.0",
+        "axios": "^1.3.4",
+        "bcryptjs": "^2.4.3",
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "cron": "^2.3.0",
+        "dotenv": "^10.0.0",
+        "ejs": "^3.1.6",
+        "express": "^4.17.1",
+        "express-validator": "^6.14.3",
+        "fcm-push": "^1.1.3",
+        "html-pdf": "^3.0.1",
+        "html-pdf-node": "^1.0.8",
+        "joi": "^17.7.0",
+        "joi-objectid": "^4.0.2",
+        "json-translation": "^1.1.0",
+        "jsonwebtoken": "^8.5.1",
+        "moment": "^2.29.4",
+        "moment-timezone": "^0.5.40",
+        "mongoose": "^5.13.2",
+        "mongoose-aggregate-paginate-v2": "^1.0.6",
+        "mongoose-paginate": "^5.0.3",
+        "mongoosejs-cli": "^1.0.7",
+        "multer": "^1.4.2",
+        "multer-s3": "^2.9.0",
+        "node-excel-export": "^1.4.4",
+        "nodemailer": "^6.6.3",
+        "nodemon": "^2.0.12",
+        "puppeteer": "^20.2.1",
+        "read-excel-file": "^5.2.9",
+        "stripe": "^11.18.0",
+        "swagger-jsdoc": "^6.1.0",
+        "swagger-ui-express": "^4.1.6",
+        "translate": "^1.4.0",
+        "twilio": "^4.9.0",
+        "winston": "^3.8.2",
+        "winston-daily-rotate-file": "^4.7.1"
+    },
+    "scripts": {
+        "staging": "set NODE_ENV=staging& node server.js",
+        "start": "set NODE_ENV=development& nodemon server.js",
+        "dev": "set NODE_ENV=development& nodemon server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@gitlab.com:splitwise/splitwise-services.git"
+    },
+    "author": "Priyank Jain",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://gitlab.com/splitwise"
+    },
+    "homepage": "https://gitlab.com/splitwise"
+}
