@@ -16,14 +16,7 @@ const createUser = async (userBody) => {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
     const user = await User.create(userBody);
-    const payload = {
-        userId: user._id,
-        email: user.email,
-        currency: user.currency,
-        iss: 'ISSUER',
-        sub: 'SUBJECT',
-    };
-    return await generateToken(payload);
+    return await generateToken(user);
 };
 
 const loginUserWithEmailAndPassword = async (userBody) => {
@@ -32,14 +25,7 @@ const loginUserWithEmailAndPassword = async (userBody) => {
     if (!user || !matched) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
-    const payload = {
-        userId: user._id,
-        email: user.email,
-        currency: user.currency,
-        iss: 'ISSUER',
-        sub: 'SUBJECT',
-    };
-    return await generateToken(payload);
+    return await generateToken(user);
 };
 
 
@@ -48,7 +34,13 @@ const loginUserWithEmailAndPassword = async (userBody) => {
  * @param {Object} payload
  * @returns {string} JWT token
  */
-const generateToken = async (payload) => {
+const generateToken = async (user) => {
+    const payload = {
+        userId: user._id,
+        email: user.email,
+        iss: 'ISSUER',
+        sub: 'SUBJECT',
+    };
     return jwt.sign(payload, config.jwt.private_key, { algorithm: 'RS256' });
 };
 

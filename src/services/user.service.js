@@ -8,10 +8,17 @@ const User = require('../models/user.model');
  * @returns {Promise<User>}
  */
 const getUserByEmail = async (email) => {
-    console.log(email);
     return User.findOne({ email, is_deleted: false });
 };
 
+const getUserById = async (userId) => {
+    return User.findOne({ _id: userId, is_deleted: false });
+}
+
+const addFriends=async(userData)=>{
+    
+}
 module.exports = {
-    getUserByEmail
+    getUserByEmail,
+    getUserById
 };

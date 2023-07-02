@@ -26,11 +26,7 @@ const userSchema = mongoose.Schema(
         is_deleted: {
             type: Boolean,
             default:false
-        },
-        country_code: {
-            type: String,
-        },
-        currency: { type: String, required: true }
+        }
     },
     {
         timestamps: true,
