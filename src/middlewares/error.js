@@ -10,31 +10,23 @@ const errorConverter = (err, req, res, next) => {
     const statusCode =
       error.statusCode || error instanceof mongoose.Error ? httpStatus.BAD_REQUEST : httpStatus.INTERNAL_SERVER_ERROR;
     const message = error.message || httpStatus[statusCode];
-    error = new ApiError(statusCode, message, false, err.stack);
+    error = new ApiError(statusCode, message, {}, err.stack);
   }
   next(error);
 };
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  let { statusCode, message } = err;
+  let { statusCode, message ,data} = err;
   if (config.env === 'production' && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR];
   }
-
-  res.locals.errorMessage = err.message;
-
   const response = {
-    code: statusCode,
     message,
-    ...(config.env === 'development' && { stack: err.stack }),
+    data:data
   };
-
-  if (config.env === 'development') {
-    logger.error(err);
-  }
-
+  logger.error(err);
   res.status(statusCode).send(response);
 };
 

@@ -11,13 +11,11 @@ const userSchema = mongoose.Schema(
         },
         email: {
             type: String,
-            required: true,
             trim: true,
             lowercase: true,
         },
         password: {
             type: String,
-            required: true,
         },
         mobile: {
             type: String,
@@ -25,7 +23,14 @@ const userSchema = mongoose.Schema(
         },
         is_deleted: {
             type: Boolean,
-            default:false
+            default: false
+        },
+        is_registered: {
+            type: Boolean,
+            default: false,
+        },
+        invite_token: {
+            type: String
         }
     },
     {

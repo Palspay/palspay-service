@@ -59,4 +59,5 @@ module.exports = {
     },
     from: envVars.EMAIL_FROM,
   },
+  invite_url:'https://yourapp.com/invites?i/'
 };
