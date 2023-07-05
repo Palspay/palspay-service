@@ -3,7 +3,8 @@ const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config/config');
-const Friends = require('../models/friends.model');
+const Groups = require('../models/group.model');
+const GroupMember = require('../models/group-members.model');
 const mongoose = require('mongoose');
 /**
  * Get user by email
@@ -63,29 +64,58 @@ async function areFriends(userId) {
 }
 const addFriends = async (userData) => {
     try {
-        const isExits = await getUserByMobile(userData.mobile);
-        const token = uuidv4().substring(0, 8);
-        const inviteLink = config.invite_url + userData.mobile.slice(0, 2) + token + userData.mobile.slice(2, 4);
-        if (isExits) {
-            const isFriend = await areFriends(userData.userId);
-            if (isFriend.length !== 0 && isFriend.includes(isExits._id.toString())) {
-                throw new ApiError(httpStatus.BAD_REQUEST, 'Already friends');
+        const promises = [];
+        const tokenData = [];
+        for (const mobileNumber of userData.mobile) {
+            const { name, mobile } = mobileNumber;
+            const isExits = await getUserByMobile(mobile);
+            if (isExits) {
+                const isFriend = await areFriends(userData.userId);
+                if (isFriend.length === 0 || !isFriend.includes(isExits._id.toString())) {
+                    promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: isExits._id } }));
+                    promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
+                }
+                if (userData.group_id && userData.group_id !== '') {
+                    const tempData = new GroupMember({
+                        group_id: userData.group_id,
+                        member_id: isExits._id,
+                        created_by: userData.userId,
+                        creation_date: userData.usecurrentDaterId,
+                    })
+                    promises.push(tempData.save());
+                }
+            } else {
+                const token = uuidv4().substring(0, 8);
+                const inviteLink = config.invite_url + mobile.slice(0, 2) + token + mobile.slice(2, 4);
+                tokenData.push({
+                    mobile: mobile,
+                    invite_link: inviteLink
+                })
+                const newUser = new User({
+                    name,
+                    mobile,
+                    invite_token: inviteLink,
+                    is_temp_registered: true
+                });
+                promises.push(newUser.save());
+                if (userData.group_id && userData.group_id !== '') {
+                    const tempData = new GroupMember({
+                        group_id: userData.group_id,
+                        member_id: newUser._id,
+                        created_by: userData.userId,
+                        creation_date: userData.usecurrentDaterId,
+                    })
+                    promises.push(tempData.save());
+                }
+                promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: newUser._id } }));
+                promises.push(User.findByIdAndUpdate(newUser._id, { $addToSet: { friends: userData.userId } }));
             }
-            return await Promise.all([
-                User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: isExits._id } }),
-                User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } })]);
 
         }
-        userData['invite_token'] = inviteLink;
-        userData['is_temp_registered'] = true;
-        const user = new User(userData);
-        const friends_id = await user.save();
-        return await Promise.all([User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: friends_id._id } }),
-        User.findByIdAndUpdate(friends_id._id, { $addToSet: { friends: userData.userId } })]);
-
+        await Promise.all(promises);
+        return tokenData;
     } catch (error) {
-        console.error(error);
-
+        console.log(error);
         if (error instanceof ApiError) {
             throw error; // Re-throw the ApiError
         } else {
@@ -94,10 +124,26 @@ const addFriends = async (userData) => {
     }
 }
 
+const createGroups = async (groupData) => {
+    try {
+        groupData['created_by'] = groupData.userId;
+        groupData['creation_date'] = groupData.usecurrentDaterId;
+        const group = new Groups(groupData);
+        return await group.save();
+    } catch (error) {
+        if (error instanceof ApiError) {
+            throw error; // Re-throw the ApiError
+        } else {
+            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+        }
+    }
+
+}
 module.exports = {
     getUserByEmail,
     getUserById,
     addFriends,
     getUserByMobile,
-    getFriendsById
+    getFriendsById,
+    createGroups
 };
