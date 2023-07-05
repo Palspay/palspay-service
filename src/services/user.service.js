@@ -4,7 +4,7 @@ const User = require('../models/user.model');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config/config');
 const Friends = require('../models/friends.model');
-const mongoose=require('mongoose');
+const mongoose = require('mongoose');
 /**
  * Get user by email
  * @param {string} email
@@ -23,63 +23,77 @@ const getUserByMobile = async (mobile) => {
 }
 
 const getFriendsById = async (userId) => {
-    console.log(userId);
-    const friendsList = await Friends.aggregate([
+    const friendsList = await User.aggregate([
         {
-          $match: { user_id:userId, status: true }
+            $match: { _id: userId }
         },
         {
-          $lookup: {
-            from: 'users',
-            localField: 'friend_id',
-            foreignField: '_id',
-            as: 'friend'
-          }
+            $lookup: {
+                from: 'users',
+                localField: 'friends',
+                foreignField: '_id',
+                as: 'friendsList'
+            }
         },
         {
-            $unwind: '$friend'
-          },
-          {
+            $unwind: '$friendsList'
+        },
+        {
             $replaceRoot: {
-              newRoot: '$friend'
+                newRoot: '$friendsList'
             }
-          },
-          {
+        },
+        {
             $project: {
-              _id: 1,
-              name: 1,
-              mobile: 1,
+                _id: 1,
+                name: 1,
+                mobile: 1,
             }
-          }
-      ]).exec();
-            
+        }
+    ]);
     if (friendsList.length === 0) {
         throw new ApiError(httpStatus.NOT_FOUND, 'Data Not Found');
     }
     return friendsList;
 }
-const addFriends = async (userData) => {
-    const isExits = await getUserByMobile(userData.mobile);
-    if (isExits) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Bad Request');
-    }
-    const token = uuidv4().substring(0, 8);
-    const inviteLink = config.invite_url + userData.mobile.slice(0, 2) + token + userData.mobile.slice(2, 4);
-    userData['invite_token'] = inviteLink;
-    userData['is_registered'] = true;
-    const user = new User(userData);
-    const friends_id = await user.save();
-    const payload = {
-        friend_id: friends_id._id,
-        user_id: userData.userId,
-        creation_date: userData.currentDate,
-        modification_date: userData.currentDate,
-        created_by: userData.userId,
-        modified_by: userData.userId
-    }
-    const friend_relation = new Friends(payload);
-    return await friend_relation.save();
+async function areFriends(userId) {
+    const user1 = await User.findOne({ _id: userId }).populate('friends').exec();
+    const user1Friends = user1.friends.map(friend => friend._id.toString());
+    return user1Friends;
 }
+const addFriends = async (userData) => {
+    try {
+        const isExits = await getUserByMobile(userData.mobile);
+        const token = uuidv4().substring(0, 8);
+        const inviteLink = config.invite_url + userData.mobile.slice(0, 2) + token + userData.mobile.slice(2, 4);
+        if (isExits) {
+            const isFriend = await areFriends(userData.userId);
+            if (isFriend.length !== 0 && isFriend.includes(isExits._id.toString())) {
+                throw new ApiError(httpStatus.BAD_REQUEST, 'Already friends');
+            }
+            return await Promise.all([
+                User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: isExits._id } }),
+                User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } })]);
+
+        }
+        userData['invite_token'] = inviteLink;
+        userData['is_temp_registered'] = true;
+        const user = new User(userData);
+        const friends_id = await user.save();
+        return await Promise.all([User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: friends_id._id } }),
+        User.findByIdAndUpdate(friends_id._id, { $addToSet: { friends: userData.userId } })]);
+
+    } catch (error) {
+        console.error(error);
+
+        if (error instanceof ApiError) {
+            throw error; // Re-throw the ApiError
+        } else {
+            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+        }
+    }
+}
+
 module.exports = {
     getUserByEmail,
     getUserById,

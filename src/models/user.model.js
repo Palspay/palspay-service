@@ -25,13 +25,14 @@ const userSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
-        is_registered: {
+        is_temp_registered: {
             type: Boolean,
             default: false,
         },
         invite_token: {
             type: String
-        }
+        },
+        friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }]
     },
     {
         timestamps: true,
