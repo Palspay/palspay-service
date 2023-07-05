@@ -3,11 +3,22 @@ const catchAsync = require('./../utills/catchAsync');
 const { userService} = require('./../services');
 
 const addFriends = catchAsync(async (req, res) => {
-    const access_token = await userService.addFriends(req.body);
-    res.status(httpStatus.CREATED).send({ access_token });
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate:req.currentDate
+      };
+    await userService.addFriends(mergedBody);
+    res.status(httpStatus.CREATED).send({message:'Add friend succesfully',data:{}});
 });
 
+const getFriends=catchAsync(async(req,res)=>{
+   const friends= await userService.getFriendsById(req.userId);
+   console.log(friends);
+    res.status(httpStatus.OK).send({message:'Data Loading',data:{friends}});
+})
 
 module.exports = {
-    addFriends
+    addFriends,
+    getFriends
 };

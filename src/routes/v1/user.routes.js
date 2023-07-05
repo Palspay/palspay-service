@@ -6,6 +6,8 @@ const auth = require('../../middlewares/auth');
 const router = express.Router();
 
 router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
+router.get('/friends', auth, userController.getFriends);
+
 
 
 module.exports = router;
