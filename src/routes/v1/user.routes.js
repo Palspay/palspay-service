@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
 router.get('/friends', auth, userController.getFriends);
+router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
 
 
 
