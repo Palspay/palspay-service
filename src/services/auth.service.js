@@ -15,7 +15,20 @@ const createUser = async (userBody) => {
     if (isEmailExits) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
-    const user = await User.create(userBody);
+    const isTempReg = await userService.getUserByMobile(userBody.mobile);
+    let user;
+    if (!isTempReg) {
+        user = await User.create(userBody);
+    }
+    else if (isTempReg.is_temp_registered === false) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Mobile number already registred');
+    } else {
+        isTempReg.password = userBody.password;
+        isTempReg.email = userBody.email;
+        isTempReg.is_temp_registered = false;
+        isTempReg.name = userBody.name;
+        user = await isTempReg.save();
+    }
     return await generateToken(user);
 };
 
