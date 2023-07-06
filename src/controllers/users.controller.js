@@ -43,6 +43,7 @@ const getMyGroups = catchAsync(async (req, res) => {
     const groupsList= await userService.getMyGroups(req.userId);
     res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList} });
 });
+
 module.exports = {
     addFriends,
     getFriends,
