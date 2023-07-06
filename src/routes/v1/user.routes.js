@@ -10,7 +10,7 @@ router.get('/friends', auth, userController.getFriends);
 router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
 
 router.get('/group-details', auth, validate(useralidation.groupDetailsByGroupId),userController.getMembersByGroupId);
-
+router.get('/mygroups', auth,userController.getMyGroups);
 
 
 module.exports = router;
