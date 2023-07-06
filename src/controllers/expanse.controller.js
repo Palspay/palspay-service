@@ -13,6 +13,16 @@ const addExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses add succesfully', data: { expanse_id: expanse_id._id } });
 });
 
+const getExpanse = catchAsync(async(req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const expanseData = await userExpanse.getGroupExpanse(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: { expanseData } });
+});
 module.exports = {
-    addExpanse
+    addExpanse,
+    getExpanse
 };
