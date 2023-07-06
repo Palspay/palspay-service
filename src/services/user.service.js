@@ -11,21 +11,20 @@ const mongoose = require('mongoose');
  * @param {string} email
  * @returns {Promise<User>}
  */
-const getUserByEmail = async (email) => {
+const getUserByEmail = async(email) => {
     return User.findOne({ email, is_deleted: false });
 };
 
-const getUserById = async (userId) => {
+const getUserById = async(userId) => {
     return User.findOne({ _id: userId, is_deleted: false });
 }
 
-const getUserByMobile = async (mobile) => {
+const getUserByMobile = async(mobile) => {
     return User.findOne({ mobile, is_deleted: false });
 }
 
-const getFriendsById = async (userId) => {
-    const friendsList = await User.aggregate([
-        {
+const getFriendsById = async(userId) => {
+    const friendsList = await User.aggregate([{
             $match: { _id: userId }
         },
         {
@@ -63,7 +62,7 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
-const addFriends = async (userData) => {
+const addFriends = async(userData) => {
     try {
         const promises = [];
         const tokenData = [];
@@ -140,9 +139,10 @@ const addFriends = async (userData) => {
     }
 }
 
-const createGroups = async (groupData) => {
+const createGroups = async(groupData) => {
     try {
         groupData['created_by'] = groupData.userId;
+        groupData['group_owner'] = groupData.userId;
         groupData['creation_date'] = groupData.usecurrentDaterId;
         const group = new Groups(groupData);
         return await group.save();
@@ -156,11 +156,10 @@ const createGroups = async (groupData) => {
 
 }
 
-const getMembersByGroupId = async (userData) => {
+const getMembersByGroupId = async(userData) => {
     try {
-        const members = await GroupMember.aggregate([
-            {
-                $match: { group_id: new mongoose.Types.ObjectId(userData.group_id),is_friendship:true }
+        const members = await GroupMember.aggregate([{
+                $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
             },
             {
                 $lookup: {
