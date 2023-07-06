@@ -20,7 +20,14 @@ const createGroup = {
     group_icon: Joi.string().optional(),
   }),
 };
+
+const groupDetailsByGroupId = {
+  body: Joi.object().keys({
+    group_id: Joi.string().required(),
+  }),
+}
 module.exports = {
   addfriends,
-  createGroup
+  createGroup,
+  groupDetailsByGroupId
 };
