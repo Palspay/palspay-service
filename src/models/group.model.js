@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const groupSchema = mongoose.Schema(
     {
         group_name:{type:String,required:true},
-        group_icon:{type:String},
+        group_icon:{type:String,default:'abcgd.png'},
         group_owner:{type:mongoose.Schema.Types.ObjectId,ref:'users'},
         created_by: {
             type: String
