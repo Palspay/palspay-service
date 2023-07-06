@@ -61,10 +61,12 @@ async function areFriends(userId) {
     const user1Friends = user1.friends.map(friend => friend._id.toString());
     return user1Friends;
 }
+
 const addFriends = async(userData) => {
     try {
         const promises = [];
         const tokenData = [];
+        const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId }).exec();
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
@@ -75,17 +77,20 @@ const addFriends = async(userData) => {
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
                 }
                 if (userData.group_id && userData.group_id !== '') {
-                    const tempData = new GroupMember({
-                        group_id: userData.group_id,
-                        member_id: isExits._id,
-                        created_by: userData.userId,
-                        creation_date: userData.usecurrentDaterId,
-                    })
-                    promises.push(tempData.save());
+                    const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id }).exec();
+                    if (!isAlreadyGroup) {
+                        promises.push(
+                            GroupMember.create({
+                                group_id: userData.group_id,
+                                member_id: isExits._id,
+                                created_by: userData.userId,
+                                creation_date: userData.usecurrentDaterId,
+                            })
+                        );
+                    }
                 }
             } else {
-                const token = uuidv4().substring(0, 8);
-                const inviteLink = config.invite_url + mobile.slice(0, 2) + token + mobile.slice(2, 4);
+                const inviteLink = config.invite_url + mobile.slice(0, 2) + uuidv4().substring(0, 8) + mobile.slice(2, 4);
                 tokenData.push({
                     mobile: mobile,
                     invite_link: inviteLink
@@ -98,18 +103,29 @@ const addFriends = async(userData) => {
                 });
                 promises.push(newUser.save());
                 if (userData.group_id && userData.group_id !== '') {
-                    const tempData = new GroupMember({
-                        group_id: userData.group_id,
-                        member_id: newUser._id,
-                        created_by: userData.userId,
-                        creation_date: userData.usecurrentDaterId,
-                    })
-                    promises.push(tempData.save());
+                    promises.push(
+                        GroupMember.create({
+                            group_id: userData.group_id,
+                            member_id: newUser._id,
+                            created_by: userData.userId,
+                            creation_date: userData.usecurrentDaterId,
+                        })
+                    );
                 }
                 promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: newUser._id } }));
                 promises.push(User.findByIdAndUpdate(newUser._id, { $addToSet: { friends: userData.userId } }));
             }
 
+        }
+        if (userData.group_id && userData.group_id !== '' && currentUserGroupMember === null) {
+            promises.push(
+                GroupMember.create({
+                    group_id: userData.group_id,
+                    member_id: userData.userId,
+                    created_by: userData.userId,
+                    creation_date: userData.usecurrentDaterId,
+                })
+            );
         }
         await Promise.all(promises);
         return tokenData;
@@ -139,11 +155,44 @@ const createGroups = async(groupData) => {
     }
 
 }
+
+const getMembersByGroupId = async(userData) => {
+    try {
+        const members = await GroupMember.aggregate([{
+                $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'member_id',
+                    foreignField: '_id',
+                    as: 'memberDetails'
+                }
+            },
+            {
+                $unwind: '$memberDetails'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    member_id: 1,
+                    member_name: '$memberDetails.name',
+                    member_mobile: '$memberDetails.mobile'
+                }
+            }
+        ]).exec();
+
+        return members;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+};
 module.exports = {
     getUserByEmail,
     getUserById,
     addFriends,
     getUserByMobile,
     getFriendsById,
-    createGroups
+    createGroups,
+    getMembersByGroupId
 };

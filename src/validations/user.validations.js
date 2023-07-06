@@ -26,8 +26,15 @@ const createExpanse = {
         amount: Joi.string().required(),
     }),
 };
+
+const groupDetailsByGroupId = {
+    body: Joi.object().keys({
+        group_id: Joi.string().required(),
+    }),
+}
 module.exports = {
     addfriends,
     createGroup,
-    createExpanse
+    createExpanse,
+    groupDetailsByGroupId
 };
