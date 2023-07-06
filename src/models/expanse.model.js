@@ -8,6 +8,10 @@ const expanseSchema = mongoose.Schema({
         type: Number,
         required: 0
     },
+    description: {
+        type: String,
+        default: ''
+    },
     is_deleted: {
         type: Boolean,
         default: false

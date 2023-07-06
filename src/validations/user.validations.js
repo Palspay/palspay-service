@@ -24,6 +24,7 @@ const createExpanse = {
     body: Joi.object().keys({
         groupId: Joi.string().required(),
         amount: Joi.string().required(),
+        description: Joi.string().required(),
     }),
 };
 

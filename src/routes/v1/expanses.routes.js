@@ -6,5 +6,6 @@ const auth = require('../../middlewares/auth');
 const router = express.Router();
 
 router.post('/addExpanse', auth, validate(useralidation.createExpanse), expanseController.addExpanse);
+router.get('/getExpanse', auth, expanseController.getExpanse);
 
 module.exports = router;
