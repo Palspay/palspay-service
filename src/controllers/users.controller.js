@@ -38,9 +38,15 @@ const getMembersByGroupId = catchAsync(async (req, res) => {
     const groupsDetails= await userService.getMembersByGroupId(mergedBody);
     res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsDetails} });
 });
+
+const getMyGroups = catchAsync(async (req, res) => {
+    const groupsList= await userService.getMyGroups(req.userId);
+    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList} });
+});
 module.exports = {
     addFriends,
     getFriends,
     createGroups,
-    getMembersByGroupId
+    getMembersByGroupId,
+    getMyGroups
 };
