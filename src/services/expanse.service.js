@@ -58,7 +58,7 @@ const getGroupExpanse = async(userData) => {
             },
         ];
         const expanse = await Expanse.aggregate(agg);
-        return expanse;
+        return expanse[0];
     } catch (error) {
         console.log(error, "<<error")
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
