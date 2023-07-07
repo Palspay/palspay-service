@@ -192,7 +192,7 @@ const getMyGroups = async (userId) => {
     try {
         const groupsList = await GroupMember.aggregate([
             {
-                $match: { member_id:userId ,is_friendship: true}
+                $match: { member_id: userId, is_friendship: true }
             },
             {
                 $lookup: {
@@ -207,10 +207,10 @@ const getMyGroups = async (userId) => {
             },
             {
                 $project: {
-                    _id:0,
+                    _id: 0,
                     group_id: 1,
                     group_name: '$group.group_name',
-                    group_icon:'$group.group_icon'
+                    group_icon: '$group.group_icon'
                 }
             }
         ]).exec();
@@ -227,5 +227,5 @@ module.exports = {
     getFriendsById,
     createGroups,
     getMembersByGroupId,
-    getMyGroups
+    getMyGroups,
 };

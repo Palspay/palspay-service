@@ -12,6 +12,18 @@ const expanseSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    divisions: [
+        {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'users',
+            },
+            amountOwed: {
+                type: Number,
+                default: 0,
+            },
+        },
+    ],
     is_deleted: {
         type: Boolean,
         default: false

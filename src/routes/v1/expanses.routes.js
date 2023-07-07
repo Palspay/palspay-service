@@ -5,7 +5,7 @@ const expanseController = require('../../controllers/expanse.controller');
 const auth = require('../../middlewares/auth');
 const router = express.Router();
 
-router.post('/addExpanse', auth, validate(useralidation.createExpanse), expanseController.addExpanse);
-router.get('/getExpanse', auth, expanseController.getExpanse);
+router.post('/addexpanse', auth, validate(useralidation.createExpanse), expanseController.addExpanse);
+router.get('/getexpanse', auth, expanseController.getExpanse);
 
 module.exports = router;
