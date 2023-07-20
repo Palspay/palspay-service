@@ -35,13 +35,28 @@ const getMembersByGroupId = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const groupsDetails= await userService.getMembersByGroupId(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsDetails} });
+    const groupsDetails = await userService.getMembersByGroupId(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsDetails } });
 });
 
 const getMyGroups = catchAsync(async (req, res) => {
-    const groupsList= await userService.getMyGroups(req.userId);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList} });
+    const groupsList = await userService.getMyGroups(req.userId);
+    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList } });
+});
+
+const setPasscode = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const passcode = await userService.setPasscode(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Passcode set succesfully', data: {} });
+});
+
+const getAllTimezones = catchAsync(async (req, res) => {
+    const timezones = await userService.getAllTimezones();
+    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { timezones } });
 });
 
 module.exports = {
@@ -49,5 +64,7 @@ module.exports = {
     getFriends,
     createGroups,
     getMembersByGroupId,
-    getMyGroups
+    getMyGroups,
+    setPasscode,
+    getAllTimezones
 };

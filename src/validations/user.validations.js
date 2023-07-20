@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { password } = require('./custom.validations');
+const { password,passcode } = require('./custom.validations');
 
 const addfriends = {
     body: Joi.object({
@@ -33,9 +33,16 @@ const groupDetailsByGroupId = {
         group_id: Joi.string().required(),
     }),
 }
+
+const setPasscode = {
+    body: Joi.object().keys({
+        passcode: Joi.number().required().custom(passcode),
+    }),
+}
 module.exports = {
     addfriends,
     createGroup,
     createExpanse,
-    groupDetailsByGroupId
+    groupDetailsByGroupId,
+    setPasscode
 };
