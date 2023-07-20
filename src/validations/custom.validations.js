@@ -14,8 +14,22 @@ const objectId = (value, helpers) => {
     }
     return value;
   };
-  
+
+  const otp_length = (value, helpers) => {
+    if (value.length < 6) {
+      return helpers.message('otp must be at least 6 digits');
+    }
+    return value;
+  };
+  const passcode = (value, helpers) => {
+    if (value.length < 6) {
+      return helpers.message('Passcode must be at least 4 digits');
+    }
+    return value;
+  };
   module.exports = {
     objectId,
     password,
+    otp_length,
+    passcode
   };

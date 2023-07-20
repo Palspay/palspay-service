@@ -11,6 +11,8 @@ router.post('/groups', auth, validate(useralidation.createGroup), userController
 
 router.get('/group-details', auth, validate(useralidation.groupDetailsByGroupId),userController.getMembersByGroupId);
 router.get('/mygroups', auth,userController.getMyGroups);
+router.post('/setpasscode', auth, validate(useralidation.setPasscode), userController.setPasscode);
+router.get('/timezones', auth, userController.getAllTimezones);
 
 
 module.exports = router;

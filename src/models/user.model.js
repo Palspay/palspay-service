@@ -25,18 +25,60 @@ const userSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
+        otp: {
+            type: Number,
+            default: null
+        },
+        fb_id: {
+            type: String,
+            default: ' '
+        },
+        gmail_id: {
+            type: String,
+            default: ' '
+        },
+        passcode:{
+            type:Number,
+            default:null
+        },
+        timezone:{
+            type:String,
+            default:''
+        },
+        currency:{
+            type:String,
+            default:''
+        },
+        dp: {
+            type: String,
+            default: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOf4qJRYPgwBbgs84YIzoacDvWMB4EYAp_HA&usqp=CAU'
+        },        
         is_temp_registered: {
+            type: Boolean,
+            default: false,
+        },
+        is_otp_verify: {
+            type: Boolean,
+            default: false,
+        },
+        is_passcode_enter: {
             type: Boolean,
             default: false,
         },
         invite_token: {
             type: String
         },
-        friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }]
+        friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
+        creation_date: {
+            type: Number,
+            default:null
+        },
+        modification_date: {
+            type: Number,
+            default:null
+        },
     },
-    {
-        timestamps: true,
-    }
+
 );
 
 
