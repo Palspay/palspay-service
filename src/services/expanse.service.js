@@ -1,27 +1,51 @@
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
-const { v4: uuidv4 } = require('uuid');
-const config = require('../config/config');
 const Expanse = require('../models/expanse.model');
 const mongoose = require('mongoose');
+const GroupMember=require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 
-const createExpanse = async(expanseData) => {
+const createExpanse = async (expanseData) => {
     try {
-        expanseData['userId'] = expanseData.userId;
-        const expanse = new Expanse(expanseData);
-        return await expanse.save();
-    } catch (error) {
-        if (error instanceof ApiError) {
-            throw error; // Re-throw the ApiError
-        } else {
-            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+        // expanseData['userId'] = expanseData.userId;
+        const { description, amount, userId, groupId } = expanseData;
+        const groupMembers = await GroupMember.find({ group_id: groupId, is_friendship: true }).exec();
+        const numUsers = groupMembers.length;
+        const [equalShare, remainingAmount] = calculateEqualDivision(amount, numUsers);
+        const expenseDivisions = [];
+        for (let i = 0; i < numUsers; i++) {
+            const { member_id } = groupMembers[i];
+            let amountOwed = equalShare;
+            if (i === 0) {
+                amountOwed += parseFloat(remainingAmount);
+            }
+            expenseDivisions.push({
+                user: member_id,
+                amountOwed: amountOwed.toFixed(2),
+            });
         }
+        const expense = new Expanse({
+            description: description,
+            amount: amount,
+            userId: userId,
+            groupId: groupId,
+            divisions: expenseDivisions,
+        });
+        return await expense.save();
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
 
-const getGroupExpanse = async(userData) => {
+const calculateEqualDivision = (totalAmount, numUsers) => {
+    const equalShare = Math.floor((totalAmount / numUsers) * 100) / 100;
+    const remainingAmount = (totalAmount - (equalShare * numUsers)).toFixed(2);
+    return [equalShare, remainingAmount];
+};
+
+const getGroupExpanse = async (userData) => {
     try {
         let agg = [
             { $match: { groupId: new ObjectId(userData.groupId), }, },
@@ -41,6 +65,7 @@ const getGroupExpanse = async(userData) => {
                             description: {
                                 $cond: { if: "$description", then: "$description", else: "" }
                             },
+                            divisions:"$divisions",
                         }
                     },
                     groupsMembers: { $first: "$membersDetails.name" },

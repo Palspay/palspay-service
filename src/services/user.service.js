@@ -6,6 +6,8 @@ const config = require('../config/config');
 const Groups = require('../models/group.model');
 const GroupMember = require('../models/group-members.model');
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
+
 /**
  * Get user by email
  * @param {string} email
@@ -192,7 +194,7 @@ const getMyGroups = async (userId) => {
     try {
         const groupsList = await GroupMember.aggregate([
             {
-                $match: { member_id:userId ,is_friendship: true}
+                $match: { member_id: userId, is_friendship: true }
             },
             {
                 $lookup: {
@@ -207,10 +209,10 @@ const getMyGroups = async (userId) => {
             },
             {
                 $project: {
-                    _id:0,
+                    _id: 0,
                     group_id: 1,
                     group_name: '$group.group_name',
-                    group_icon:'$group.group_icon'
+                    group_icon: '$group.group_icon'
                 }
             }
         ]).exec();
@@ -219,6 +221,30 @@ const getMyGroups = async (userId) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 }
+
+const setPasscode = async (userBody) => {
+    try {
+        const user = await getUserById(userBody?.userId);
+        if (!user) {
+            throw new ApiError(httpStatus.BAD_REQUEST, 'Bad Request');
+        }
+        user.passcode = userBody.passcode;
+        user.modification_date = userBody.currentDate;
+        return await user.save();
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
+const getAllTimezones = async () => {
+    try {
+        const timezones = moment.tz.names();
+        return timezones;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
 module.exports = {
     getUserByEmail,
     getUserById,
@@ -227,5 +253,7 @@ module.exports = {
     getFriendsById,
     createGroups,
     getMembersByGroupId,
-    getMyGroups
+    getMyGroups,
+    setPasscode,
+    getAllTimezones
 };

@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { password } = require('./custom.validations');
+const { password ,otp_length} = require('./custom.validations');
 
 const register = {
   body: Joi.object().keys({
@@ -15,7 +15,15 @@ const login = {
     password: Joi.string().required().custom(password),
   }),
 };
+
+const verifyOtp={
+  body: Joi.object().keys({
+    userId: Joi.string().required(),
+    otp: Joi.number().required().custom(otp_length),
+  }),
+}
 module.exports = {
   register,
-  login
+  login,
+  verifyOtp
 };
