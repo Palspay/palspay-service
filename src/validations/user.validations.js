@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { password,passcode } = require('./custom.validations');
+const { password, passcode } = require('./custom.validations');
 
 const addfriends = {
     body: Joi.object({
@@ -23,7 +23,7 @@ const createGroup = {
 const createExpanse = {
     body: Joi.object().keys({
         groupId: Joi.string().required(),
-        amount: Joi.string().required(),
+        totalExpanse: Joi.string().required(),
         description: Joi.string().required(),
     }),
 };
