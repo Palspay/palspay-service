@@ -11,7 +11,7 @@ const { getCurrentDateTime } = require('./../constants/constant');
  * @param {Object} userBody
  * @returns {Promise<User>}
  */
-const createUser = async (userBody) => {
+const createUser = async(userBody) => {
     const isEmailExits = await userService.getUserByEmail(userBody.email);
     if (isEmailExits) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
@@ -21,11 +21,11 @@ const createUser = async (userBody) => {
     const otp = await generateOtp(6);
     if (!isTempReg) {
         userBody['otp'] = otp;
-        userBody['timezone']=Intl.DateTimeFormat().resolvedOptions().timeZone;
-        console.log(await userService.getCurrencyByTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone));return
+        userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // console.log(await userService.getCurrencyByTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone));
+        // return
         user = await User.create(userBody);
-    }
-    else if (isTempReg.is_temp_registered === false) {
+    } else if (isTempReg.is_temp_registered === false) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Mobile number already registred');
     } else {
         isTempReg.password = userBody.password;
@@ -38,7 +38,7 @@ const createUser = async (userBody) => {
     return { userId: user._id, otp: user.otp };
 };
 
-const loginUserWithEmailAndPassword = async (userBody) => {
+const loginUserWithEmailAndPassword = async(userBody) => {
     const user = await userService.getUserByEmail(userBody.email);
     const matched = await bcrypt.compare(userBody.password, user.password);
     if (!user || !matched) {
@@ -53,7 +53,7 @@ const loginUserWithEmailAndPassword = async (userBody) => {
  * @param {Object} payload
  * @returns {string} JWT token
  */
-const generateToken = async (user) => {
+const generateToken = async(user) => {
     const payload = {
         userId: user._id,
         email: user.email,
@@ -63,7 +63,7 @@ const generateToken = async (user) => {
     return jwt.sign(payload, config.jwt.private_key, { algorithm: 'RS256' });
 };
 
-const generateOtp = async (length) => {
+const generateOtp = async(length) => {
     const digits = '0123456789';
     let OTP = '';
     for (let i = 0; i < length; i++) {
@@ -73,9 +73,9 @@ const generateOtp = async (length) => {
 }
 
 
-const verifyOtp = async (data) => {
+const verifyOtp = async(data) => {
     const user = await userService.getUserById(data.userId);
-    if (!user || user?.otp !== data.otp) {
+    if (!user || user.otp !== data.otp) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Otp');
     }
     if (user.is_otp_verify) {
