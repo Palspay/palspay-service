@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-const userSchema = mongoose.Schema(
-    {
+const userSchema = mongoose.Schema({
         name: {
             type: String,
             required: true,
@@ -37,22 +36,26 @@ const userSchema = mongoose.Schema(
             type: String,
             default: ' '
         },
-        passcode:{
-            type:Number,
-            default:null
+        passcode: {
+            type: Number,
+            default: null
         },
-        timezone:{
-            type:String,
-            default:''
+        timezone: {
+            type: String,
+            default: ''
         },
-        currency:{
-            type:String,
-            default:''
+        currency: {
+            type: String,
+            default: ''
+        },
+        otp: {
+            type: String,
+            default: ''
         },
         dp: {
             type: String,
             default: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOf4qJRYPgwBbgs84YIzoacDvWMB4EYAp_HA&usqp=CAU'
-        },        
+        },
         is_temp_registered: {
             type: Boolean,
             default: false,
@@ -71,11 +74,11 @@ const userSchema = mongoose.Schema(
         friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
         creation_date: {
             type: Number,
-            default:null
+            default: null
         },
         modification_date: {
             type: Number,
-            default:null
+            default: null
         },
     },
 
@@ -83,7 +86,7 @@ const userSchema = mongoose.Schema(
 
 
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function(next) {
     const user = this;
     if (user.isModified('password')) {
         user.password = await bcrypt.hash(user.password, 8);

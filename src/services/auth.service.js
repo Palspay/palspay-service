@@ -87,10 +87,22 @@ const verifyOtp = async(data) => {
     return { access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter };
 }
 
+const verifyUser = async(data) => {
+    const user = await userService.verifyUser(data);
+    return user;
+}
+
+const createNewPassword = async(data) => {
+    const isCreate = await userService.createNewPassword(data);
+    return { access_token: await generateToken(isCreate) };
+}
+
 
 module.exports = {
     createUser,
     generateToken,
     loginUserWithEmailAndPassword,
-    verifyOtp
+    verifyOtp,
+    verifyUser,
+    createNewPassword
 };
