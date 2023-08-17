@@ -17,7 +17,7 @@ const login = catchAsync(async(req, res) => {
 });
 
 const verifyUser = catchAsync(async(req, res) => { //verifyUser and send sms
-    var otp = Math.floor(100000 + Math.random() * 9000).toString();
+    var otp = 123456 // Math.floor(100000 + Math.random() * 9000).toString();
     const mergedBody = {
         ...req.body,
         otp: otp
@@ -30,7 +30,7 @@ const verifyUser = catchAsync(async(req, res) => { //verifyUser and send sms
     }
 });
 
-const createNewPassword = catchAsync(async(req, res) => { //verifyUser and send sms
+const createNewPassword = catchAsync(async(req, res) => { //Create a new password
 
     if (req.body.confirmPassword != req.body.newPassword) {
         return res.status(httpStatus.NOT_ACCEPTABLE).send({ message: 'New password and confirm password is not matched!', data: [] });
