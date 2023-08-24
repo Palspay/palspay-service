@@ -43,8 +43,8 @@ const getExpanse = catchAsync(async(req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const expanseData = await userExpanse.getGroupExpanse(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: { expanseData } });
+    const data = await userExpanse.getGroupExpanse(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data });
 });
 const fetchExpanse = catchAsync(async(req, res) => {
     const mergedBody = {
@@ -52,8 +52,8 @@ const fetchExpanse = catchAsync(async(req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const expanseData = await userExpanse.fetchExpanse(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Fetch expanse load succesfully', data: { expanseData } });
+    const data = await userExpanse.fetchExpanse(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Fetch expanse load succesfully', data });
 });
 module.exports = {
     addExpanse,

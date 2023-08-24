@@ -40,8 +40,9 @@ const updateExpanse = async(expanseData) => {
                 });
             }
         }
+        expanseData['_id'] = expanseData.expanseId;
         expanseData['imagesArray'] = imagesArray;
-        var check = await Expanse.deleteOne({ _id: new ObjectId(expanseData.expanseId) });
+        await Expanse.deleteOne({ _id: new ObjectId(expanseData.expanseId) });
         const expense = new Expanse(expanseData);
         return await expense.save();
     } catch (error) {
@@ -65,14 +66,25 @@ const getGroupExpanse = async(userData) => {
         let { groupId } = userData
         let agg = [
             { $match: { groupId }, },
-            { "$lookup": { "from": "groups_members", "localField": "groupId", "foreignField": "group_id", "as": "groupsMembers" } },
+            {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: { $toObjectId: "$groupId" },
+                            else: "$groupId"
+                        }
+                    }
+                }
+            },
+            { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
             { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
             { $unwind: "$usersDetail" },
             {
                 $group: {
                     _id: { groupId: "$groupId" },
-                    data: {
+                    expanseList: {
                         $push: {
                             _id: "$_id",
                             totalExpanse: "$totalExpanse",
@@ -80,8 +92,7 @@ const getGroupExpanse = async(userData) => {
                             usersName: "$usersDetail.name",
                             description: {
                                 $cond: { if: "$description", then: "$description", else: "" }
-                            },
-                            divisions: "$divisions",
+                            }
                         }
                     },
                     groupsMembers: { $first: "$membersDetails.name" },
@@ -91,7 +102,7 @@ const getGroupExpanse = async(userData) => {
             {
                 "$project": {
                     _id: 0,
-                    data: 1,
+                    expanseList: 1,
                     groupsMembers: 1,
                     total: 1,
                     groupsMembersCount: { $size: "$groupsMembers" },
@@ -110,6 +121,17 @@ const fetchExpanse = async(userData) => {
         let agg = [
             { $match: { _id: new ObjectId(userData.expanseId), is_deleted: false } },
             {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] }, // Check if groupId is not blank
+                            then: { $toObjectId: "$groupId" }, // Convert groupId to ObjectId
+                            else: "$groupId" // Keep groupId as is
+                        }
+                    }
+                }
+            },
+            {
                 $lookup: {
                     from: "users",
                     localField: "splitEqually.memberId",
@@ -118,8 +140,24 @@ const fetchExpanse = async(userData) => {
                 }
             },
             {
+                $lookup: {
+                    from: "groups",
+                    localField: "groupIdObjectId",
+                    foreignField: "_id",
+                    as: "groupInfo"
+                }
+            },
+            { $unwind: { path: "$groupInfo", preserveNullAndEmptyArrays: true } },
+            {
                 "$project": {
                     groupId: 1,
+                    groupName: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: "$groupInfo.group_name",
+                            else: ""
+                        }
+                    },
                     totalExpanse: 1,
                     description: 1,
                     addPayer: 1,
