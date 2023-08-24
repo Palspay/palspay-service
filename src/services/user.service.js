@@ -14,7 +14,7 @@ const moment = require('moment-timezone');
  * @returns {Promise<User>}
  */
 const getUserByEmail = async(email) => {
-    return User.findOne({ email, is_deleted: false });
+    return User.findOne({ email, is_deleted: false,is_otp_verify:true });
 };
 
 const getUserById = async(userId) => {
@@ -22,7 +22,7 @@ const getUserById = async(userId) => {
 }
 
 const getUserByMobile = async(mobile) => {
-    return User.findOne({ mobile, is_deleted: false });
+    return User.findOne({ mobile, is_deleted: false ,is_otp_verify:true});
 }
 
 const getFriendsById = async(userId) => {
