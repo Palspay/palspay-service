@@ -62,7 +62,19 @@ const fetchExpanse = catchAsync(async(req, res) => {
     } else {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
-
+});
+const individualExpanse = catchAsync(async(req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const data = await userExpanse.individualExpanse(mergedBody);
+    if (data.length > 0) {
+        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data });
+    } else {
+        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data: [] });
+    }
 });
 module.exports = {
     addExpanse,
@@ -70,4 +82,5 @@ module.exports = {
     getExpanse,
     fetchExpanse,
     deleteExpanse,
+    individualExpanse,
 };
