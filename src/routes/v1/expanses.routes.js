@@ -10,5 +10,6 @@ router.put('/updateExpanse/:id', auth, expanseController.updateExpanse);
 router.delete('/deleteExpanse/:id', auth, expanseController.deleteExpanse);
 router.get('/fetchExpanse', auth, expanseController.fetchExpanse);
 router.get('/getexpanse', auth, expanseController.getExpanse); // by getExpanse by group id
+router.get('/individualExpanse', auth, expanseController.individualExpanse);
 
 module.exports = router;

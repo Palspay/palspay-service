@@ -120,6 +120,8 @@ const fetchExpanse = async(userData) => {
     try {
         let agg = [
             { $match: { _id: new ObjectId(userData.expanseId), is_deleted: false } },
+            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
+            { $unwind: "$usersData" },
             {
                 $addFields: {
                     groupIdObjectId: {
@@ -151,6 +153,7 @@ const fetchExpanse = async(userData) => {
             {
                 "$project": {
                     groupId: 1,
+                    expanseAddedBy: "$usersData.name",
                     groupName: {
                         $cond: {
                             if: { $ne: ["$groupId", ""] },
@@ -158,6 +161,7 @@ const fetchExpanse = async(userData) => {
                             else: ""
                         }
                     },
+                    userId: 1,
                     totalExpanse: 1,
                     description: 1,
                     addPayer: 1,
@@ -179,10 +183,86 @@ const fetchExpanse = async(userData) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
+const individualExpanse = async(data) => {
+    try {
+        let agg = [{
+                $match: {
+                    groupId: { $eq: "" },
+                    is_deleted: false,
+                    $or: [
+                        { "addPayer.from": data.userId },
+                        { "addPayer.to": data.userId }
+                    ]
+                }
+            },
+            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
+            { $unwind: "$usersData" },
+            {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] }, // Check if groupId is not blank
+                            then: { $toObjectId: "$groupId" }, // Convert groupId to ObjectId
+                            else: "$groupId" // Keep groupId as is
+                        }
+                    },
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "splitEqually.memberId",
+                    foreignField: "_id",
+                    as: "splitEquallyUsers"
+                }
+            },
+            {
+                $lookup: {
+                    from: "groups",
+                    localField: "groupIdObjectId",
+                    foreignField: "_id",
+                    as: "groupInfo"
+                }
+            },
+            { $unwind: { path: "$groupInfo", preserveNullAndEmptyArrays: true } },
+            {
+                "$project": {
+                    groupId: 1,
+                    expanseAddedBy: "$usersData.name",
+                    groupName: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: "$groupInfo.group_name",
+                            else: ""
+                        }
+                    },
+                    userId: 1,
+                    totalExpanse: 1,
+                    description: 1,
+                    addPayer: 1,
+                    imagesArray: 1,
+                    splitEqually: 1,
+                    splitUnequally: 1,
+                    splitByPercentage: 1,
+                    splitByShare: 1,
+                    splitByAdjustments: 1,
+                    is_deleted: 1,
+                    createdAt: 1
+                }
+            }
+        ];
+        const expanse = await Expanse.aggregate(agg);
+        return expanse;
+    } catch (error) {
+        console.log(error, "<<error")
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+};
 module.exports = {
     createExpanse,
     updateExpanse,
     getGroupExpanse,
     fetchExpanse,
-    deleteExpanse
+    deleteExpanse,
+    individualExpanse
 };
