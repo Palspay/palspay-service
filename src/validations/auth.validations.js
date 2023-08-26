@@ -19,7 +19,7 @@ const login = {
 const verifyOtp = {
     body: Joi.object().keys({
         userId: Joi.string().required(),
-        otp: Joi.number().required().custom(otp_length),
+        otp: Joi.string().required().custom(otp_length),
     }),
 }
 const verifyUser = {
