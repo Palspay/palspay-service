@@ -64,15 +64,12 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
-<<<<<<< HEAD
-=======
 async function areFriends(userId) {
     const user1 = await User.findOne({ _id: userId }).populate('friends').exec();
     const user1Friends = user1.friends.map(friend => friend._id.toString());
     return user1Friends;
 }
 
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
 const addFriends = async (userData) => {
     try {
         const promises = [];
@@ -89,11 +86,7 @@ const addFriends = async (userData) => {
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
                     tokenData.push({
                         mobile: mobileNumber.mobile,
-<<<<<<< HEAD
-                        name: mobileNumber.name,
-=======
                         name:mobileNumber.name,
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
                         invite_link: ''
                     })
                 }
@@ -110,29 +103,17 @@ const addFriends = async (userData) => {
                         );
                         tokenData.push({
                             mobile: isExits.mobile,
-<<<<<<< HEAD
-                            name: isExits.name,
-                            invite_link: ''
-                        })
-                    }
-
-=======
                             name:isExits.name,
                             invite_link: ''
                         })
                     }
                     
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
                 }
             } else {
                 const inviteLink = config.invite_url + mobile.slice(0, 2) + uuidv4().substring(0, 8) + mobile.slice(2, 4);
                 tokenData.push({
                     mobile: mobile,
-<<<<<<< HEAD
-                    name: name,
-=======
                     name:name,
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
                     invite_link: inviteLink
                 })
                 const newUser = new User({
@@ -177,12 +158,7 @@ const addFriends = async (userData) => {
         }
     }
 }
-<<<<<<< HEAD
-
-const createGroups = async (groupData) => {
-=======
 const createGroups = async(groupData) => {
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
     try {
         groupData['created_by'] = groupData.userId;
         groupData['group_owner'] = groupData.userId;
@@ -231,40 +207,6 @@ const getMembersByGroupId = async (userData) => {
     }
 };
 
-<<<<<<< HEAD
-// const getMyGroups = async(userId) => {
-//     try {
-//         const groupsList = await GroupMember.aggregate([{
-//                 $match: { member_id: new mongoose.Types.ObjectId(userId), is_friendship: true }
-//             },
-//             {
-//                 $lookup: {
-//                     from: 'groups',
-//                     localField: 'group_id',
-//                     foreignField: '_id',
-//                     as: 'group'
-//                 }
-//             },
-//             {
-//                 $unwind: '$group'
-//             },
-//             {
-//                 $project: {
-//                     _id: 0,
-//                     group_id: 1,
-//                     group_name: '$group.group_name',
-//                     group_icon: '$group.group_icon'
-//                 }
-//             }
-//         ]).exec();
-//         return groupsList;
-//     } catch (error) {
-//         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
-//     }
-// }
-
-=======
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
 const getMyGroups = async (userId) => {
     try {
         const groupsList = await Groups.find({ group_owner: userId, is_deleted: false }).select({ group_name: 1, group_icon: 1, _id: 1 }).exec();
@@ -333,11 +275,6 @@ module.exports = {
     setPasscode,
     getAllTimezones,
     verifyUser,
-<<<<<<< HEAD
     createNewPassword,
     editProfile
 };
-=======
-    createNewPassword
-};
->>>>>>> 39739719cb9c7e8afa26c2e4e70a2f54f9e3aa64
