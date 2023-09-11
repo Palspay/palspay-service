@@ -7,7 +7,7 @@ const addfriends = {
             .items(
                 Joi.object({
                     name: Joi.string().required(),
-                    mobile: Joi.string().pattern(/^[0-9]+$/).required()
+                    mobile: Joi.string().required()
                 })
             )
             .required(),

@@ -64,7 +64,13 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
-const addFriends = async(userData) => {
+async function areFriends(userId) {
+    const user1 = await User.findOne({ _id: userId }).populate('friends').exec();
+    const user1Friends = user1.friends.map(friend => friend._id.toString());
+    return user1Friends;
+}
+
+const addFriends = async (userData) => {
     try {
         const promises = [];
         const tokenData = [];
@@ -72,11 +78,17 @@ const addFriends = async(userData) => {
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
+            console.log(isExits);
             if (isExits) {
                 const isFriend = await areFriends(userData.userId);
                 if (isFriend.length === 0 || !isFriend.includes(isExits._id.toString())) {
                     promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: isExits._id } }));
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
+                    tokenData.push({
+                        mobile: mobileNumber.mobile,
+                        name:mobileNumber.name,
+                        invite_link: ''
+                    })
                 }
                 if (userData.group_id && userData.group_id !== '') {
                     const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id }).exec();
@@ -89,12 +101,19 @@ const addFriends = async(userData) => {
                                 creation_date: userData.usecurrentDaterId,
                             })
                         );
+                        tokenData.push({
+                            mobile: isExits.mobile,
+                            name:isExits.name,
+                            invite_link: ''
+                        })
                     }
+                    
                 }
             } else {
                 const inviteLink = config.invite_url + mobile.slice(0, 2) + uuidv4().substring(0, 8) + mobile.slice(2, 4);
                 tokenData.push({
                     mobile: mobile,
+                    name:name,
                     invite_link: inviteLink
                 })
                 const newUser = new User({
@@ -132,7 +151,6 @@ const addFriends = async(userData) => {
         await Promise.all(promises);
         return tokenData;
     } catch (error) {
-        console.log(error);
         if (error instanceof ApiError) {
             throw error; // Re-throw the ApiError
         } else {
@@ -140,7 +158,6 @@ const addFriends = async(userData) => {
         }
     }
 }
-
 const createGroups = async(groupData) => {
     try {
         groupData['created_by'] = groupData.userId;
@@ -190,37 +207,14 @@ const getMembersByGroupId = async(userData) => {
     }
 };
 
-const getMyGroups = async(userId) => {
+const getMyGroups = async (userId) => {
     try {
-        const groupsList = await GroupMember.aggregate([{
-                $match: { member_id: userId, is_friendship: true }
-            },
-            {
-                $lookup: {
-                    from: 'groups',
-                    localField: 'group_id',
-                    foreignField: '_id',
-                    as: 'group'
-                }
-            },
-            {
-                $unwind: '$group'
-            },
-            {
-                $project: {
-                    _id: 0,
-                    group_id: 1,
-                    group_name: '$group.group_name',
-                    group_icon: '$group.group_icon'
-                }
-            }
-        ]).exec();
+        const groupsList = await Groups.find({ group_owner: userId, is_deleted: false }).select({ group_name: 1, group_icon: 1, _id: 1 }).exec();
         return groupsList;
     } catch (error) {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 }
-
 const setPasscode = async(userBody) => {
     try {
         const user = await getUserById(userBody.userId);
