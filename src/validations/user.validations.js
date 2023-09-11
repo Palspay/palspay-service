@@ -39,10 +39,21 @@ const setPasscode = {
         passcode: Joi.number().required().custom(passcode),
     }),
 }
+
+const profile = {
+    body: Joi.object().keys({
+        email: Joi.string().required().email(),
+        name: Joi.string().required(),
+        mobile: Joi.string().required(),
+        timezone: Joi.string().required(),
+        currency: Joi.string().required(),
+    }),
+};
 module.exports = {
     addfriends,
     createGroup,
     createExpanse,
     groupDetailsByGroupId,
-    setPasscode
+    setPasscode,
+    profile
 };
