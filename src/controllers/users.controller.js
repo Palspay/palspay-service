@@ -1,6 +1,9 @@
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
 const { userService } = require('./../services');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -59,6 +62,46 @@ const getAllTimezones = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { timezones } });
 });
 
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = path.join(__dirname, '../../public/uploads');
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath);
+        }
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    },
+});
+
+const upload = multer({ storage });
+
+const uploadFile = catchAsync(async (req, res) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
+        }
+        if (!req.file) {
+            res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
+        }
+
+        const releativePath = path.join('/uploads', req.file.filename);
+        res.json({ message: 'File uploaded successfully', imagePath: releativePath });
+    });
+});
+
+const editProfile = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        modification_date: req.currentDate
+    };
+    const profile = await userService.editProfile(mergedBody, req.userId);
+    res.status(httpStatus.OK).send({ message: 'Profile update succesfully', data: {} });
+});
 module.exports = {
     addFriends,
     getFriends,
@@ -66,5 +109,7 @@ module.exports = {
     getMembersByGroupId,
     getMyGroups,
     setPasscode,
-    getAllTimezones
+    getAllTimezones,
+    uploadFile,
+    editProfile
 };

@@ -11,7 +11,7 @@ const { getCurrentDateTime } = require('./../constants/constant');
  * @param {Object} userBody
  * @returns {Promise<User>}
  */
-const createUser = async(userBody) => {
+const createUser = async (userBody) => {
     const isEmailExits = await userService.getUserByEmail(userBody.email);
     if (isEmailExits) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
@@ -22,6 +22,7 @@ const createUser = async(userBody) => {
     if (!isTempReg) {
         userBody['otp'] = otp;
         userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
         // console.log(await userService.getCurrencyByTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone));
         // return
         user = await User.create(userBody);
@@ -38,9 +39,9 @@ const createUser = async(userBody) => {
     return { userId: user._id, otp: user.otp };
 };
 
-const loginUserWithEmailAndPassword = async(userBody) => {
+const loginUserWithEmailAndPassword = async (userBody) => {
     const user = await userService.getUserByEmail(userBody.email);
-if (!user) {
+    if (!user) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
     const matched = await bcrypt.compare(userBody.password, user.password);
@@ -56,7 +57,7 @@ if (!user) {
  * @param {Object} payload
  * @returns {string} JWT token
  */
-const generateToken = async(user) => {
+const generateToken = async (user) => {
     const payload = {
         userId: user._id,
         email: user.email,
@@ -66,7 +67,7 @@ const generateToken = async(user) => {
     return jwt.sign(payload, config.jwt.private_key, { algorithm: 'RS256' });
 };
 
-const generateOtp = async(length) => {
+const generateOtp = async (length) => {
     const digits = '0123456789';
     let OTP = '';
     for (let i = 0; i < length; i++) {
@@ -76,7 +77,7 @@ const generateOtp = async(length) => {
 }
 
 
-const verifyOtp = async(data) => {
+const verifyOtp = async (data) => {
     const user = await userService.getUserById(data.userId);
     if (!user || user.otp !== data.otp) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Otp');
@@ -90,12 +91,12 @@ const verifyOtp = async(data) => {
     return { access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter };
 }
 
-const verifyUser = async(data) => {
+const verifyUser = async (data) => {
     const user = await userService.verifyUser(data);
     return user;
 }
 
-const createNewPassword = async(data) => {
+const createNewPassword = async (data) => {
     const isCreate = await userService.createNewPassword(data);
     return { access_token: await generateToken(isCreate) };
 }

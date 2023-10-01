@@ -10,6 +10,9 @@ const morgan = require('./config/morgan');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utills/ApiError');
+const path = require('path');
+const mime = require('mime');
+const fs = require('fs');
 
 const app = express();
 
@@ -18,8 +21,10 @@ if (config.env !== 'test') {
   app.use(morgan.errorHandler);
 }
 
+app.use(express.static(path.join(__dirname, '../public')));
 // set security HTTP headers
 app.use(helmet());
+
 
 // parse json request body
 app.use(express.json());
@@ -41,9 +46,10 @@ app.options('*', cors());
 // v1 api routes
 app.use('/v1', routes);
 
-app.get('/',(req,res)=>{
+app.get('/', (req, res) => {
   res.send('Server is running');
 })
+
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
@@ -52,7 +58,6 @@ app.use((req, res, next) => {
 // convert error to ApiError, if needed
 app.use(errorConverter);
 
-// handle error
 app.use(errorHandler);
 
 module.exports = app;

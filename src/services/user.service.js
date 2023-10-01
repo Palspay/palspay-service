@@ -13,45 +13,45 @@ const moment = require('moment-timezone');
  * @param {string} email
  * @returns {Promise<User>}
  */
-const getUserByEmail = async(email) => {
-    return User.findOne({ email, is_deleted: false,is_otp_verify:true });
+const getUserByEmail = async (email) => {
+    return User.findOne({ email, is_deleted: false, is_otp_verify: true });
 };
 
-const getUserById = async(userId) => {
+const getUserById = async (userId) => {
     return User.findOne({ _id: userId, is_deleted: false });
 }
 
-const getUserByMobile = async(mobile) => {
-    return User.findOne({ mobile, is_deleted: false ,is_otp_verify:true});
+const getUserByMobile = async (mobile) => {
+    return User.findOne({ mobile, is_deleted: false, is_otp_verify: true });
 }
 
-const getFriendsById = async(userId) => {
+const getFriendsById = async (userId) => {
     const friendsList = await User.aggregate([{
-            $match: { _id: userId }
-        },
-        {
-            $lookup: {
-                from: 'users',
-                localField: 'friends',
-                foreignField: '_id',
-                as: 'friendsList'
-            }
-        },
-        {
-            $unwind: '$friendsList'
-        },
-        {
-            $replaceRoot: {
-                newRoot: '$friendsList'
-            }
-        },
-        {
-            $project: {
-                _id: 1,
-                name: 1,
-                mobile: 1,
-            }
+        $match: { _id: userId }
+    },
+    {
+        $lookup: {
+            from: 'users',
+            localField: 'friends',
+            foreignField: '_id',
+            as: 'friendsList'
         }
+    },
+    {
+        $unwind: '$friendsList'
+    },
+    {
+        $replaceRoot: {
+            newRoot: '$friendsList'
+        }
+    },
+    {
+        $project: {
+            _id: 1,
+            name: 1,
+            mobile: 1,
+        }
+    }
     ]);
     if (friendsList.length === 0) {
         throw new ApiError(httpStatus.NOT_FOUND, 'Data Not Found');
@@ -175,30 +175,30 @@ const createGroups = async(groupData) => {
 
 }
 
-const getMembersByGroupId = async(userData) => {
+const getMembersByGroupId = async (userData) => {
     try {
         const members = await GroupMember.aggregate([{
-                $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'member_id',
-                    foreignField: '_id',
-                    as: 'memberDetails'
-                }
-            },
-            {
-                $unwind: '$memberDetails'
-            },
-            {
-                $project: {
-                    _id: 0,
-                    member_id: 1,
-                    member_name: '$memberDetails.name',
-                    member_mobile: '$memberDetails.mobile'
-                }
+            $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'member_id',
+                foreignField: '_id',
+                as: 'memberDetails'
             }
+        },
+        {
+            $unwind: '$memberDetails'
+        },
+        {
+            $project: {
+                _id: 0,
+                member_id: 1,
+                member_name: '$memberDetails.name',
+                member_mobile: '$memberDetails.mobile'
+            }
+        }
         ]).exec();
 
         return members;
@@ -229,7 +229,7 @@ const setPasscode = async(userBody) => {
     }
 }
 
-const getAllTimezones = async() => {
+const getAllTimezones = async () => {
     try {
         const timezones = moment.tz.names();
         return timezones;
@@ -238,7 +238,7 @@ const getAllTimezones = async() => {
     }
 }
 
-const verifyUser = async(data) => {
+const verifyUser = async (data) => {
     const isValid = await User.findOne({ mobile: data.mobile, is_deleted: false }, { _id: 1, name: 1 }).lean();
     console.log(isValid, "isValid")
     if (isValid) {
@@ -247,7 +247,7 @@ const verifyUser = async(data) => {
     return isValid
 }
 
-const createNewPassword = async(data) => {
+const createNewPassword = async (data) => {
     const isExists = await User.findOne({ _id: data.userId, is_deleted: false });
     if (isExists) {
         isExists.password = data.newPassword
@@ -255,6 +255,13 @@ const createNewPassword = async(data) => {
     }
     return isExists
 }
+
+
+const editProfile = async (data, id) => {
+    const updateData=await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true, useFindAndModify: false }).lean();
+    return updateData
+}
+
 
 module.exports = {
     getUserByEmail,
@@ -268,5 +275,6 @@ module.exports = {
     setPasscode,
     getAllTimezones,
     verifyUser,
-    createNewPassword
+    createNewPassword,
+    editProfile
 };
