@@ -88,7 +88,7 @@ const verifyOtp = async (data) => {
     user.is_otp_verify = true;
     user.modification_date = await getCurrentDateTime();
     const users = await user.save();
-    return { access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter };
+    return { access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter, email: users.email, mobile_no: users.mobile_no, name: users.name, user_id: users._id };
 }
 
 const verifyUser = async (data) => {
