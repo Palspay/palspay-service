@@ -92,10 +92,11 @@ const getGroupExpanse = async(userData) => {
                             usersName: "$usersDetail.name",
                             description: {
                                 $cond: { if: "$description", then: "$description", else: "" }
-                            }
+                            },
+                            addPayer: "$addPayer"
                         }
                     },
-                    groupsMembers: { $first: "$membersDetails.name" },
+                    groupsMembers: { $first: "$membersDetails._id" },
                     total: { $sum: "$totalExpanse" },
                 },
             },
@@ -110,6 +111,45 @@ const getGroupExpanse = async(userData) => {
             },
         ];
         const expanse = await Expanse.aggregate(agg);
+
+        let dataArr = [];
+
+        const expanseList = expanse[0].expanseList;
+        const groupsMembers = expanse[0].groupsMembers;
+        const totalExpanse = expanse[0].total;
+        const groupsMembersCount = expanse[0].groupsMembersCount;
+        const equalShare = totalExpanse / groupsMembersCount;
+
+        const memberAmounts = {};
+
+        groupsMembers.forEach(memberId => {
+            memberAmounts[memberId] = 0;
+        });
+        expanseList.forEach(expense => {
+            expense.addPayer.forEach(payer => {
+                const payerId = payer.from;
+                const amount = payer.amount;
+
+                // Add the amount to the corresponding member in memberAmounts
+                memberAmounts[payerId] += amount;
+            });
+        });
+        const resultArray = [];
+
+        for (const memberId in memberAmounts) {
+            var owesYou = 0;
+            var youOwe = 0;
+            const amountPaid = memberAmounts[memberId];
+            const balances = parseFloat(equalShare).toFixed(2) - parseFloat(amountPaid).toFixed(2);
+            const balance = balances.toFixed(2);
+            if (balance > 0) {
+                owesYou = balance;
+            } else if (balance < 0) {
+                youOwe = balance;
+            }
+            resultArray.push({ memberId, amountPaid, equalShare: Number(equalShare.toFixed(2)), owesYou: Number(owesYou), youOwe: Number(youOwe) });
+        }
+        expanse[0].youOwe = resultArray
         return expanse[0];
     } catch (error) {
         console.log(error, "<<error")
@@ -191,7 +231,7 @@ const individualExpanse = async(data) => {
                     is_deleted: false,
                     $or: [
                         { "addPayer.from": data.userId },
-                        { "addPayer.to": data.userId }
+                        // { "addPayer.to": data.userId }
                     ]
                 }
             },

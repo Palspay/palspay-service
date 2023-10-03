@@ -27,10 +27,6 @@ const expanseSchema = mongoose.Schema({
         }
     }],
     addPayer: [{
-        to: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'users',
-        },
         from: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
