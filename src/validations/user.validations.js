@@ -49,6 +49,8 @@ const profile = {
         currency: Joi.string().required(),
     }),
 };
+
+
 module.exports = {
     addfriends,
     createGroup,
