@@ -20,6 +20,14 @@ router.get('/timezones', auth, userController.getAllTimezones);
 
 router.post('/uploads', userController.uploadFile);
 
+router.put('/leave-group', auth, userController.leaveGroup);
+router.put('/leave-group/:group_id', auth, userController.leaveGroup);
+
+router.delete('/delete-group', auth,userController.deleteGroup);
+router.delete('/delete-group/:group_id', auth,userController.deleteGroup);
+
+router.delete('/remove-friend', auth,userController.removeFriend);
+router.delete('/remove-friend/:user_id', auth,userController.removeFriend);
 
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;

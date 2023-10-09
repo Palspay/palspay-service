@@ -4,6 +4,7 @@ const { userService } = require('./../services');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { use } = require('../routes/v1/user.routes');
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -102,6 +103,38 @@ const editProfile = catchAsync(async (req, res) => {
     const profile = await userService.editProfile(mergedBody, req.userId);
     res.status(httpStatus.OK).send({ message: 'Profile update succesfully', data: {} });
 });
+
+const  leaveGroup=catchAsync(async (req, res) => {
+    const group_id = req.query.group_id;
+    console.log(group_id);
+    const mergedBody = {
+        group_id,
+        modification_date: req.currentDate
+    };
+    const profile = await userService.leaveGroup(mergedBody, req.userId);
+    res.status(httpStatus.OK).send({ message: 'Leave group succesfully', data: {} });
+});
+
+const  deleteGroup=catchAsync(async (req, res) => {
+    const group_id = req.query.group_id;
+    const mergedBody = {
+        group_id,
+        modification_date: req.currentDate
+    };
+    const profile = await userService.deleteGroup(mergedBody, req.userId);
+    res.status(httpStatus.OK).send({ message: 'Delete succesfully', data: {} });
+});
+
+const  removeFriend=catchAsync(async (req, res) => {
+    const user_id = req.query.user_id;
+    const mergedBody = {
+        user_id,
+        modification_date: req.currentDate
+    };
+    const profile = await userService.removeFriend(mergedBody, req.userId);
+    res.status(httpStatus.OK).send({ message: 'Delete succesfully', data: {} });
+});
+
 module.exports = {
     addFriends,
     getFriends,
@@ -111,5 +144,8 @@ module.exports = {
     setPasscode,
     getAllTimezones,
     uploadFile,
-    editProfile
+    editProfile,
+    leaveGroup,
+    deleteGroup,
+    removeFriend
 };
