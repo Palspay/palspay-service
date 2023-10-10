@@ -13,7 +13,7 @@ const verifyOtp = catchAsync(async(req, res) => {
 })
 const login = catchAsync(async(req, res) => {
     const access_token = await authService.loginUserWithEmailAndPassword(req.body);
-    res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data: { access_token } });
+    res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data:  access_token  });
 });
 
 const verifyUser = catchAsync(async(req, res) => { //verifyUser and send sms
