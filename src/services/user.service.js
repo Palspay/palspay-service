@@ -7,7 +7,7 @@ const Groups = require('../models/group.model');
 const GroupMember = require('../models/group-members.model');
 const mongoose = require('mongoose');
 const moment = require('moment-timezone');
-
+const Plans = require('./../models/plan.model');
 /**
  * Get user by email
  * @param {string} email
@@ -76,7 +76,7 @@ const addFriends = async (userData) => {
     try {
         const promises = [];
         const tokenData = [];
-        const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId,is_friendship:true }).exec();
+        const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId, is_friendship: true }).exec();
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
@@ -92,7 +92,7 @@ const addFriends = async (userData) => {
                     })
                 }
                 if (userData.group_id && userData.group_id !== '') {
-                    const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id,is_friendship:true }).exec();
+                    const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id, is_friendship: true }).exec();
                     if (!isAlreadyGroup) {
                         promises.push(
                             GroupMember.create({
@@ -139,7 +139,7 @@ const addFriends = async (userData) => {
             }
 
         }
-        if (userData.group_id && currentUserGroupMember===null) {
+        if (userData.group_id && currentUserGroupMember === null) {
             promises.push(
                 GroupMember.create({
                     group_id: userData.group_id,
@@ -264,24 +264,46 @@ const editProfile = async (data, id) => {
 
 
 const leaveGroup = async (data, id) => {
-    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id),is_friendship:true }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
+    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
     return updateData;
 }
 
 const deleteGroup = async (data, id) => {
-    const updateData = await Groups.findOneAndUpdate({ group_owner: new mongoose.Types.ObjectId(id), _id: new mongoose.Types.ObjectId(data.group_id) ,is_deleted:false}, { $set: { is_deleted: true } }, { new: true }).lean();
+    const updateData = await Groups.findOneAndUpdate({ group_owner: new mongoose.Types.ObjectId(id), _id: new mongoose.Types.ObjectId(data.group_id), is_deleted: false }, { $set: { is_deleted: true } }, { new: true }).lean();
     if (updateData) {
         await GroupMember.updateMany({ member_id: new mongoose.Types.ObjectId(id), group_id: new mongoose.Types.ObjectId(data.group_id) }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
     }
     return updateData;
 }
 
-const removeFriend= async (data, id) => {
+const removeFriend = async (data, id) => {
     console.log(data.user_id);
-    const updateData = await User.findOneAndUpdate({ _id: id}, {  $pull: { friends: new mongoose.Types.ObjectId(data.user_id ) }
-}, { new: true }).lean();
+    const updateData = await User.findOneAndUpdate({ _id: id }, {
+        $pull: { friends: new mongoose.Types.ObjectId(data.user_id) }
+    }, { new: true }).lean();
     return updateData;
 }
+
+const takePlan = async (data, id) => {
+    const planValid = await Plans.findOne({ _id: data.plan_id, is_deleted: false }).exec();
+    if(!planValid){
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan not exits in our database');
+    }
+    const originalDate = new Date(data.modification_date);
+    if (data.plan_type === 'Yearly') {
+        originalDate.setFullYear(originalDate.getFullYear() + 1);
+        data['plan_expired'] = originalDate.getTime();
+    } else if (data.plan_type === 'Monthly') {
+        originalDate.setMonth(originalDate.getMonth() + 1);
+        if (originalDate.getDate() !== new Date(originalTimestamp).getDate()) {
+            originalDate.setDate(0);
+        }
+        data['plan_expired'] = Date.parse(originalDate.getTime());
+    }
+    const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();
+    return updateData
+}
+
 module.exports = {
     getUserByEmail,
     getUserById,
@@ -298,5 +320,6 @@ module.exports = {
     editProfile,
     leaveGroup,
     deleteGroup,
-    removeFriend
+    removeFriend,
+    takePlan
 };

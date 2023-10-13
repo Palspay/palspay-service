@@ -2,7 +2,7 @@ const express = require('express');
 const validate = require('../../middlewares/validate');
 const useralidation = require('../../validations/user.validations');
 const userController = require('../../controllers/users.controller');
-const auth = require('../../middlewares/auth');
+const {auth} = require('../../middlewares/auth');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
@@ -28,6 +28,8 @@ router.delete('/delete-group/:group_id', auth,userController.deleteGroup);
 
 router.delete('/remove-friend', auth,userController.removeFriend);
 router.delete('/remove-friend/:user_id', auth,userController.removeFriend);
+
+router.post('/take-plan', auth, validate(useralidation.takePlan), userController.takePlan);
 
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;
