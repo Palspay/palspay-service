@@ -49,7 +49,6 @@ const loginUserWithEmailAndPassword = async (userBody) => {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
     return { access_token: await generateToken(user), is_passcode_enter: user.is_passcode_enter, email: user.email, mobile_no: user.mobile_no, name: user.name, user_id: user._id };
-    // return await generateToken(user);
 };
 
 
