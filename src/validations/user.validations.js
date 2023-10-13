@@ -50,6 +50,12 @@ const profile = {
     }),
 };
 
+const takePlan = {
+    body: Joi.object().keys({
+        plan_id: Joi.string().required(),
+        plan_type:Joi.string().required()
+    }),
+}
 
 module.exports = {
     addfriends,
@@ -57,5 +63,6 @@ module.exports = {
     createExpanse,
     groupDetailsByGroupId,
     setPasscode,
-    profile
+    profile,
+    takePlan
 };

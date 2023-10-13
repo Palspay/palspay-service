@@ -48,10 +48,16 @@ const loginUserWithEmailAndPassword = async (userBody) => {
     if (!user || !matched) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
-    return { access_token: await generateToken(user), is_passcode_enter: user.is_passcode_enter, email: user.email, mobile_no: user.mobile_no, name: user.name, user_id: user._id };
-
-};
-
+    return {
+        access_token: await generateToken(user),
+        is_passcode_enter: user.is_passcode_enter,
+        email: user.email,
+        mobile_no: user.mobile_no,
+        name: user.name,
+        user_id: user._id,
+        currency: user.currency || 'INR',
+    };
+}
 
 /**
  * Generate a JWT token
@@ -89,7 +95,9 @@ const verifyOtp = async (data) => {
     user.is_otp_verify = true;
     user.modification_date = await getCurrentDateTime();
     const users = await user.save();
-    return { access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter, email: users.email, mobile_no: users.mobile_no, name: users.name, user_id: users._id };
+    return {
+        access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter, email: users.email, mobile_no: users.mobile_no, name: users.name, user_id: users._id, currency: users.currency || 'INR',
+    };
 }
 
 const verifyUser = async (data) => {

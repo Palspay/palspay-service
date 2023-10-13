@@ -104,7 +104,7 @@ const editProfile = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Profile update succesfully', data: {} });
 });
 
-const  leaveGroup=catchAsync(async (req, res) => {
+const leaveGroup = catchAsync(async (req, res) => {
     const group_id = req.query.group_id;
     console.log(group_id);
     const mergedBody = {
@@ -115,7 +115,7 @@ const  leaveGroup=catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Leave group succesfully', data: {} });
 });
 
-const  deleteGroup=catchAsync(async (req, res) => {
+const deleteGroup = catchAsync(async (req, res) => {
     const group_id = req.query.group_id;
     const mergedBody = {
         group_id,
@@ -125,7 +125,7 @@ const  deleteGroup=catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Delete succesfully', data: {} });
 });
 
-const  removeFriend=catchAsync(async (req, res) => {
+const removeFriend = catchAsync(async (req, res) => {
     const user_id = req.query.user_id;
     const mergedBody = {
         user_id,
@@ -133,6 +133,17 @@ const  removeFriend=catchAsync(async (req, res) => {
     };
     const profile = await userService.removeFriend(mergedBody, req.userId);
     res.status(httpStatus.OK).send({ message: 'Delete succesfully', data: {} });
+});
+
+const takePlan = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        modification_date: req.currentDate,
+        plan_selected_date: req.currentDate,
+
+    };
+    await userService.takePlan(mergedBody, req.userId);
+    res.status(httpStatus.OK).send({ message: 'Plan update succesfully', data: {} });
 });
 
 module.exports = {
@@ -147,5 +158,6 @@ module.exports = {
     editProfile,
     leaveGroup,
     deleteGroup,
-    removeFriend
+    removeFriend,
+    takePlan
 };
