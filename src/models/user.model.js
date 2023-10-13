@@ -46,7 +46,7 @@ const userSchema = mongoose.Schema({
     },
     currency: {
         type: String,
-        default: ''
+        default: 'INR'
     },
     otp: {
         type: String,
