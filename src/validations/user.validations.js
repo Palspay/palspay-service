@@ -49,11 +49,20 @@ const profile = {
         currency: Joi.string().required(),
     }),
 };
+
+const takePlan = {
+    body: Joi.object().keys({
+        plan_id: Joi.string().required(),
+        plan_type:Joi.string().required()
+    }),
+}
+
 module.exports = {
     addfriends,
     createGroup,
     createExpanse,
     groupDetailsByGroupId,
     setPasscode,
-    profile
+    profile,
+    takePlan
 };

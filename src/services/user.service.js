@@ -7,7 +7,7 @@ const Groups = require('../models/group.model');
 const GroupMember = require('../models/group-members.model');
 const mongoose = require('mongoose');
 const moment = require('moment-timezone');
-
+const Plans = require('./../models/plan.model');
 /**
  * Get user by email
  * @param {string} email
@@ -22,7 +22,9 @@ const getUserById = async (userId) => {
 }
 
 const getUserByMobile = async (mobile) => {
-    return User.findOne({ mobile, is_deleted: false, is_otp_verify: true });
+    // return User.findOne({ mobile, is_deleted: false, is_otp_verify: true, });
+    return User.findOne({ mobile, is_deleted: false });
+
 }
 
 const getFriendsById = async (userId) => {
@@ -74,11 +76,10 @@ const addFriends = async (userData) => {
     try {
         const promises = [];
         const tokenData = [];
-        const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId }).exec();
+        const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId, is_friendship: true }).exec();
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
-            console.log(isExits);
             if (isExits) {
                 const isFriend = await areFriends(userData.userId);
                 if (isFriend.length === 0 || !isFriend.includes(isExits._id.toString())) {
@@ -86,12 +87,12 @@ const addFriends = async (userData) => {
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
                     tokenData.push({
                         mobile: mobileNumber.mobile,
-                        name:mobileNumber.name,
+                        name: mobileNumber.name,
                         invite_link: ''
                     })
                 }
                 if (userData.group_id && userData.group_id !== '') {
-                    const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id }).exec();
+                    const isAlreadyGroup = await GroupMember.findOne({ group_id: userData.group_id, member_id: isExits._id, is_friendship: true }).exec();
                     if (!isAlreadyGroup) {
                         promises.push(
                             GroupMember.create({
@@ -103,17 +104,17 @@ const addFriends = async (userData) => {
                         );
                         tokenData.push({
                             mobile: isExits.mobile,
-                            name:isExits.name,
+                            name: isExits.name,
                             invite_link: ''
                         })
                     }
-                    
+
                 }
             } else {
                 const inviteLink = config.invite_url + mobile.slice(0, 2) + uuidv4().substring(0, 8) + mobile.slice(2, 4);
                 tokenData.push({
                     mobile: mobile,
-                    name:name,
+                    name: name,
                     invite_link: inviteLink
                 })
                 const newUser = new User({
@@ -138,7 +139,7 @@ const addFriends = async (userData) => {
             }
 
         }
-        if (userData.group_id && userData.group_id !== '' && currentUserGroupMember === null) {
+        if (userData.group_id && currentUserGroupMember === null) {
             promises.push(
                 GroupMember.create({
                     group_id: userData.group_id,
@@ -158,7 +159,7 @@ const addFriends = async (userData) => {
         }
     }
 }
-const createGroups = async(groupData) => {
+const createGroups = async (groupData) => {
     try {
         groupData['created_by'] = groupData.userId;
         groupData['group_owner'] = groupData.userId;
@@ -215,7 +216,7 @@ const getMyGroups = async (userId) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 }
-const setPasscode = async(userBody) => {
+const setPasscode = async (userBody) => {
     try {
         const user = await getUserById(userBody.userId);
         if (!user) {
@@ -240,7 +241,6 @@ const getAllTimezones = async () => {
 
 const verifyUser = async (data) => {
     const isValid = await User.findOne({ mobile: data.mobile, is_deleted: false }, { _id: 1, name: 1 }).lean();
-    console.log(isValid, "isValid")
     if (isValid) {
         await User.findByIdAndUpdate(isValid._id, { $set: { otp: data.otp } }, { new: true, useFindAndModify: false }).lean();
     }
@@ -258,10 +258,51 @@ const createNewPassword = async (data) => {
 
 
 const editProfile = async (data, id) => {
-    const updateData=await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true, useFindAndModify: false }).lean();
+    const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true, useFindAndModify: false }).lean();
     return updateData
 }
 
+
+const leaveGroup = async (data, id) => {
+    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
+    return updateData;
+}
+
+const deleteGroup = async (data, id) => {
+    const updateData = await Groups.findOneAndUpdate({ group_owner: new mongoose.Types.ObjectId(id), _id: new mongoose.Types.ObjectId(data.group_id), is_deleted: false }, { $set: { is_deleted: true } }, { new: true }).lean();
+    if (updateData) {
+        await GroupMember.updateMany({ member_id: new mongoose.Types.ObjectId(id), group_id: new mongoose.Types.ObjectId(data.group_id) }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
+    }
+    return updateData;
+}
+
+const removeFriend = async (data, id) => {
+    console.log(data.user_id);
+    const updateData = await User.findOneAndUpdate({ _id: id }, {
+        $pull: { friends: new mongoose.Types.ObjectId(data.user_id) }
+    }, { new: true }).lean();
+    return updateData;
+}
+
+const takePlan = async (data, id) => {
+    const planValid = await Plans.findOne({ _id: data.plan_id, is_deleted: false }).exec();
+    if(!planValid){
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan not exits in our database');
+    }
+    const originalDate = new Date(data.modification_date);
+    if (data.plan_type === 'Yearly') {
+        originalDate.setFullYear(originalDate.getFullYear() + 1);
+        data['plan_expired'] = originalDate.getTime();
+    } else if (data.plan_type === 'Monthly') {
+        originalDate.setMonth(originalDate.getMonth() + 1);
+        if (originalDate.getDate() !== new Date(originalTimestamp).getDate()) {
+            originalDate.setDate(0);
+        }
+        data['plan_expired'] = Date.parse(originalDate.getTime());
+    }
+    const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();
+    return updateData
+}
 
 module.exports = {
     getUserByEmail,
@@ -276,5 +317,9 @@ module.exports = {
     getAllTimezones,
     verifyUser,
     createNewPassword,
-    editProfile
+    editProfile,
+    leaveGroup,
+    deleteGroup,
+    removeFriend,
+    takePlan
 };
