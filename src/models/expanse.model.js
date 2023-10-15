@@ -12,6 +12,10 @@ const expanseSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    currency: {
+        type: String,
+        default: ''
+    },
     imagesArray: [{
         imgS3Key: {
             type: String,
@@ -69,14 +73,18 @@ const expanseSchema = mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
         },
-        status: {
-            type: Boolean,
-            default: false,
+        percentage: {
+            type: String,
+            default: "",
         },
         amount: {
             type: String,
             default: "",
-        }
+        },
+        status: {
+            type: Boolean,
+            default: false,
+        },
     }],
     splitByShare: [{
         memberId: {
