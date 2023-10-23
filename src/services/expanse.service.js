@@ -229,10 +229,11 @@ const individualExpanse = async(data) => {
                 $match: {
                     groupId: { $eq: "" },
                     is_deleted: false,
-                    $or: [
-                        { "addPayer.from": data.userId },
-                        // { "addPayer.to": data.userId }
-                    ]
+                    userId: data.userId,
+                    // $or: [
+                    //     { "addPayer.from": data.userId },
+                    //     // { "addPayer.to": data.userId }
+                    // ]
                 }
             },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
