@@ -229,11 +229,11 @@ const individualExpanse = async(data) => {
                 $match: {
                     groupId: { $eq: "" },
                     is_deleted: false,
-                    userId: data.userId,
-                    // $or: [
-                    //     { "addPayer.from": data.userId },
-                    //     // { "addPayer.to": data.userId }
-                    // ]
+                    // userId: data.userId,
+                    $or: [
+                        { "addPayer.from": data.userId },
+                        // { "addPayer.to": data.userId }
+                    ]
                 }
             },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
@@ -293,6 +293,62 @@ const individualExpanse = async(data) => {
             }
         ];
         const expanse = await Expanse.aggregate(agg);
+        for await (let item of expanse) {
+            let non_group = [];
+
+            // splitEqually
+            if (item.splitEqually.length > 0) {
+                for await (let per of item.splitEqually) {
+                    if (per.memberId.toString() == data.userId.toString()) {
+                        non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                    } else {
+                        non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                    }
+                }
+            }
+            // splitUnequally
+            if (item.splitUnequally.length > 0) {
+                for await (let per of item.splitUnequally) {
+                    if (per.memberId.toString() == data.userId.toString()) {
+                        non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                    } else {
+                        non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                    }
+                }
+            }
+            // splitByPercentage
+            if (item.splitByPercentage.length > 0) {
+                for await (let per of item.splitByPercentage) {
+                    if (per.memberId.toString() == data.userId.toString()) {
+                        non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                    } else {
+                        non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                    }
+                }
+            }
+            // splitByShare
+            if (item.splitByShare.length > 0) {
+                for await (let per of item.splitByShare) {
+                    if (per.memberId.toString() == data.userId.toString()) {
+                        non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                    } else {
+                        non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                    }
+                }
+            }
+
+            // splitByAdjustments
+            if (item.splitByAdjustments.length > 0) {
+                for await (let per of item.splitByAdjustments) {
+                    if (per.memberId.toString() == data.userId.toString()) {
+                        non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                    } else {
+                        non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                    }
+                }
+            }
+            item.non_group_expanse = non_group;
+        }
         return expanse;
     } catch (error) {
         console.log(error, "<<error")

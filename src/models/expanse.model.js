@@ -39,6 +39,10 @@ const expanseSchema = mongoose.Schema({
             type: Number,
             default: 0,
         },
+        isPaid: {
+            type: Boolean,
+            default: false,
+        },
     }],
     splitEqually: [{
         memberId: {
@@ -118,6 +122,10 @@ const expanseSchema = mongoose.Schema({
             default: "",
         }
     }],
+    is_settled: {
+        type: Boolean,
+        default: false
+    },
     is_deleted: {
         type: Boolean,
         default: false
