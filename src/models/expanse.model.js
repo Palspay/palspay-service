@@ -38,8 +38,14 @@ const expanseSchema = mongoose.Schema({
         amount: {
             type: Number,
             default: 0,
+        }
+    }],
+    members: [{
+        from: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
         },
-        isPaid: {
+        is_settled: {
             type: Boolean,
             default: false,
         },
