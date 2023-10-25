@@ -231,8 +231,8 @@ const individualExpanse = async(data) => {
                     is_deleted: false,
                     // userId: data.userId,
                     $or: [
-                        { "addPayer.from": data.userId },
-                        // { "addPayer.to": data.userId }
+                        // { "addPayer.from": data.userId },
+                        { "members.memberId": data.userId },
                     ]
                 }
             },
