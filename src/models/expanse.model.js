@@ -41,7 +41,7 @@ const expanseSchema = mongoose.Schema({
         }
     }],
     members: [{
-        from: {
+        memberId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users',
         },
