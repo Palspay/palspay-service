@@ -273,7 +273,7 @@ const fetchExpanse = async(data) => {
                     }
                 }
             }
-            item.non_group_expanse = non_group;
+            item.expanse_details = non_group;
         }
         return expanse[0];
     } catch (error) {
