@@ -44,6 +44,12 @@ const getExpanse = catchAsync(async(req, res) => {
         currentDate: req.currentDate
     };
     const data = await userExpanse.getGroupExpanse(mergedBody);
+    // for await (let item of data.expanseList) {
+    //     if (item._id.toString() == "653b49d85f5cbada14581269") {
+    //         mergedBody.expanseId = item._id;
+    //         item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+    //     }
+    // }
     if (data) {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data });
     } else {
