@@ -149,7 +149,7 @@ const getGroupExpanse = async(userData) => {
             }
             resultArray.push({ memberId, amountPaid, equalShare: Number(equalShare.toFixed(2)), owesYou: Number(owesYou), youOwe: Number(youOwe) });
         }
-        expanse[0].youOwe = resultArray
+        // expanse[0].youOwe = resultArray
         return expanse[0];
     } catch (error) {
         console.log(error, "<<error")
@@ -303,6 +303,10 @@ const fetchExpanse = async(data) => {
             } else {
                 item.you_lent = lentAmount.toFixed(2);
             }
+        }
+        for await (let item of expanse[0].expanse_details) {
+            const data = await User.findOne(item.memberId, { name: 1 }).lean();
+            item.name = data ? data.name : "--";
         }
         return expanse[0];
     } catch (error) {
