@@ -126,12 +126,14 @@ const getGroupExpanse = async(userData) => {
             memberAmounts[memberId] = 0;
         });
         expanseList.forEach(expense => {
-            expense.addPayer.forEach(payer => {
+            expense.addPayer.forEach(async payer => {
                 const payerId = payer.from;
                 const amount = payer.amount;
 
                 // Add the amount to the corresponding member in memberAmounts
                 memberAmounts[payerId] += amount;
+                const data = await User.findOne(payer.from, { name: 1 }).lean();
+                payer.name = data ? data.name : "--";
             });
         });
         const resultArray = [];
@@ -306,6 +308,10 @@ const fetchExpanse = async(data) => {
         }
         for await (let item of expanse[0].expanse_details) {
             const data = await User.findOne(item.memberId, { name: 1 }).lean();
+            item.name = data ? data.name : "--";
+        }
+        for await (let item of expanse[0].addPayer) {
+            const data = await User.findOne(item.from, { name: 1 }).lean();
             item.name = data ? data.name : "--";
         }
         return expanse[0];
