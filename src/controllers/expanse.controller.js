@@ -83,7 +83,18 @@ const getExpanse = catchAsync(async(req, res) => {
             return { from_id, from, amount: sums[key], to: "You" };
         });
 
-        data.owe_arr = owe_arr;
+        owe_arr.forEach(item => {
+            const key = `${item.to_id}_${item.to}`;
+            sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
+        });
+
+        const owe_result = Object.keys(sums).map(key => {
+            const [to_id, to] = key.split('_');
+            return { to_id, from: "You", amount: sums[key], to };
+        });
+
+
+        data.owe_arr = owe_result;
 
         data.owes_arr = result;
         // if (overall > 0) { data.owed_overall = overall } else { data.owe_overall = overall }
