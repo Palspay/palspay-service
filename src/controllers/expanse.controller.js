@@ -45,13 +45,48 @@ const getExpanse = catchAsync(async(req, res) => {
     };
     const data = await userExpanse.getGroupExpanse(mergedBody);
 
+    let total_lent = 0,
+        total_borrowed = 0,
+        owe_arr = [],
+        owes_arr = [];
     for await (let item of data.expanseList) {
-        // if (item._id.toString() == "653b49d85f5cbada14581269") {
         mergedBody.expanseId = item._id;
         item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-        // }
+        total_lent += parseFloat(item.expanseData.you_lent);
+        total_borrowed += parseFloat(item.expanseData.you_borrowed);
+        let borrowed = parseFloat(item.expanseData.you_borrowed)
+        let lent = parseFloat(item.expanseData.you_lent)
+
+        if (borrowed > 0) {
+            owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
+        }
+        if (lent > 0) {
+            for await (let payer of item.expanseData.expanse_details) {
+                if (payer.type == "owes")
+                    owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+            }
+        }
     }
     if (data) {
+        data.overall = total_lent - total_borrowed;
+        const owe_sums = {};
+        const sums = {};
+
+        // Iterate through the owes_arr
+        owes_arr.forEach(item => {
+            const key = `${item.from_id}_${item.from}`;
+            sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
+        });
+
+        const result = Object.keys(sums).map(key => {
+            const [from_id, from] = key.split('_');
+            return { from_id, from, amount: sums[key], to: "You" };
+        });
+
+        data.owe_arr = owe_arr;
+
+        data.owes_arr = result;
+        // if (overall > 0) { data.owed_overall = overall } else { data.owe_overall = overall }
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data });
     } else {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
