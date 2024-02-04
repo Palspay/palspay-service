@@ -392,7 +392,12 @@ const individualExpanse = async(data) => {
             }
         ];
         const expanse = await Expanse.aggregate(agg);
+
+        let lentAmount = 0,
+            borrowedAmount = 0;
         for await (let item of expanse) {
+            item.you_lent = 0;
+            item.you_borrowed = 0;
             let non_group = [];
 
             // splitEqually
@@ -400,8 +405,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitEqually) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -410,8 +419,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitUnequally) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -420,8 +433,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByPercentage) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -430,8 +447,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByShare) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -441,12 +462,28 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByAdjustments) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
-            item.non_group_expanse = non_group;
+            item.expanse_details = non_group;
+            if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                item.you_borrowed = borrowedAmount.toFixed(2);
+            } else {
+                item.you_lent = lentAmount.toFixed(2);
+            }
+            lentAmount = 0, borrowedAmount = 0;
+        }
+        for await (let exp of expanse) {
+            for await (let item of exp.expanse_details) {
+                const data = await User.findOne(item.memberId, { name: 1 }).lean();
+                item.name = data ? data.name : "--";
+            }
         }
         return expanse;
     } catch (error) {
