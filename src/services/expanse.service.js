@@ -154,8 +154,7 @@ const getGroupExpanse = async(userData) => {
         // expanse[0].youOwe = resultArray
         return expanse[0];
     } catch (error) {
-        console.log(error, "<<error")
-        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+        throw new ApiError(httpStatus.NOT_FOUND, 'no data found');
     }
 };
 const fetchExpanse = async(data) => {
