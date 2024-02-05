@@ -1,6 +1,8 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utills/catchAsync');
 const { userExpanse } = require('../services');
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
 const addExpanse = catchAsync(async(req, res) => {
     const mergedBody = {
@@ -117,9 +119,11 @@ const fetchExpanse = catchAsync(async(req, res) => {
     }
 });
 const individualExpanse = catchAsync(async(req, res) => {
+
+    let userId = (req.query.friendId) ? new ObjectId(req.query.friendId) : req.userId;
     const mergedBody = {
         ...req.body,
-        userId: req.userId,
+        userId: userId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.individualExpanse(mergedBody);
