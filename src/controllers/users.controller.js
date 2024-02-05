@@ -90,7 +90,7 @@ const uploadFile = catchAsync(async (req, res) => {
             res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
         }
 
-        const releativePath = path.join('/uploads', req.file.filename);
+        const releativePath = path.join(req.file.filename);
         res.json({ message: 'File uploaded successfully', imagePath: releativePath });
     });
 });
