@@ -5,6 +5,7 @@ const Expanse = require('../models/expanse.model');
 const mongoose = require('mongoose');
 const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
+const activityService = require('./activity.service');
 
 const createExpanse = async(expanseData) => {
     try {
@@ -21,6 +22,11 @@ const createExpanse = async(expanseData) => {
         }
         expanseData['imagesArray'] = imagesArray;
         const expense = new Expanse(expanseData);
+        const obj = {
+            description: 'you create' + expanseData.description + ' expanse sucessfully',
+            user_id: expanseData.userId
+        }
+        await activityService.createActivity(obj);
         return await expense.save();
     } catch (error) {
         console.log(error);
@@ -53,7 +59,12 @@ const updateExpanse = async(expanseData) => {
 
 const deleteExpanse = async(expanseData) => {
     try {
-        await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
+        const expanse=await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
+        const obj = {
+            description: 'you delete' + expanse.description + ' expanse sucessfully',
+            user_id: expanseData.userId
+        }
+        await activityService.createActivity(obj);
         return true;
     } catch (error) {
         console.log(error);
