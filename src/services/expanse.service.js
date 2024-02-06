@@ -76,105 +76,52 @@ const getGroupExpanse = async(userData) => {
     try {
         let { groupId } = userData
         let agg;
-        if (!userData.check) {
-            agg = [
-                { $match: { groupId }, },
-                {
-                    $addFields: {
-                        groupIdObjectId: {
-                            $cond: {
-                                if: { $ne: ["$groupId", ""] },
-                                then: { $toObjectId: "$groupId" },
-                                else: "$groupId"
-                            }
+        agg = [
+            { $match: { groupId }, },
+            {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: { $toObjectId: "$groupId" },
+                            else: "$groupId"
                         }
                     }
-                },
-                { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
-                { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
-                { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
-                { $unwind: "$usersDetail" },
-                {
-                    $group: {
-                        _id: { groupId: "$groupId" },
-                        expanseList: {
-                            $push: {
-                                _id: "$_id",
-                                totalExpanse: "$totalExpanse",
-                                groupId: "$groupId",
-                                usersName: "$usersDetail.name",
-                                description: {
-                                    $cond: { if: "$description", then: "$description", else: "" }
-                                },
-                                addPayer: "$addPayer"
-                            }
-                        },
-                        groupsMembers: { $first: "$membersDetails._id" },
-                        total: { $sum: "$totalExpanse" },
-                    },
-                },
-                {
-                    "$project": {
-                        _id: 0,
-                        expanseList: 1,
-                        groupsMembers: 1,
-                        total: 1,
-                        groupsMembersCount: { $size: "$groupsMembers" },
-                    }
-                },
-            ];
-        } else {
-            agg = [
-                { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
-                {
-                    $addFields: {
-                        groupIdObjectId: {
-                            $cond: {
-                                if: { $ne: ["$groupId", ""] },
-                                then: { $toObjectId: "$groupId" },
-                                else: "$groupId"
-                            }
+                }
+            },
+            { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
+            { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
+            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
+            { $unwind: "$usersDetail" },
+            {
+                $group: {
+                    _id: { groupId: "$groupId" },
+                    expanseList: {
+                        $push: {
+                            _id: "$_id",
+                            totalExpanse: "$totalExpanse",
+                            groupId: "$groupId",
+                            usersName: "$usersDetail.name",
+                            description: {
+                                $cond: { if: "$description", then: "$description", else: "" }
+                            },
+                            addPayer: "$addPayer"
                         }
-                    }
-                },
-                { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
-                { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
-                { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
-                { $unwind: "$usersDetail" },
-                { "$lookup": { "from": "groups", "localField": "groupIdObjectId", "foreignField": "_id", "as": "groupsdetails" } },
-                { $unwind: "$groupsdetails" },
-                {
-                    $group: {
-                        _id: { groupId: "$groupId" },
-                        expanseList: {
-                            $push: {
-                                _id: "$_id",
-                                totalExpanse: "$totalExpanse",
-                                groupId: "$groupId",
-                                group_name: "$groupsdetails.group_name",
-                                usersName: "$usersDetail.name",
-                                description: {
-                                    $cond: { if: "$description", then: "$description", else: "" }
-                                },
-                                addPayer: "$addPayer",
-
-                            }
-                        },
-                        groupsMembers: { $first: "$membersDetails._id" },
-                        total: { $sum: "$totalExpanse" },
                     },
+                    groupsMembers: { $first: "$membersDetails._id" },
+                    total: { $sum: "$totalExpanse" },
                 },
-                {
-                    "$project": {
-                        _id: 0,
-                        expanseList: 1,
-                        groupsMembers: 1,
-                        total: 1,
-                        groupsMembersCount: { $size: "$groupsMembers" },
-                    }
-                },
-            ];
-        }
+            },
+            {
+                "$project": {
+                    _id: 0,
+                    expanseList: 1,
+                    groupsMembers: 1,
+                    total: 1,
+                    groupsMembersCount: { $size: "$groupsMembers" },
+                }
+            },
+        ];
 
         const expanse = await Expanse.aggregate(agg);
         let dataArr = [];
@@ -560,11 +507,73 @@ const individualExpanse = async(data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
+const getGroupByUser = async(userData) => {
+    try {
+        let agg;
+        agg = [
+            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
+            {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: { $toObjectId: "$groupId" },
+                            else: "$groupId"
+                        }
+                    }
+                }
+            },
+            { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
+            { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
+            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
+            { $unwind: "$usersDetail" },
+            { "$lookup": { "from": "groups", "localField": "groupIdObjectId", "foreignField": "_id", "as": "groupsdetails" } },
+            { $unwind: "$groupsdetails" },
+            {
+                $group: {
+                    _id: { groupId: "$groupId" },
+                    expanseList: {
+                        $push: {
+                            _id: "$_id",
+                            totalExpanse: "$totalExpanse",
+                            groupId: "$groupId",
+                            group_name: "$groupsdetails.group_name",
+                            usersName: "$usersDetail.name",
+                            description: {
+                                $cond: { if: "$description", then: "$description", else: "" }
+                            },
+                            // addPayer: "$addPayer",
+
+                        }
+                    },
+                    groupsMembers: { $first: "$membersDetails._id" },
+                    total: { $sum: "$totalExpanse" },
+                },
+            },
+            {
+                "$project": {
+                    _id: 0,
+                    expanseList: { $arrayElemAt: ["$expanseList", 0] },
+                    groupsMembers: 1,
+                    total: 1,
+                    // groupsMembersCount: { $size: "$groupsMembers" },
+                }
+            },
+        ];
+        const expanse = await Expanse.aggregate(agg);
+        return expanse;
+    } catch (error) {
+        console.log(error, "<<error")
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+};
+
 module.exports = {
     createExpanse,
     updateExpanse,
     getGroupExpanse,
     fetchExpanse,
     deleteExpanse,
-    individualExpanse
+    individualExpanse,
+    getGroupByUser
 };
