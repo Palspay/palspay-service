@@ -133,7 +133,8 @@ const individualExpanse = catchAsync(async(req, res) => {
             total_borrowed = 0,
             owe_arr = [],
             owes_arr = [],
-            expanse = {};
+            expanse = {},
+            groupDetails = {};
         for await (let item of data) {
             mergedBody.expanseId = item._id;
             item.expanseData = await userExpanse.fetchExpanse(mergedBody);
@@ -142,8 +143,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             let borrowed = parseFloat(item.expanseData.you_borrowed)
             let lent = parseFloat(item.expanseData.you_lent)
 
-            mergedBody.check = "individual"; //group details for linked user
-            expanse.groupDetails = await userExpanse.getGroupExpanse(mergedBody);
+            groupDetails = await userExpanse.getGroupByUser(mergedBody); //group details for linked user
 
             if (borrowed > 0) {
                 // console.log(item, "payer", borrowed);
@@ -187,7 +187,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             expanse.owe_arr = {};
         }
 
-        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse });
+        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse, groupDetails });
     } else {
         res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data: [] });
     }
