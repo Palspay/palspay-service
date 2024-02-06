@@ -125,7 +125,7 @@ const getGroupExpanse = async(userData) => {
             ];
         } else {
             agg = [
-                { $match: { "members.memberId": userData.userId } },
+                { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
                 {
                     $addFields: {
                         groupIdObjectId: {
@@ -141,6 +141,8 @@ const getGroupExpanse = async(userData) => {
                 { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
                 { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
                 { $unwind: "$usersDetail" },
+                { "$lookup": { "from": "groups", "localField": "groupIdObjectId", "foreignField": "_id", "as": "groupsdetails" } },
+                { $unwind: "$groupsdetails" },
                 {
                     $group: {
                         _id: { groupId: "$groupId" },
@@ -149,11 +151,13 @@ const getGroupExpanse = async(userData) => {
                                 _id: "$_id",
                                 totalExpanse: "$totalExpanse",
                                 groupId: "$groupId",
+                                group_name: "$groupsdetails.group_name",
                                 usersName: "$usersDetail.name",
                                 description: {
                                     $cond: { if: "$description", then: "$description", else: "" }
                                 },
-                                addPayer: "$addPayer"
+                                addPayer: "$addPayer",
+
                             }
                         },
                         groupsMembers: { $first: "$membersDetails._id" },
