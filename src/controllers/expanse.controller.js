@@ -141,6 +141,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             total_borrowed += parseFloat(item.expanseData.you_borrowed);
             let borrowed = parseFloat(item.expanseData.you_borrowed)
             let lent = parseFloat(item.expanseData.you_lent)
+
             mergedBody.check = "individual"; //group details for linked user
             expanse.groupDetails = await userExpanse.getGroupExpanse(mergedBody);
 
@@ -156,7 +157,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             }
         }
         expanse.overall = total_lent - total_borrowed;
-        console.log(owes_arr, "owes_arr", owe_arr);
+        // console.log(owes_arr, "owes_arr", owe_arr);
         if (owes_arr.length > 0) {
             owes_arr.forEach(item => {
                 const key = `${item.from_id}_${item.from}`;
