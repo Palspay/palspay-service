@@ -526,37 +526,44 @@ const getGroupByUser = async(userData) => {
             { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
             { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
-            { $unwind: "$usersDetail" },
+            { $unwind: { path: "$usersDetail", preserveNullAndEmptyArrays: true } },
             { "$lookup": { "from": "groups", "localField": "groupIdObjectId", "foreignField": "_id", "as": "groupsdetails" } },
-            { $unwind: "$groupsdetails" },
+            { $unwind: { path: "$groupsdetails", preserveNullAndEmptyArrays: true } },
             {
                 $group: {
                     _id: { groupId: "$groupId" },
+                    groupId: { $first: "$groupId" },
+                    group_name: { $first: "$groupsdetails.group_name" },
                     expanseList: {
                         $push: {
                             _id: "$_id",
-                            totalExpanse: "$totalExpanse",
+                            total: "$totalExpanse",
                             groupId: "$groupId",
-                            group_name: "$groupsdetails.group_name",
-                            usersName: "$usersDetail.name",
+                            addedBy: "$usersDetail.name",
                             description: {
                                 $cond: { if: "$description", then: "$description", else: "" }
                             },
-                            // addPayer: "$addPayer",
-
+                            createdAt: "$createdAt",
                         }
                     },
                     groupsMembers: { $first: "$membersDetails._id" },
-                    total: { $sum: "$totalExpanse" },
+                    totalExpanse: { $sum: "$totalExpanse" },
                 },
             },
+            // {
+            //     $addFields: {
+            //         expanseList: { $slice: ["$expanseList", { $subtract: [{ $size: "$expanseList" }, 1] }, 1] },
+            //         recentExpanse: { $arrayElemAt: ["$expanseList", 0] },
+            //     }
+            // },
             {
                 "$project": {
                     _id: 0,
-                    expanseList: { $arrayElemAt: ["$expanseList", 0] },
+                    groupId: 1,
+                    group_name: 1,
+                    expanseList: 1,
                     groupsMembers: 1,
-                    total: 1,
-                    // groupsMembersCount: { $size: "$groupsMembers" },
+                    totalExpanse: 1,
                 }
             },
         ];
