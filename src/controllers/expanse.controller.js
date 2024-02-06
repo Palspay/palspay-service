@@ -141,6 +141,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             total_borrowed += parseFloat(item.expanseData.you_borrowed);
             let borrowed = parseFloat(item.expanseData.you_borrowed)
             let lent = parseFloat(item.expanseData.you_lent)
+
             mergedBody.check = "individual"; //group details for linked user
             expanse.groupDetails = await userExpanse.getGroupExpanse(mergedBody);
 
