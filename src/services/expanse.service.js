@@ -23,7 +23,7 @@ const createExpanse = async(expanseData) => {
         expanseData['imagesArray'] = imagesArray;
         const expense = new Expanse(expanseData);
         const obj = {
-            description: 'you create' + expanseData.description + ' expanse sucessfully',
+            description: 'You added an expense ' + expanseData.description,
             user_id: expanseData.userId
         }
         await activityService.createActivity(obj);
