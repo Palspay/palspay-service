@@ -4,8 +4,8 @@ const { userService } = require('./../services');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { use } = require('../routes/v1/user.routes');
-
+// const { use } = require('../routes/v1/user.routes');
+const activityService=require('./../services/activity.service');
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -90,7 +90,7 @@ const uploadFile = catchAsync(async (req, res) => {
             res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
         }
 
-        const releativePath = path.join('/uploads', req.file.filename);
+        const releativePath = path.join(req.file.filename);
         res.json({ message: 'File uploaded successfully', imagePath: releativePath });
     });
 });
@@ -106,7 +106,6 @@ const editProfile = catchAsync(async (req, res) => {
 
 const leaveGroup = catchAsync(async (req, res) => {
     const group_id = req.query.group_id;
-    console.log(group_id);
     const mergedBody = {
         group_id,
         modification_date: req.currentDate
@@ -146,6 +145,12 @@ const takePlan = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Plan update succesfully', data: {} });
 });
 
+
+
+const getActivity = catchAsync(async (req, res) => {
+    const activity = await activityService.getActivity(req.userId);
+    res.status(httpStatus.OK).send({ message: 'Data Loading', data: { activity } });
+})
 module.exports = {
     addFriends,
     getFriends,
@@ -159,5 +164,6 @@ module.exports = {
     leaveGroup,
     deleteGroup,
     removeFriend,
-    takePlan
+    takePlan,
+    getActivity
 };

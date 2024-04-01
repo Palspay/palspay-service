@@ -1,6 +1,8 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utills/catchAsync');
 const { userExpanse } = require('../services');
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Types;
 
 const addExpanse = catchAsync(async(req, res) => {
     const mergedBody = {
@@ -117,14 +119,75 @@ const fetchExpanse = catchAsync(async(req, res) => {
     }
 });
 const individualExpanse = catchAsync(async(req, res) => {
+
+    let userId = (req.query.friendId) ? new ObjectId(req.query.friendId) : req.userId;
     const mergedBody = {
         ...req.body,
-        userId: req.userId,
+        userId: userId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.individualExpanse(mergedBody);
     if (data.length > 0) {
-        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data });
+        const sums = {};
+        let total_lent = 0,
+            total_borrowed = 0,
+            owe_arr = [],
+            owes_arr = [],
+            expanse = {},
+            groupDetails = {};
+        for await (let item of data) {
+            mergedBody.expanseId = item._id;
+            item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+            total_lent += parseFloat(item.expanseData.you_lent);
+            total_borrowed += parseFloat(item.expanseData.you_borrowed);
+            let borrowed = parseFloat(item.expanseData.you_borrowed)
+            let lent = parseFloat(item.expanseData.you_lent)
+
+            groupDetails = await userExpanse.getGroupByUser(mergedBody); //group details for linked user
+
+            if (borrowed > 0) {
+                // console.log(item, "payer", borrowed);
+                owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
+            }
+            if (lent > 0) {
+                for await (let payer of item.expanseData.expanse_details) {
+                    if (payer.type == "owes")
+                        owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                }
+            }
+        }
+        expanse.overall = total_lent - total_borrowed;
+        // console.log(owes_arr, "owes_arr", owe_arr);
+        if (owes_arr.length > 0) {
+            owes_arr.forEach(item => {
+                const key = `${item.from_id}_${item.from}`;
+                sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
+            });
+
+            const result = Object.keys(sums).map(key => {
+                const [from_id, from] = key.split('_');
+                return { from_id, from, amount: sums[key], to: "You" };
+            });
+            expanse.owes_arr = result;
+        } else {
+            expanse.owes_arr = {};
+        }
+        if (owe_arr.length > 0) {
+            owe_arr.forEach(item => {
+                const key = `${item.to_id}_${item.to}`;
+                sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
+            });
+
+            const owe_result = Object.keys(sums).map(key => {
+                const [to_id, to] = key.split('_');
+                return { to_id, from: "You", amount: sums[key], to };
+            });
+            expanse.owe_arr = owe_result;
+        } else {
+            expanse.owe_arr = {};
+        }
+
+        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse, groupDetails });
     } else {
         res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data: [] });
     }

@@ -20,8 +20,9 @@ if (config.env !== 'test') {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
 }
+app.use('/images', express.static(path.join(__dirname, '../public/uploads')));
 
-app.use(express.static(path.join(__dirname, '../public')));
+console.log('test',path.join(__dirname, '../public/uploads'));
 // set security HTTP headers
 app.use(helmet());
 

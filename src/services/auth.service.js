@@ -6,6 +6,7 @@ const config = require('../config/config');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { getCurrentDateTime } = require('./../constants/constant');
+const activityService=require('./activity.service');
 /**
  * Create a user
  * @param {Object} userBody

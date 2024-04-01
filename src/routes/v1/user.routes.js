@@ -31,9 +31,13 @@ router.delete('/remove-friend/:user_id', auth,userController.removeFriend);
 
 router.post('/take-plan', auth, validate(useralidation.takePlan), userController.takePlan);
 
+router.get('/activity', auth, userController.getActivity);
+
+
+
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;
-  const imagePath = path.join(__dirname, '../', 'public/uploads', imageName);
+  const imagePath = path.join(__dirname, '../../../', 'public/uploads', imageName);
   fs.access(imagePath, fs.constants.F_OK, (err) => {
     if (err) {
       // File does not exist

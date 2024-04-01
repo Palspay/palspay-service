@@ -8,52 +8,55 @@ const GroupMember = require('../models/group-members.model');
 const mongoose = require('mongoose');
 const moment = require('moment-timezone');
 const Plans = require('./../models/plan.model');
+const Activity = require('../models/activity.model');
+const activityService = require('./activity.service');
+
 /**
  * Get user by email
  * @param {string} email
  * @returns {Promise<User>}
  */
-const getUserByEmail = async (email) => {
+const getUserByEmail = async(email) => {
     return User.findOne({ email, is_deleted: false, is_otp_verify: true });
 };
 
-const getUserById = async (userId) => {
+const getUserById = async(userId) => {
     return User.findOne({ _id: userId, is_deleted: false });
 }
 
-const getUserByMobile = async (mobile) => {
+const getUserByMobile = async(mobile) => {
     // return User.findOne({ mobile, is_deleted: false, is_otp_verify: true, });
     return User.findOne({ mobile, is_deleted: false });
 
 }
 
-const getFriendsById = async (userId) => {
+const getFriendsById = async(userId) => {
     const friendsList = await User.aggregate([{
-        $match: { _id: userId }
-    },
-    {
-        $lookup: {
-            from: 'users',
-            localField: 'friends',
-            foreignField: '_id',
-            as: 'friendsList'
+            $match: { _id: userId }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'friends',
+                foreignField: '_id',
+                as: 'friendsList'
+            }
+        },
+        {
+            $unwind: '$friendsList'
+        },
+        {
+            $replaceRoot: {
+                newRoot: '$friendsList'
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                mobile: 1,
+            }
         }
-    },
-    {
-        $unwind: '$friendsList'
-    },
-    {
-        $replaceRoot: {
-            newRoot: '$friendsList'
-        }
-    },
-    {
-        $project: {
-            _id: 1,
-            name: 1,
-            mobile: 1,
-        }
-    }
     ]);
     if (friendsList.length === 0) {
         throw new ApiError(httpStatus.NOT_FOUND, 'Data Not Found');
@@ -72,11 +75,13 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
-const addFriends = async (userData) => {
+const addFriends = async(userData) => {
     try {
         const promises = [];
         const tokenData = [];
+        const activityArray = [];
         const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId, is_friendship: true }).exec();
+        const group = await Groups.findOne({ _id: new mongoose.Types.ObjectId(userData.group_id) }).exec();
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
@@ -85,6 +90,12 @@ const addFriends = async (userData) => {
                 if (isFriend.length === 0 || !isFriend.includes(isExits._id.toString())) {
                     promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: isExits._id } }));
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
+                    activityArray.push(
+                        Activity.create({
+                            description: 'you addedd ' + isExits.name + ' to the palspay app',
+                            user_id: userData.userId
+                        })
+                    );
                     tokenData.push({
                         mobile: mobileNumber.mobile,
                         name: mobileNumber.name,
@@ -107,6 +118,12 @@ const addFriends = async (userData) => {
                             name: isExits.name,
                             invite_link: ''
                         })
+                        activityArray.push(
+                            Activity.create({
+                                description: 'you addedd ' + isExits.name + ' to the ' + group.group_name,
+                                user_id: userData.userId
+                            })
+                        );
                     }
 
                 }
@@ -133,6 +150,12 @@ const addFriends = async (userData) => {
                             creation_date: userData.usecurrentDaterId,
                         })
                     );
+                    activityArray.push(
+                        Activity.create({
+                            description: 'you addedd ' + name + ' to the ' + group.group_name,
+                            user_id: userData.userId
+                        })
+                    );
                 }
                 promises.push(User.findByIdAndUpdate(userData.userId, { $addToSet: { friends: newUser._id } }));
                 promises.push(User.findByIdAndUpdate(newUser._id, { $addToSet: { friends: userData.userId } }));
@@ -150,8 +173,10 @@ const addFriends = async (userData) => {
             );
         }
         await Promise.all(promises);
+        await Promise.all(activityArray);
         return tokenData;
     } catch (error) {
+        console.log(error);
         if (error instanceof ApiError) {
             throw error; // Re-throw the ApiError
         } else {
@@ -159,12 +184,17 @@ const addFriends = async (userData) => {
         }
     }
 }
-const createGroups = async (groupData) => {
+const createGroups = async(groupData) => {
     try {
         groupData['created_by'] = groupData.userId;
         groupData['group_owner'] = groupData.userId;
         groupData['creation_date'] = groupData.usecurrentDaterId;
         const group = new Groups(groupData);
+        const obj = {
+            description: 'You created a new group ' + groupData.group_name,
+            user_id: groupData.userId
+        }
+        await activityService.createActivity(obj);
         return await group.save();
     } catch (error) {
         if (error instanceof ApiError) {
@@ -176,30 +206,30 @@ const createGroups = async (groupData) => {
 
 }
 
-const getMembersByGroupId = async (userData) => {
+const getMembersByGroupId = async(userData) => {
     try {
         const members = await GroupMember.aggregate([{
-            $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
-        },
-        {
-            $lookup: {
-                from: 'users',
-                localField: 'member_id',
-                foreignField: '_id',
-                as: 'memberDetails'
+                $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'member_id',
+                    foreignField: '_id',
+                    as: 'memberDetails'
+                }
+            },
+            {
+                $unwind: '$memberDetails'
+            },
+            {
+                $project: {
+                    _id: 0,
+                    member_id: 1,
+                    member_name: '$memberDetails.name',
+                    member_mobile: '$memberDetails.mobile'
+                }
             }
-        },
-        {
-            $unwind: '$memberDetails'
-        },
-        {
-            $project: {
-                _id: 0,
-                member_id: 1,
-                member_name: '$memberDetails.name',
-                member_mobile: '$memberDetails.mobile'
-            }
-        }
         ]).exec();
 
         return members;
@@ -208,7 +238,7 @@ const getMembersByGroupId = async (userData) => {
     }
 };
 
-const getMyGroups = async (userId) => {
+const getMyGroups = async(userId) => {
     try {
         const groupsList = await Groups.find({ group_owner: userId, is_deleted: false }).select({ group_name: 1, group_icon: 1, _id: 1 }).exec();
         return groupsList;
@@ -216,7 +246,7 @@ const getMyGroups = async (userId) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 }
-const setPasscode = async (userBody) => {
+const setPasscode = async(userBody) => {
     try {
         const user = await getUserById(userBody.userId);
         if (!user) {
@@ -230,7 +260,7 @@ const setPasscode = async (userBody) => {
     }
 }
 
-const getAllTimezones = async () => {
+const getAllTimezones = async() => {
     try {
         const timezones = moment.tz.names();
         return timezones;
@@ -239,7 +269,7 @@ const getAllTimezones = async () => {
     }
 }
 
-const verifyUser = async (data) => {
+const verifyUser = async(data) => {
     const isValid = await User.findOne({ mobile: data.mobile, is_deleted: false }, { _id: 1, name: 1 }).lean();
     if (isValid) {
         await User.findByIdAndUpdate(isValid._id, { $set: { otp: data.otp } }, { new: true, useFindAndModify: false }).lean();
@@ -247,7 +277,7 @@ const verifyUser = async (data) => {
     return isValid
 }
 
-const createNewPassword = async (data) => {
+const createNewPassword = async(data) => {
     const isExists = await User.findOne({ _id: data.userId, is_deleted: false });
     if (isExists) {
         isExists.password = data.newPassword
@@ -257,35 +287,52 @@ const createNewPassword = async (data) => {
 }
 
 
-const editProfile = async (data, id) => {
+const editProfile = async(data, id) => {
     const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true, useFindAndModify: false }).lean();
     return updateData
 }
 
 
-const leaveGroup = async (data, id) => {
-    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
+const leaveGroup = async(data, id) => {
+    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false, is_deleted: true, member_id: null } }, { new: true }).lean();
+    const group = await Groups.findOne({ _id: new mongoose.Types.ObjectId(data.group_id) }).exec();
+    const obj = {
+        description: 'you leave ' + group.group_name + ' sucessfully',
+        user_id: id
+    }
+    await activityService.createActivity(obj);
     return updateData;
 }
 
-const deleteGroup = async (data, id) => {
+const deleteGroup = async(data, id) => {
     const updateData = await Groups.findOneAndUpdate({ group_owner: new mongoose.Types.ObjectId(id), _id: new mongoose.Types.ObjectId(data.group_id), is_deleted: false }, { $set: { is_deleted: true } }, { new: true }).lean();
+    const obj = {
+        description: 'you delete ' + group.group_name + ' sucessfully',
+        user_id: id
+    }
+    await activityService.createActivity(obj);
     if (updateData) {
         await GroupMember.updateMany({ member_id: new mongoose.Types.ObjectId(id), group_id: new mongoose.Types.ObjectId(data.group_id) }, { $set: { is_friendship: false, is_deleted: true } }, { new: true }).lean();
     }
     return updateData;
 }
 
-const removeFriend = async (data, id) => {
+const removeFriend = async(data, id) => {
     const updateData = await User.findOneAndUpdate({ _id: id }, {
         $pull: { friends: new mongoose.Types.ObjectId(data.user_id) }
     }, { new: true }).lean();
+    const user = await getUserById(data.user_id);
+    const obj = {
+        description: 'you remove  ' + user.name + ' for friends list sucessfully',
+        user_id: id
+    }
+    await activityService.createActivity(obj);
     return updateData;
 }
 
-const takePlan = async (data, id) => {
+const takePlan = async(data, id) => {
     const planValid = await Plans.findOne({ _id: data.plan_id, is_deleted: false }).exec();
-    if(!planValid){
+    if (!planValid) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan not exits in our database');
     }
     const originalDate = new Date(data.modification_date);

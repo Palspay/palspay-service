@@ -5,6 +5,7 @@ const Expanse = require('../models/expanse.model');
 const mongoose = require('mongoose');
 const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
+const activityService = require('./activity.service');
 
 const createExpanse = async(expanseData) => {
     try {
@@ -21,6 +22,11 @@ const createExpanse = async(expanseData) => {
         }
         expanseData['imagesArray'] = imagesArray;
         const expense = new Expanse(expanseData);
+        const obj = {
+            description: 'You added an expense ' + expanseData.description,
+            user_id: expanseData.userId
+        }
+        await activityService.createActivity(obj);
         return await expense.save();
     } catch (error) {
         console.log(error);
@@ -53,7 +59,12 @@ const updateExpanse = async(expanseData) => {
 
 const deleteExpanse = async(expanseData) => {
     try {
-        await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
+        const expanse = await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
+        const obj = {
+            description: 'you delete' + expanse.description + ' expanse sucessfully',
+            user_id: expanseData.userId
+        }
+        await activityService.createActivity(obj);
         return true;
     } catch (error) {
         console.log(error);
@@ -64,7 +75,8 @@ const deleteExpanse = async(expanseData) => {
 const getGroupExpanse = async(userData) => {
     try {
         let { groupId } = userData
-        let agg = [
+        let agg;
+        agg = [
             { $match: { groupId }, },
             {
                 $addFields: {
@@ -110,8 +122,8 @@ const getGroupExpanse = async(userData) => {
                 }
             },
         ];
-        const expanse = await Expanse.aggregate(agg);
 
+        const expanse = await Expanse.aggregate(agg);
         let dataArr = [];
 
         const expanseList = expanse[0].expanseList;
@@ -154,6 +166,7 @@ const getGroupExpanse = async(userData) => {
         // expanse[0].youOwe = resultArray
         return expanse[0];
     } catch (error) {
+        console.log(error, "<<<error")
         throw new ApiError(httpStatus.NOT_FOUND, 'no data found');
     }
 };
@@ -391,7 +404,12 @@ const individualExpanse = async(data) => {
             }
         ];
         const expanse = await Expanse.aggregate(agg);
+
+        let lentAmount = 0,
+            borrowedAmount = 0;
         for await (let item of expanse) {
+            item.you_lent = 0;
+            item.you_borrowed = 0;
             let non_group = [];
 
             // splitEqually
@@ -399,8 +417,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitEqually) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -409,8 +431,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitUnequally) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -419,8 +445,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByPercentage) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -429,8 +459,12 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByShare) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
@@ -440,12 +474,32 @@ const individualExpanse = async(data) => {
                 for await (let per of item.splitByAdjustments) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
+                        if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                            borrowedAmount = parseFloat(per.amount);
+                        }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        lentAmount += parseFloat(per.amount);
                     }
                 }
             }
-            item.non_group_expanse = non_group;
+            item.expanse_details = non_group;
+            if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+                item.you_borrowed = borrowedAmount.toFixed(2);
+            } else {
+                item.you_lent = lentAmount.toFixed(2);
+            }
+            lentAmount = 0, borrowedAmount = 0;
+        }
+        for await (let exp of expanse) {
+            for await (let item of exp.expanse_details) {
+                const data = await User.findOne(item.memberId, { name: 1 }).lean();
+                item.name = data ? data.name : "--";
+            }
+            for await (let obj of exp.addPayer) {
+                const data = await User.findOne(obj.from, { name: 1 }).lean();
+                obj.name = data ? data.name : "--";
+            }
         }
         return expanse;
     } catch (error) {
@@ -453,11 +507,80 @@ const individualExpanse = async(data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
+const getGroupByUser = async(userData) => {
+    try {
+        let agg;
+        agg = [
+            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
+            {
+                $addFields: {
+                    groupIdObjectId: {
+                        $cond: {
+                            if: { $ne: ["$groupId", ""] },
+                            then: { $toObjectId: "$groupId" },
+                            else: "$groupId"
+                        }
+                    }
+                }
+            },
+            { "$lookup": { "from": "groups_members", "localField": "groupIdObjectId", "foreignField": "group_id", "as": "groupsMembers" } },
+            { "$lookup": { "from": "users", "localField": "groupsMembers.member_id", "foreignField": "_id", "as": "membersDetails" }, },
+            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersDetail" }, },
+            { $unwind: { path: "$usersDetail", preserveNullAndEmptyArrays: true } },
+            { "$lookup": { "from": "groups", "localField": "groupIdObjectId", "foreignField": "_id", "as": "groupsdetails" } },
+            { $unwind: { path: "$groupsdetails", preserveNullAndEmptyArrays: true } },
+            {
+                $group: {
+                    _id: { groupId: "$groupId" },
+                    groupId: { $first: "$groupId" },
+                    group_name: { $first: "$groupsdetails.group_name" },
+                    expanseList: {
+                        $push: {
+                            _id: "$_id",
+                            total: "$totalExpanse",
+                            groupId: "$groupId",
+                            addedBy: "$usersDetail.name",
+                            description: {
+                                $cond: { if: "$description", then: "$description", else: "" }
+                            },
+                            createdAt: "$createdAt",
+                        }
+                    },
+                    groupsMembers: { $first: "$membersDetails._id" },
+                    totalExpanse: { $sum: "$totalExpanse" },
+                },
+            },
+            // {
+            //     $addFields: {
+            //         expanseList: { $slice: ["$expanseList", { $subtract: [{ $size: "$expanseList" }, 1] }, 1] },
+            //         recentExpanse: { $arrayElemAt: ["$expanseList", 0] },
+            //     }
+            // },
+            {
+                "$project": {
+                    _id: 0,
+                    groupId: 1,
+                    group_name: 1,
+                    expanseList: 1,
+                    groupsMembers: 1,
+                    totalExpanse: 1,
+                }
+            },
+        ];
+        const expanse = await Expanse.aggregate(agg);
+        return expanse;
+    } catch (error) {
+        console.log(error, "<<error")
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+};
+
 module.exports = {
     createExpanse,
     updateExpanse,
     getGroupExpanse,
     fetchExpanse,
     deleteExpanse,
-    individualExpanse
+    individualExpanse,
+    getGroupByUser
 };
