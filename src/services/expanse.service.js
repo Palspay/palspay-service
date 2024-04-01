@@ -105,7 +105,8 @@ const getGroupExpanse = async(userData) => {
                             description: {
                                 $cond: { if: "$description", then: "$description", else: "" }
                             },
-                            addPayer: "$addPayer"
+                            addPayer: "$addPayer",
+                            createdAt: "$createdAt",
                         }
                     },
                     groupsMembers: { $first: "$membersDetails._id" },
@@ -120,6 +121,11 @@ const getGroupExpanse = async(userData) => {
                     total: 1,
                     groupsMembersCount: { $size: "$groupsMembers" },
                 }
+            },
+            {
+                $sort: {
+                    createdAt: -1,
+                },
             },
         ];
 
@@ -401,7 +407,12 @@ const individualExpanse = async(data) => {
                     currency: 1,
                     createdAt: 1
                 }
-            }
+            },
+            {
+                $sort: {
+                    createdAt: -1,
+                },
+            },
         ];
         const expanse = await Expanse.aggregate(agg);
 
