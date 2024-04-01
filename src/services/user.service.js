@@ -277,7 +277,6 @@ const deleteGroup = async (data, id) => {
 }
 
 const removeFriend = async (data, id) => {
-    console.log(data.user_id);
     const updateData = await User.findOneAndUpdate({ _id: id }, {
         $pull: { friends: new mongoose.Types.ObjectId(data.user_id) }
     }, { new: true }).lean();
