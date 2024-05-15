@@ -1,5 +1,5 @@
-const Joi = require('joi');
-const { password, passcode } = require('./custom.validations');
+import Joi from 'joi';
+import { password, passcode } from './custom.validations.js';
 
 const addfriends = {
     body: Joi.object({
@@ -57,7 +57,7 @@ const takePlan = {
     }),
 }
 
-module.exports = {
+export default {
     addfriends,
     createGroup,
     createExpanse,

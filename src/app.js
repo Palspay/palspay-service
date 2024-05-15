@@ -1,18 +1,16 @@
-const express = require('express');
-const helmet = require('helmet');
-const xss = require('xss-clean');
-const mongoSanitize = require('express-mongo-sanitize');
-const compression = require('compression');
-const cors = require('cors');
-const httpStatus = require('http-status');
-const config = require('./config/config');
-const morgan = require('./config/morgan');
-const routes = require('./routes/v1');
-const { errorConverter, errorHandler } = require('./middlewares/error');
-const ApiError = require('./utills/ApiError');
-const path = require('path');
-const mime = require('mime');
-const fs = require('fs');
+import express from 'express';
+import helmet from 'helmet';
+import xss from 'xss-clean';
+import mongoSanitize from 'express-mongo-sanitize';
+import compression from 'compression';
+import cors from 'cors';
+import httpStatus from 'http-status';
+import config from './config/config.js';
+import morgan from './config/morgan.js';
+import routes from './routes/v1/index.js';
+import { errorConverter, errorHandler } from './middlewares/error.js';
+import ApiError from './utills/ApiError.js';
+import path from 'path';
 
 const app = express();
 
@@ -61,4 +59,4 @@ app.use(errorConverter);
 
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

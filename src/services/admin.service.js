@@ -1,7 +1,7 @@
-const httpStatus = require('http-status');
-const ApiError = require('../utills/ApiError');
-const mongoose = require('mongoose');
-const Plans=require('./../models/plan.model');
+import httpStatus from 'http-status';
+import ApiError from '../utills/ApiError';
+import mongoose from 'mongoose';
+import Plans from './../models/plan.model';
 
 
 const createPlans = async (groupData) => {
@@ -21,6 +21,6 @@ const createPlans = async (groupData) => {
 
 }
 
-module.exports = {
+export default {
     createPlans
 };

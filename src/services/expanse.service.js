@@ -1,11 +1,11 @@
-const httpStatus = require('http-status');
-const ApiError = require('../utills/ApiError');
-const User = require('../models/user.model');
-const Expanse = require('../models/expanse.model');
-const mongoose = require('mongoose');
-const GroupMember = require('../models/group-members.model');
+import httpStatus from 'http-status';
+import ApiError from '../utills/ApiError';
+import User from '../models/user.model';
+import Expanse from '../models/expanse.model';
+import mongoose from 'mongoose';
+import GroupMember from '../models/group-members.model';
 const { ObjectId } = mongoose.Types;
-const activityService = require('./activity.service');
+import activityService from './activity.service';
 
 const createExpanse = async(expanseData) => {
     try {
@@ -586,7 +586,7 @@ const getGroupByUser = async(userData) => {
     }
 };
 
-module.exports = {
+export default {
     createExpanse,
     updateExpanse,
     getGroupExpanse,

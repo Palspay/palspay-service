@@ -2,6 +2,7 @@
   "name": "palspay",
   "version": "1.0.0",
   "description": "This is a backend app for palspay",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon src/index.js",
@@ -31,6 +32,7 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.22",
+    "phonepesdk-web": "^1.0.7",
     "timezone-support": "^3.1.0",
     "uuid": "^9.0.0",
     "validator": "^13.9.0",

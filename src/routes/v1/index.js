@@ -1,31 +1,31 @@
-const express = require('express');
-const authRoute = require('./auth.routes');
-const userRoute = require('./user.routes');
-const expaseRoute = require('./expanses.routes');
-const adminRoutes=require('./admin.routes');
-const paymentRoutes=require('./payment.routes');
+import express from 'express';
+import authRoute from './auth.routes.js';
+import userRoute from './user.routes.js';
+import expaseRoute from './expanses.routes.js';
+import adminRoutes from './admin.routes.js';
+import paymentRoutes from './payment.routes.js';
 
 const router = express.Router();
 const defaultRoutes = [{
-        path: '/auth',
-        route: authRoute,
-    },
-    {
-        path: '/users',
-        route: userRoute,
-    },
-    {
-        path: '/expanses',
-        route: expaseRoute,
-    },
-    {
-        path: '/admin',
-        route: adminRoutes,
-    },
-    {
-        path: '/payment',
-        route: paymentRoutes,
-    },
+    path: '/auth',
+    route: authRoute,
+},
+{
+    path: '/users',
+    route: userRoute,
+},
+{
+    path: '/expanses',
+    route: expaseRoute,
+},
+{
+    path: '/admin',
+    route: adminRoutes,
+},
+{
+    path: '/payment',
+    route: paymentRoutes,
+},
 ];
 
 defaultRoutes.forEach((route) => {
@@ -33,4 +33,4 @@ defaultRoutes.forEach((route) => {
 });
 
 
-module.exports = router;
+export default router;

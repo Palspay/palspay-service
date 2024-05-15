@@ -1,10 +1,10 @@
-const express = require('express');
-const validate = require('../../middlewares/validate');
-const adminValidation = require('../../validations/admin.validation');
-const adminController = require('../../controllers/admin.controller');
-const {authAdmin} = require('../../middlewares/auth');
+import express from 'express';
+import validate from '../../middlewares/validate.js';
+import adminValidation from '../../validations/admin.validation.js';
+import adminController from '../../controllers/admin.controller.js';
+import { authAdmin } from '../../middlewares/auth.js';
 const router = express.Router();
 
 router.post('/createplan', authAdmin,  validate(adminValidation.createPlans),adminController.createPlans);
 
-module.exports = router;
+export default router;

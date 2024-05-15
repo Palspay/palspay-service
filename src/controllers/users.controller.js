@@ -1,11 +1,13 @@
-const httpStatus = require('http-status');
-const catchAsync = require('./../utills/catchAsync');
-const { userService } = require('./../services');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+import httpStatus from 'http-status';
+import catchAsync from './../utills/catchAsync.js';
+import { userService } from './../services/index.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
 // const { use } = require('../routes/v1/user.routes');
-const activityService=require('./../services/activity.service');
+import activityService from './../services/activity.service.js';
+
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -151,7 +153,8 @@ const getActivity = catchAsync(async (req, res) => {
     const activity = await activityService.getActivity(req.userId);
     res.status(httpStatus.OK).send({ message: 'Data Loading', data: { activity } });
 })
-module.exports = {
+
+export default {
     addFriends,
     getFriends,
     createGroups,

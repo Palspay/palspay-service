@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const expanseSchema = mongoose.Schema({
 
@@ -149,4 +149,4 @@ expanseSchema.set('versionKey', false);
  */
 const Expanse = mongoose.model('expanse', expanseSchema);
 
-module.exports = Expanse;
+export default Expanse;

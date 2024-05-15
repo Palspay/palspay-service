@@ -1,6 +1,6 @@
-const httpStatus = require('http-status');
-const catchAsync = require('./../utills/catchAsync');
-const { authService } = require('./../services');
+import httpStatus from 'http-status';
+import catchAsync from './../utills/catchAsync.js';
+import { authService } from './../services/index.js';
 
 const register = catchAsync(async(req, res) => {
     const data = await authService.createUser(req.body);
@@ -48,7 +48,7 @@ const createNewPassword = catchAsync(async(req, res) => { //Create a new passwor
 });
 
 
-module.exports = {
+export default {
     register,
     login,
     verifyOtp,

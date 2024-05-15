@@ -1,5 +1,5 @@
-const Joi = require('joi');
-const { password, otp_length } = require('./custom.validations');
+import Joi from 'joi';
+import { password, otp_length } from './custom.validations.js';
 
 const register = {
     body: Joi.object().keys({
@@ -36,7 +36,7 @@ const createPassword = {
     }),
 }
 
-module.exports = {
+export default {
     register,
     login,
     verifyOtp,

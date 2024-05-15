@@ -1,12 +1,12 @@
-const httpStatus = require('http-status');
-const ApiError = require('../utills/ApiError');
-const User = require('../models/user.model');
-const userService = require('./user.service');
-const config = require('../config/config');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const { getCurrentDateTime } = require('./../constants/constant');
-const activityService=require('./activity.service');
+import httpStatus from 'http-status';
+import ApiError from '../utills/ApiError';
+import User from '../models/user.model';
+import userService from './user.service';
+import config from '../config/config';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { getCurrentDateTime } from './../constants/constant';
+import activityService from './activity.service';
 /**
  * Create a user
  * @param {Object} userBody
@@ -112,7 +112,7 @@ const createNewPassword = async (data) => {
 }
 
 
-module.exports = {
+export default {
     createUser,
     generateToken,
     loginUserWithEmailAndPassword,

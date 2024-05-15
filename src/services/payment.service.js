@@ -1,33 +1,34 @@
-const httpStatus = require('http-status');
-const ApiError = require('../utills/ApiError');
-const mongoose = require('mongoose');
-const Transactions = require('../models/transaction.model');
-const crypto = require('crypto');
-const axios = require('axios');
+import httpStatus from 'http-status';
+import ApiError from '../utills/ApiError';
+import mongoose from 'mongoose';
+import Transactions from '../models/transaction.model';
+import crypto from 'crypto';
+import axios from 'axios';
+import phonepe from 'phonepesdk-web';
 const paymentInitated = async (paymentData) => {
     try {
         const merchantTransactionId = 'M' + Date.now();
-        const { price, phone, name, paidTo } = paymentData;
+        const { price, phone, name, paidTo, userId } = paymentData;
         const data = {
             merchantId: process.env.MERCHANT_ID,
             merchantTransactionId: merchantTransactionId,
-            merchantUserId: 'MUID' + paymentData.userId,
+            merchantUserId: 'MUID' + userId,
             name: name,
             amount: price * 100,
             redirectUrl: `http://localhost:6000/v1/payment/checkStatus?txnId=${merchantTransactionId}`,
             redirectMode: 'POST',
-            mobileNumber: phone,
             paymentInstrument: {
-                type: 'PAY_PAGE'
+                type: "PAY_PAGE"
             }
         };
+
         const payload = JSON.stringify(data);
         const payloadMain = Buffer.from(payload).toString('base64');
         const keyIndex = 1;
         const string = payloadMain + '/pg/v1/pay' + process.env.SALT_KEY;
         const sha256 = crypto.createHash('sha256').update(string).digest('hex');
         const checksum = sha256 + '###' + keyIndex;
-        const prod_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay"
+        const prod_URL = process.env.PHONEPE_URL + "pg/v1/pay"
         const options = {
             method: 'POST',
             url: prod_URL,
@@ -41,17 +42,20 @@ const paymentInitated = async (paymentData) => {
             }
         };
 
-        const urlData = await axios.request(options);
-        const paymentInfo = {
-            userId: paymentData.userId,
-            paidTo: paidTo,
-            amount: price,
-            status: 'Pending',
-            merchantTransactionId: urlData.data.data.merchantTransactionId
-        }
+        phonepe.init({merchantId: process.env.MERCHANT_ID, enableLogging: true, environment: 'SANDBOX'}).then(result => console.log(result));
+
+
+        // const urlData = await axios.request(options);
+        // const paymentInfo = {
+        //     userId: paymentData.userId,
+        //     paidTo: paidTo,
+        //     amount: price,
+        //     status: 'Pending',
+        //     merchantTransactionId: urlData.data.data.merchantTransactionId
+        // }
         const tr = new Transactions(paymentInfo);
-        await tr.save(paymentInfo);
-        return urlData.data.data.instrumentResponse.redirectInfo;
+        // await tr.save(paymentInfo);
+        return 'urlData.data.data.instrumentResponse.redirectInfo';
 
     } catch (error) {
         console.log(error);
@@ -95,7 +99,7 @@ const checkStatus = async (body) => {
 
 };
 
-module.exports = {
+export default {
     paymentInitated,
     checkStatus
 };

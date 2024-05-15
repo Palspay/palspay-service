@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const createPlans = {
     body: Joi.object().keys({
@@ -10,6 +10,6 @@ const createPlans = {
 };
 
 
-module.exports = {
+export default {
     createPlans
 };

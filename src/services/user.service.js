@@ -69,11 +69,6 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
-async function areFriends(userId) {
-    const user1 = await User.findOne({ _id: userId }).populate('friends').exec();
-    const user1Friends = user1.friends.map(friend => friend._id.toString());
-    return user1Friends;
-}
 
 const addFriends = async(userData) => {
     try {
@@ -350,7 +345,7 @@ const takePlan = async(data, id) => {
     return updateData
 }
 
-module.exports = {
+export default {
     getUserByEmail,
     getUserById,
     addFriends,

@@ -1,11 +1,10 @@
-const httpStatus = require('http-status');
-const catchAsync = require('./../utills/catchAsync');
-const { paymentService } = require('./../services');
+import httpStatus from 'http-status';
+import catchAsync from './../utills/catchAsync.js';
+import { paymentService } from './../services/index.js';
 
 const paymentInitated = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
-        userId: req.userId,
         currentDate: req.currentDate
     };
     const data=await paymentService.paymentInitated(mergedBody);
@@ -26,7 +25,7 @@ const checkStatus = catchAsync(async (req, res) => {
 });
 
 
-module.exports = {
+export default {
     paymentInitated,
     checkStatus
 };

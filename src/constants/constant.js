@@ -1,4 +1,4 @@
-async function getCurrentDateTime(timezone='Asia/Kolkata') {
+export async function getCurrentDateTime(timezone='Asia/Kolkata') {
     const options = {
         timeZone: timezone,
         year: 'numeric',
@@ -11,7 +11,3 @@ async function getCurrentDateTime(timezone='Asia/Kolkata') {
     const currentDate = new Date().toLocaleString('en-US', options);
     return Date.parse(currentDate);
 }
-
-module.exports = {
-    getCurrentDateTime
-};

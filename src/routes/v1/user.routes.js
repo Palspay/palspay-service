@@ -1,12 +1,12 @@
-const express = require('express');
-const validate = require('../../middlewares/validate');
-const useralidation = require('../../validations/user.validations');
-const userController = require('../../controllers/users.controller');
-const {auth} = require('../../middlewares/auth');
+import express from 'express';
+import validate from '../../middlewares/validate.js';
+import useralidation from '../../validations/user.validations.js';
+import userController from '../../controllers/users.controller.js';
+import { auth } from '../../middlewares/auth.js';
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-const mime = require('mime');
+import path from 'path';
+import fs from 'fs';
+import mime from 'mime';
 router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
 router.get('/friends', auth, userController.getFriends);
 router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
@@ -49,4 +49,4 @@ router.get('/uploads/:imageName', (req, res) => {
     }
   });
 });
-module.exports = router;
+export default router;

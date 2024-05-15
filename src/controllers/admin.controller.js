@@ -1,6 +1,6 @@
-const httpStatus = require('http-status');
-const catchAsync = require('./../utills/catchAsync');
-const { adminService } = require('./../services');
+import httpStatus from 'http-status';
+import catchAsync from './../utills/catchAsync.js';
+import { adminService } from './../services/index.js';
 
 const createPlans = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -13,6 +13,6 @@ const createPlans = catchAsync(async (req, res) => {
 });
 
 
-module.exports = {
+export default {
     createPlans
 };

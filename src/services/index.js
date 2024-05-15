@@ -1,12 +1,6 @@
-authService = require('./auth.service');
-userService = require('./user.service');
-userExpanse = require('./expanse.service');
-adminService=require('./admin.service');
-paymentService=require('./payment.service')
-module.exports = {
-    authService,
-    userService,
-    userExpanse,
-    adminService,
-    paymentService
-};
+export const authService = require('./auth.service');
+export const userService = require('./user.service');
+export const userExpanse = require('./expanse.service');
+export const adminService = require('./admin.service');
+export const paymentService = require('./payment.service')
+

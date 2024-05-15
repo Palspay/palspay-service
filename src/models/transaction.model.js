@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const transactionSchema = mongoose.Schema(
     {
@@ -37,4 +37,4 @@ transactionSchema.set('versionKey', false);
  */
 const Transactions = mongoose.model('transactions', transactionSchema);
 
-module.exports = Transactions;
+export default Transactions;

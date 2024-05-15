@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const activitySchema = mongoose.Schema(
     {
@@ -33,4 +33,4 @@ activitySchema.set('versionKey', false);
  */
 const Activity = mongoose.model('activity', activitySchema);
 
-module.exports = Activity;
+export default Activity;

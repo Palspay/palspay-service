@@ -1,7 +1,7 @@
-const httpStatus = require('http-status');
-const catchAsync = require('../utills/catchAsync');
-const { userExpanse } = require('../services');
-const mongoose = require('mongoose');
+import httpStatus from 'http-status';
+import catchAsync from '../utills/catchAsync.js';
+import { userExpanse } from '../services/index.js';
+import mongoose from 'mongoose';
 const { ObjectId } = mongoose.Types;
 
 const addExpanse = catchAsync(async(req, res) => {
@@ -193,7 +193,8 @@ const individualExpanse = catchAsync(async(req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data: [] });
     }
 });
-module.exports = {
+
+export default {
     addExpanse,
     updateExpanse,
     getExpanse,

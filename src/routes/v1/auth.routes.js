@@ -1,7 +1,7 @@
-const express = require('express');
-const validate = require('../../middlewares/validate');
-const authValidation = require('../../validations/auth.validations');
-const authController = require('../../controllers/auth.controller');
+import express from 'express';
+import validate from '../../middlewares/validate.js';
+import authValidation from '../../validations/auth.validations.js';
+import authController from '../../controllers/auth.controller.js';
 
 const router = express.Router();
 
@@ -12,4 +12,4 @@ router.post('/verify-user', validate(authValidation.verifyUser), authController.
 router.post('/forgot-password', validate(authValidation.createPassword), authController.createNewPassword);
 
 
-module.exports = router;
+export default router;

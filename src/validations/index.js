@@ -1,1 +1,1 @@
-module.exports.authValidation = require('./auth.validation');
+export const authValidation = require('./auth.validation');

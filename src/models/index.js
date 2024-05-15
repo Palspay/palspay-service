@@ -1,6 +1,6 @@
-module.exports.User = require('./user.model');
-module.exports.Groups = require('./group.model');
-module.exports.GroupsMember = require('./group-members.model');
-module.exports.Transactions = require('./transaction.model');
+export const User = require('./user.model');
+export const Groups = require('./group.model');
+export const GroupsMember = require('./group-members.model');
+export const Transactions = require('./transaction.model');
 
 
