@@ -92,7 +92,7 @@ const addFriends = async(userData) => {
                     promises.push(User.findByIdAndUpdate(isExits._id, { $addToSet: { friends: userData.userId } }));
                     activityArray.push(
                         Activity.create({
-                            description: 'you addedd ' + isExits.name + ' to the palspay app',
+                            description: 'you added ' + isExits.name + ' to the palspay app',
                             user_id: userData.userId
                         })
                     );
@@ -120,7 +120,7 @@ const addFriends = async(userData) => {
                         })
                         activityArray.push(
                             Activity.create({
-                                description: 'you addedd ' + isExits.name + ' to the ' + group.group_name,
+                                description: 'you added ' + isExits.name + ' to the ' + group.group_name,
                                 user_id: userData.userId
                             })
                         );
@@ -294,7 +294,7 @@ const editProfile = async(data, id) => {
 
 
 const leaveGroup = async(data, id) => {
-    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false, is_deleted: true, member_id: null } }, { new: true }).lean();
+    const updateData = await GroupMember.updateMany({ member_id: id, group_id: new mongoose.Types.ObjectId(data.group_id), is_friendship: true }, { $set: { is_friendship: false } }, { new: true }).lean();
     const group = await Groups.findOne({ _id: new mongoose.Types.ObjectId(data.group_id) }).exec();
     const obj = {
         description: 'you leave ' + group.group_name + ' sucessfully',
