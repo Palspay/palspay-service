@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 // const { use } = require('../routes/v1/user.routes');
-const activityService=require('./../services/activity.service');
+const activityService = require('./../services/activity.service');
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -111,9 +111,9 @@ const leaveGroup = catchAsync(async (req, res) => {
         group_id,
         modification_date: req.currentDate
     };
-    
-    if(!!!(await isGroupMember(req.userId, group_id))) {
-        res.status(httpStatus.FORBIDDEN).send({ message: 'User is not part of this group'});
+
+    if (!!!(await isGroupMember(req.userId, group_id))) {
+        res.status(httpStatus.FORBIDDEN).send({ message: 'User is not part of this group' });
         return;
     }
     await userService.leaveGroup(mergedBody, req.userId);
