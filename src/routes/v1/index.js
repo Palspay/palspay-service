@@ -23,7 +23,7 @@ const defaultRoutes = [{
         route: adminRoutes,
     },
     {
-        path: '/payment',
+        path: '/payments',
         route: paymentRoutes,
     },
 ];

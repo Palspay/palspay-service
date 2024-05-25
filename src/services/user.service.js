@@ -209,7 +209,7 @@ const createGroups = async (groupData) => {
 const getMembersByGroupId = async (userData) => {
     try {
         const members = await GroupMember.aggregate([{
-            $match: { group_id: new mongoose.Types.ObjectId(userData.group_id), is_friendship: true }
+            $match: { group_id: new mongoose.Types.ObjectId(userData.groupId), is_friendship: true }
         },
         {
             $lookup: {

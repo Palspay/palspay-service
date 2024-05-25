@@ -7,11 +7,11 @@ const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 const activityService = require('./activity.service');
 
-const createExpanse = async(expanseData) => {
+const createExpanse = async (expanseData) => {
     try {
         expanseData['userId'] = expanseData.userId;
         var imagesArray = [];
-        if (expanseData.imageArray.length > 0) {
+        if (expanseData?.imageArray?.length > 0) {
             for await (let item of expanseData.imageArray) {
                 imagesArray.push({
                     imgS3Key: 'expanseImages/' + item.imgName,
@@ -33,7 +33,7 @@ const createExpanse = async(expanseData) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const updateExpanse = async(expanseData) => {
+const updateExpanse = async (expanseData) => {
     try {
         expanseData['userId'] = expanseData.userId;
         var imagesArray = [];
@@ -57,7 +57,7 @@ const updateExpanse = async(expanseData) => {
     }
 };
 
-const deleteExpanse = async(expanseData) => {
+const deleteExpanse = async (expanseData) => {
     try {
         const expanse = await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
         const obj = {
@@ -72,7 +72,7 @@ const deleteExpanse = async(expanseData) => {
     }
 };
 
-const getGroupExpanse = async(userData) => {
+const getGroupExpanse = async (userData) => {
     try {
         let { groupId } = userData
         let agg;
@@ -176,7 +176,7 @@ const getGroupExpanse = async(userData) => {
         throw new ApiError(httpStatus.NOT_FOUND, 'no data found');
     }
 };
-const fetchExpanse = async(data) => {
+const fetchExpanse = async (data) => {
     try {
         let agg = [
             { $match: { _id: new ObjectId(data.expanseId), is_deleted: false } },
@@ -324,11 +324,11 @@ const fetchExpanse = async(data) => {
                 item.you_lent = lentAmount.toFixed(2);
             }
         }
-        for await (let item of expanse[0].expanse_details) {
+        for await (let item of expanse[0]?.expanse_details) {
             const data = await User.findOne(item.memberId, { name: 1 }).lean();
             item.name = data ? data.name : "--";
         }
-        for await (let item of expanse[0].addPayer) {
+        for await (let item of expanse[0]?.addPayer) {
             const data = await User.findOne(item.from, { name: 1 }).lean();
             item.name = data ? data.name : "--";
         }
@@ -338,81 +338,81 @@ const fetchExpanse = async(data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const individualExpanse = async(data) => {
+const individualExpanse = async (data) => {
     try {
         let agg = [{
-                $match: {
-                    groupId: { $eq: "" },
-                    is_deleted: false,
-                    // userId: data.userId,
-                    $or: [
-                        // { "addPayer.from": data.userId },
-                        { "members.memberId": data.userId },
-                    ]
-                }
-            },
-            { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
-            { $unwind: "$usersData" },
-            {
-                $addFields: {
-                    groupIdObjectId: {
-                        $cond: {
-                            if: { $ne: ["$groupId", ""] }, // Check if groupId is not blank
-                            then: { $toObjectId: "$groupId" }, // Convert groupId to ObjectId
-                            else: "$groupId" // Keep groupId as is
-                        }
-                    },
-                }
-            },
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "splitEqually.memberId",
-                    foreignField: "_id",
-                    as: "splitEquallyUsers"
-                }
-            },
-            {
-                $lookup: {
-                    from: "groups",
-                    localField: "groupIdObjectId",
-                    foreignField: "_id",
-                    as: "groupInfo"
-                }
-            },
-            { $unwind: { path: "$groupInfo", preserveNullAndEmptyArrays: true } },
-            {
-                "$project": {
-                    groupId: 1,
-                    expanseAddedBy: "$usersData.name",
-                    groupName: {
-                        $cond: {
-                            if: { $ne: ["$groupId", ""] },
-                            then: "$groupInfo.group_name",
-                            else: ""
-                        }
-                    },
-                    userId: 1,
-                    totalExpanse: 1,
-                    description: 1,
-                    addPayer: 1,
-                    imagesArray: 1,
-                    splitEqually: 1,
-                    splitUnequally: 1,
-                    splitByPercentage: 1,
-                    splitByShare: 1,
-                    splitByAdjustments: 1,
-                    is_deleted: 1,
-                    members: 1,
-                    currency: 1,
-                    createdAt: 1
-                }
-            },
-            {
-                $sort: {
-                    createdAt: -1,
+            $match: {
+                groupId: { $eq: "" },
+                is_deleted: false,
+                // userId: data.userId,
+                $or: [
+                    // { "addPayer.from": data.userId },
+                    { "members.memberId": data.userId },
+                ]
+            }
+        },
+        { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
+        { $unwind: "$usersData" },
+        {
+            $addFields: {
+                groupIdObjectId: {
+                    $cond: {
+                        if: { $ne: ["$groupId", ""] }, // Check if groupId is not blank
+                        then: { $toObjectId: "$groupId" }, // Convert groupId to ObjectId
+                        else: "$groupId" // Keep groupId as is
+                    }
                 },
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "splitEqually.memberId",
+                foreignField: "_id",
+                as: "splitEquallyUsers"
+            }
+        },
+        {
+            $lookup: {
+                from: "groups",
+                localField: "groupIdObjectId",
+                foreignField: "_id",
+                as: "groupInfo"
+            }
+        },
+        { $unwind: { path: "$groupInfo", preserveNullAndEmptyArrays: true } },
+        {
+            "$project": {
+                groupId: 1,
+                expanseAddedBy: "$usersData.name",
+                groupName: {
+                    $cond: {
+                        if: { $ne: ["$groupId", ""] },
+                        then: "$groupInfo.group_name",
+                        else: ""
+                    }
+                },
+                userId: 1,
+                totalExpanse: 1,
+                description: 1,
+                addPayer: 1,
+                imagesArray: 1,
+                splitEqually: 1,
+                splitUnequally: 1,
+                splitByPercentage: 1,
+                splitByShare: 1,
+                splitByAdjustments: 1,
+                is_deleted: 1,
+                members: 1,
+                currency: 1,
+                createdAt: 1
+            }
+        },
+        {
+            $sort: {
+                createdAt: -1,
             },
+        },
         ];
         const expanse = await Expanse.aggregate(agg);
 
@@ -518,7 +518,7 @@ const individualExpanse = async(data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const getGroupByUser = async(userData) => {
+const getGroupByUser = async (userData) => {
     try {
         let agg;
         agg = [
