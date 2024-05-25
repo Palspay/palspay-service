@@ -8,14 +8,14 @@ const expanseSchema = mongoose.Schema({
         type: Number,
         required: 0
     },
-    you_lent: {
-        type: Number,
-        required: 0
-    },
-    you_owe: {
-        type: Number,
-        required: 0
-    },
+    // you_lent: {
+    //     type: Number,
+    //     required: 0
+    // },
+    // you_owe: {
+    //     type: Number,
+    //     required: 0
+    // },
     description: {
         type: String,
         default: ''
