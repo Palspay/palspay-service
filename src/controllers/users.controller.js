@@ -38,6 +38,7 @@ const getMembersByGroupId = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
+        groupId: req.params.group_id, 
         currentDate: req.currentDate
     };
     const groupsDetails = await userService.getMembersByGroupId(mergedBody);

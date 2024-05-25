@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const PaymentStatus = {
+    PAYMENT_INITIATED: 'PAYMENT_INITIATED',
+    PAYIN_FAILED: 'PAYIN_FAILED',
+    PAYIN_SUCCESS: 'PAYIN_SUCCESS',
+    PAYOUT_INITITATED: 'PAYOUT_INITITATED',
+    PAYOUT_FAILED: 'PAYOUT_FAILED',
+    PAYMENT_COMPLETED: 'PAYMENT_COMPLETED',
+}
 const transactionSchema = mongoose.Schema(
     {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
@@ -37,4 +45,4 @@ transactionSchema.set('versionKey', false);
  */
 const Transactions = mongoose.model('transactions', transactionSchema);
 
-module.exports = Transactions;
+module.exports = { Transactions, PaymentStatus };

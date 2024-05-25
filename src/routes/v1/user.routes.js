@@ -11,7 +11,7 @@ router.post('/addfriends', auth, validate(useralidation.addfriends), userControl
 router.get('/friends', auth, userController.getFriends);
 router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
 
-router.get('/group-details', auth, validate(useralidation.groupDetailsByGroupId), userController.getMembersByGroupId);
+router.get('/group-details/:group_id', auth, userController.getMembersByGroupId);
 router.get('/mygroups', auth, userController.getMyGroups);
 router.post('/setpasscode', auth, validate(useralidation.setPasscode), userController.setPasscode);
 router.post('/edit-profile', auth, validate(useralidation.profile), userController.editProfile);

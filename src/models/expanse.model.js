@@ -8,6 +8,14 @@ const expanseSchema = mongoose.Schema({
         type: Number,
         required: 0
     },
+    you_lent: {
+        type: Number,
+        required: 0
+    },
+    you_owe: {
+        type: Number,
+        required: 0
+    },
     description: {
         type: String,
         default: ''
@@ -135,7 +143,7 @@ const expanseSchema = mongoose.Schema({
     is_deleted: {
         type: Boolean,
         default: false
-    }
+    },
 }, {
     timestamps: true
 });
