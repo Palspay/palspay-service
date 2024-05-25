@@ -195,7 +195,14 @@ const createGroups = async (groupData) => {
             user_id: groupData.userId
         }
         await activityService.createActivity(obj);
-        return await group.save();
+        const createdGroup = await group.save();
+        await GroupMember.create({
+            group_id: createdGroup._id,
+            member_id: groupData.userId,
+            created_by: groupData.userId,
+            creation_date: groupData.usecurrentDaterId,
+        })
+        return createdGroup;
     } catch (error) {
         if (error instanceof ApiError) {
             throw error; // Re-throw the ApiError
