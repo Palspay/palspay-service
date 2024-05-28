@@ -3,7 +3,7 @@ const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 
-// let server;
+let server;
 // const password = encodeURIComponent("A31401puri");
 // const connectionString = `mongodb+srv://thepalspayapp:${password}@palspay.aqaz2lz.mongodb.net/?retryWrites=true&w=majority`;
 

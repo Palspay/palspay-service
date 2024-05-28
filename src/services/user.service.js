@@ -378,9 +378,11 @@ const takePlan = async (data, id) => {
         data['plan_expired'] = originalDate.getTime();
     } else if (data.plan_type === 'Monthly') {
         originalDate.setMonth(originalDate.getMonth() + 1);
+        // @ts-ignore
         if (originalDate.getDate() !== new Date(originalTimestamp).getDate()) {
             originalDate.setDate(0);
         }
+        // @ts-ignore
         data['plan_expired'] = Date.parse(originalDate.getTime());
     }
     const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();

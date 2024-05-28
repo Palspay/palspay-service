@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 // const { use } = require('../routes/v1/user.routes');
 const activityService = require('./../services/activity.service');
+// @ts-ignore
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {

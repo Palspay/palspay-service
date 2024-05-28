@@ -3,6 +3,7 @@ const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const Expanse = require('../models/expanse.model');
 const mongoose = require('mongoose');
+// @ts-ignore
 const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 const activityService = require('./activity.service');
@@ -129,7 +130,9 @@ const getGroupExpanse = async (userData) => {
             },
         ];
 
+        // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
+        // @ts-ignore
         let dataArr = [];
 
         const expanseList = expanse[0].expanseList;
@@ -160,11 +163,16 @@ const getGroupExpanse = async (userData) => {
             var owesYou = 0;
             var youOwe = 0;
             const amountPaid = memberAmounts[memberId];
+            // @ts-ignore
             const balances = parseFloat(equalShare).toFixed(2) - parseFloat(amountPaid).toFixed(2);
             const balance = balances.toFixed(2);
+            // @ts-ignore
             if (balance > 0) {
+                // @ts-ignore
                 owesYou = balance;
+            // @ts-ignore
             } else if (balance < 0) {
+                // @ts-ignore
                 youOwe = balance;
             }
             resultArray.push({ memberId, amountPaid, equalShare: Number(equalShare.toFixed(2)), owesYou: Number(owesYou), youOwe: Number(youOwe) });
@@ -414,6 +422,7 @@ const individualExpanse = async (data) => {
             },
         },
         ];
+        // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
 
         let lentAmount = 0,

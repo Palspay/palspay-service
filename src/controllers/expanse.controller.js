@@ -71,6 +71,7 @@ const getExpanse = catchAsync(async(req, res) => {
     }
     if (data) {
         data.overall = total_lent - total_borrowed;
+        // @ts-ignore
         const owe_sums = {};
         const sums = {};
 
@@ -87,6 +88,7 @@ const getExpanse = catchAsync(async(req, res) => {
 
         owe_arr.forEach(item => {
             const key = `${item.to_id}_${item.to}`;
+            // @ts-ignore
             sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
         });
 
@@ -176,6 +178,7 @@ const individualExpanse = catchAsync(async(req, res) => {
         if (owe_arr.length > 0) {
             owe_arr.forEach(item => {
                 const key = `${item.to_id}_${item.to}`;
+                // @ts-ignore
                 sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
             });
 

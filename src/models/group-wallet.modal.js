@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const groupWalletSchema = mongoose.Schema({
+const groupWalletSchema = new mongoose.Schema({
     group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'group' },
     balance: { type: Number, default: 0 }, // This value is in paisa, multiple by 100 to get in rupee
     transactions: [{
@@ -14,9 +14,9 @@ const groupWalletSchema = mongoose.Schema({
 groupWalletSchema.set('versionKey', false);
 
 
-/**
- * @typedef GroupWallet
- */
+// /**
+//  * @typedef GroupWallet
+//  */
 const GroupWallet = mongoose.model('group_wallet', groupWalletSchema);
 
 module.exports = GroupWallet;

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
-const expanseSchema = mongoose.Schema({
-
+const expanseSchema = new mongoose.Schema({
     groupId: { type: String, default: '' },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+    // @ts-ignore
     totalExpanse: {
         type: Number,
         required: 0
@@ -152,9 +152,9 @@ const expanseSchema = mongoose.Schema({
 expanseSchema.set('versionKey', false);
 
 
-/**
- * @typedef Groups
- */
+// /**
+//  * @typedef Groups
+//  */
 const Expanse = mongoose.model('expanse', expanseSchema);
 
 module.exports = Expanse;

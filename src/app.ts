@@ -11,7 +11,7 @@ const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utills/ApiError');
 const path = require('path');
-const mime = require('mime');
+// const mime = require('mime');
 const fs = require('fs');
 
 const app = express();

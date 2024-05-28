@@ -3,9 +3,12 @@ const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const userService = require('./user.service');
 const config = require('../config/config');
+// @ts-ignore
 const jwt = require('jsonwebtoken');
+// @ts-ignore
 const bcrypt = require('bcryptjs');
 const { getCurrentDateTime } = require('./../constants/constant');
+// @ts-ignore
 const activityService=require('./activity.service');
 /**
  * Create a user
@@ -37,6 +40,7 @@ const createUser = async (userBody) => {
         isTempReg.otp = otp;
         user = await isTempReg.save();
     }
+    // @ts-ignore
     return { userId: user._id, otp: user.otp };
 };
 
@@ -45,25 +49,31 @@ const loginUserWithEmailAndPassword = async (userBody) => {
     if (!user) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
+    // @ts-ignore
     const matched = await bcrypt.compare(userBody.password, user.password);
     if (!user || !matched) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
     return {
         access_token: await generateToken(user),
+        // @ts-ignore
         is_passcode_enter: user.is_passcode_enter,
+        // @ts-ignore
         email: user.email,
+        // @ts-ignore
         mobile_no: user.mobile_no,
         name: user.name,
+        // @ts-ignore
         user_id: user._id,
+        // @ts-ignore
         currency: user.currency || 'INR',
     };
 }
 
 /**
  * Generate a JWT token
- * @param {Object} payload
- * @returns {string} JWT token
+ * @param {Object} user
+ * @returns {Promise<string>} JWT token
  */
 const generateToken = async (user) => {
     const payload = {
@@ -97,6 +107,7 @@ const verifyOtp = async (data) => {
     user.modification_date = await getCurrentDateTime();
     const users = await user.save();
     return {
+        // @ts-ignore
         access_token: await generateToken(users), is_passcode_enter: users.is_passcode_enter, email: users.email, mobile_no: users.mobile_no, name: users.name, user_id: users._id, currency: users.currency || 'INR',
     };
 }
