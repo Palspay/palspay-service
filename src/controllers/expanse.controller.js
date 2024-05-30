@@ -4,7 +4,7 @@ const { userExpanse } = require('../services');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 
-const addExpanse = catchAsync(async(req, res) => {
+const addExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
@@ -15,7 +15,7 @@ const addExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses add succesfully', data: { expanse_id: expanse_id._id } });
 });
 
-const updateExpanse = catchAsync(async(req, res) => {
+const updateExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;
     const mergedBody = {
         ...req.body,
@@ -27,7 +27,7 @@ const updateExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses updated succesfully', data: { expanse_id: expanse_id._id } });
 });
 
-const deleteExpanse = catchAsync(async(req, res) => {
+const deleteExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;
     const mergedBody = {
         ...req.body,
@@ -39,37 +39,36 @@ const deleteExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.OK).send({ message: 'Delete expanse succesfully', data: { expanseData } });
 });
 
-const getExpanse = catchAsync(async(req, res) => {
+const getExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.getGroupExpanse(mergedBody);
+    if (data && data.length > 0) {
+        let total_lent = 0,
+            total_borrowed = 0,
+            owe_arr = [],
+            owes_arr = [];
+        for await (let item of data.expanseList) {
+            mergedBody.expanseId = item._id;
+            item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+            total_lent += parseFloat(item.expanseData.you_lent);
+            total_borrowed += parseFloat(item.expanseData.you_borrowed);
+            let borrowed = parseFloat(item.expanseData.you_borrowed)
+            let lent = parseFloat(item.expanseData.you_lent)
 
-    let total_lent = 0,
-        total_borrowed = 0,
-        owe_arr = [],
-        owes_arr = [];
-    for await (let item of data.expanseList) {
-        mergedBody.expanseId = item._id;
-        item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-        total_lent += parseFloat(item.expanseData.you_lent);
-        total_borrowed += parseFloat(item.expanseData.you_borrowed);
-        let borrowed = parseFloat(item.expanseData.you_borrowed)
-        let lent = parseFloat(item.expanseData.you_lent)
-
-        if (borrowed > 0) {
-            owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
-        }
-        if (lent > 0) {
-            for await (let payer of item.expanseData.expanse_details) {
-                if (payer.type == "owes")
-                    owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+            if (borrowed > 0) {
+                owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
+            }
+            if (lent > 0) {
+                for await (let payer of item.expanseData.expanse_details) {
+                    if (payer.type == "owes")
+                        owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                }
             }
         }
-    }
-    if (data) {
         data.overall = total_lent - total_borrowed;
         // @ts-ignore
         const owe_sums = {};
@@ -107,7 +106,7 @@ const getExpanse = catchAsync(async(req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
 });
-const fetchExpanse = catchAsync(async(req, res) => {
+const fetchExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
@@ -120,7 +119,7 @@ const fetchExpanse = catchAsync(async(req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
 });
-const individualExpanse = catchAsync(async(req, res) => {
+const individualExpanse = catchAsync(async (req, res) => {
 
     let userId = (req.query.friendId) ? new ObjectId(req.query.friendId) : req.userId;
 

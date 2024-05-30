@@ -47,6 +47,7 @@ const profile = {
         mobile: Joi.string().required(),
         timezone: Joi.string().required(),
         currency: Joi.string().required(),
+        vpa: Joi.string(),
     }),
 };
 

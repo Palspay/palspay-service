@@ -10,7 +10,6 @@ const activityService = require('./activity.service');
 
 const createExpanse = async (expanseData) => {
     try {
-        expanseData['userId'] = expanseData.userId;
         var imagesArray = [];
         if (expanseData?.imageArray?.length > 0) {
             for await (let item of expanseData.imageArray) {
@@ -132,13 +131,16 @@ const getGroupExpanse = async (userData) => {
 
         // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
+        if(expanse.length == 0){
+            return [];
+        }
         // @ts-ignore
         let dataArr = [];
 
-        const expanseList = expanse[0].expanseList;
-        const groupsMembers = expanse[0].groupsMembers;
-        const totalExpanse = expanse[0].total;
-        const groupsMembersCount = expanse[0].groupsMembersCount;
+        const expanseList = expanse[0]?.expanseList;
+        const groupsMembers = expanse[0]?.groupsMembers;
+        const totalExpanse = expanse[0]?.total;
+        const groupsMembersCount = expanse[0]?.groupsMembersCount;
         const equalShare = totalExpanse / groupsMembersCount;
 
         const memberAmounts = {};
@@ -509,7 +511,6 @@ const individualExpanse = async (data) => {
             } else {
                 item.you_lent = lentAmount.toFixed(2);
             }
-            lentAmount = 0, borrowedAmount = 0;
         }
         for await (let exp of expanse) {
             for await (let item of exp.expanse_details) {
@@ -531,7 +532,7 @@ const getGroupByUser = async (userData) => {
     try {
         let agg;
         agg = [
-            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
+            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId, is_deleted: false } },
             {
                 $addFields: {
                     groupIdObjectId: {

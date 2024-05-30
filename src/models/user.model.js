@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
+    vpa: {
+        type: String
+    },
     mobile: {
         type: String,
         require: true

@@ -43,12 +43,12 @@ const getMembersByGroupId = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const groupsDetails = await userService.getMembersByGroupId(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsDetails } });
+    res.status(httpStatus.OK).send({ message: 'Group details fetched succesfully', data: { groupsDetails } });
 });
 
 const getMyGroups = catchAsync(async (req, res) => {
     const groupsList = await userService.getMyGroups(req.userId);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList } });
+    res.status(httpStatus.OK).send({ message: 'Group list fetched succesfully', data: { groupsList } });
 });
 
 const setPasscode = catchAsync(async (req, res) => {

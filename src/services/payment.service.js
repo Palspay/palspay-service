@@ -5,81 +5,37 @@ import { Transactions, PaymentStatus } from "../models/transaction.model";
 import crypto from "crypto";
 import axios from "axios";
 import razorpay from "../utills/razorpay";
+import GroupWallet from "../models/group-wallet.modal";
 var {
   validatePaymentVerification,
 } = require("razorpay/dist/utils/razorpay-utils");
 const paymentInitated = async (paymentData) => {
-  const { amount, paidTo, userId } = paymentData;
+  const { amount, paidTo, userId, groupId } = paymentData;
   try {
-    const merchantTransactionId =
-      "MTRX" + Math.floor(Math.random() * 1000000000);
+    // const merchantTransactionId =
+    //   "MTRX" + Math.floor(Math.random() * 1000000000);
     const order = await razorpay.orders.create({
       amount: amount,
       currency: "INR",
-      receipt: "receipt#1",
       partial_payment: false,
       notes: {
-        key1: "value3",
-        key2: "value2",
+        groupId: groupId,
       },
     });
     const orderData = {
       userId,
       paidTo,
       amount,
-      transactionId: merchantTransactionId,
       status: PaymentStatus.PAYMENT_INITIATED,
       paymentData: order,
     };
     const data = await Transactions.create(orderData);
-    // await new Transactions(orderData).save();
-    //   const merchantTransactionId = 'M' + Date.now();
-    // const { price, phone, name, paidTo } = paymentData;
-    // const data = {
-    //     merchantId: process.env.MERCHANT_ID,
-    //     merchantTransactionId: merchantTransactionId,
-    //     merchantUserId: 'MUID' + paymentData.userId,
-    //     name: name,
-    //     amount: price * 100,
-    //     redirectUrl: `http://localhost:6000/v1/payment/checkStatus?txnId=${merchantTransactionId}`,
-    //     redirectMode: 'POST',
-    //     mobileNumber: phone,
-    //     paymentInstrument: {
-    //         type: 'PAY_PAGE'
-    //     }
-    // };
-    // const payload = JSON.stringify(data);
-    // const payloadMain = Buffer.from(payload).toString('base64');
-    // const keyIndex = 1;
-    // const string = payloadMain + '/pg/v1/pay' + process.env.SALT_KEY;
-    // const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-    // const checksum = sha256 + '###' + keyIndex;
-    // const prod_URL = process.env.PHONEPE_URL
-    // const options = {
-    //     method: 'POST',
-    //     url: prod_URL,
-    //     headers: {
-    //         accept: 'application/json',
-    //         'Content-Type': 'application/json',
-    //         'X-VERIFY': checksum
-    //     },
-    //     data: {
-    //         request: payloadMain
-    //     }
-    // };
+    return {
+      // @ts-ignore
+      orderId: data?.paymentData?.id,
+      transactionId: data._id,
 
-    // const urlData = await axios.request(options);
-    // const paymentInfo = {
-    //     userId: paymentData.userId,
-    //     paidTo: paidTo,
-    //     amount: price,
-    //     status: 'PAYMENT_INITIATED',
-    //     merchantTransactionId: urlData.data.data.merchantTransactionId
-    // }
-    // const tr = new Transactions(paymentInfo);
-    // await tr.save(paymentInfo);
-    // return urlData.data.data.instrumentResponse.redirectInfo;
-    return data;
+    };
   } catch (error) {
     console.log(error);
     throw new ApiError(
@@ -91,16 +47,10 @@ const paymentInitated = async (paymentData) => {
 
 const payoutInitated = async (payoutData) => {
   const { paymentId, signature, transactionId } = payoutData;
-
   const data = await Transactions.findOne({
     _id: transactionId
   });
 
-  // crypto.createHmac('sha256', "key").update("message").digest("base64");
-  // const generatedSignature = hmac_sha256(order_id + "|" + razorpay_payment_id, secret);
-  // if (generatedSignature == signature) {
-  //   console.log("Signature verified successfully");
-  // }
   const validPayment = validatePaymentVerification(
     // @ts-ignore
     { order_id: data?.paymentData?.id, payment_id: paymentId },
@@ -108,54 +58,11 @@ const payoutInitated = async (payoutData) => {
     process.env.RAZORPAY_KEY_SECRET
   );
 
-  const payoutRequest = {
-    account_number: "2323230082686509",
-    amount: 10000,
-    currency: "INR",
-    mode: "UPI",
-    purpose: "refund",
-    fund_account: {
-      account_type: "vpa",
-      vpa: {
-        address: "gauravkumar@exampleupi",
-      },
-      contact: {
-        name: "Gaurav Kumar",
-        email: "gaurav.kumar@example.com",
-        contact: "9876543210",
-        type: "employee",
-        reference_id: "Acme Contact ID 12345",
-        notes: {
-          notes_key_1: "Tea, Earl Grey, Hot",
-          notes_key_2: "Tea, Earl Grey… decaf.",
-        },
-      },
-    },
-    queue_if_low_balance: true,
-    reference_id: "Acme Transaction ID 12345",
-    narration: "Acme Corp Fund Transfer",
-    notes: {
-      notes_key_1: "Beam me up Scotty",
-      notes_key_2: "Engage",
-    },
-  };
-  const options = {
-    method: "POST",
-    url: process.env.RAZORPAY_URL + "/v1/payouts",
-    auth: {
-      username: process.env.RAZORPAY_KEY_ID,
-      password: process.env.RAZORPAY_KEY_SECRET,
-    },
-    headers: {
-      accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    data: {
-      ...payoutRequest,
-    },
-  };
+  if (!validPayment) {
+    throw new ApiError("Payment verification failed", httpStatus.BAD_REQUEST);
+  }
 
-  const urlData = await axios.request(options);
+  await razorpayPayout(data);
 
   const paymentInfo = {
     status: "PAYOUT_INITITATED",
@@ -179,11 +86,38 @@ const refundInitiated = async (refundData) => {
   ).lean();
 };
 
-const addToWallet = async (paymentInfo) => {
-  await Transactions.findOneAndUpdate(
-    { _id: paymentInfo.transactionId },
-    { $set: { ...paymentInfo } }
-  ).lean();
+const addToWallet = async (paymentData) => {
+  try {
+    const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.group_id },
+      { $push: { transactions: paymentData.transactions } }, { new: true }
+    )
+    const { amount, paidTo, userId, groupId } = paymentData;
+    const order = await razorpay.orders.create({
+      amount: amount,
+      currency: "INR",
+      partial_payment: false,
+      notes: {
+        groupId: groupId,
+      },
+    });
+    
+    return wallet;
+  }
+  catch (error) {
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, error);
+  }
+};
+
+const makePayment = async (paymentData) => {
+  const transactionInfo = {
+    type: "PAYMENT",
+    amount: paymentData.amount,
+  };
+  const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.group_id },
+    { $push: { transactions: paymentData.transactions } }, { new: true }
+  )
+  await razorpayPayout(paymentInfo);
+  return response;
 };
 
 const checkStatus = async (body) => {
@@ -229,4 +163,56 @@ const checkStatus = async (body) => {
   }
 };
 
-export { paymentInitated, payoutInitated, refundInitiated, checkStatus, addToWallet };
+async function razorpayPayout(data) {
+  const payoutRequest = {
+    account_number: "2323230082686509",
+    amount: data.amount,
+    currency: "INR",
+    mode: "UPI",
+    purpose: "refund",
+    fund_account: {
+      account_type: "vpa",
+      vpa: {
+        address: "gauravkumar@exampleupi",
+      },
+      contact: {
+        name: "Gaurav Kumar",
+        email: "gaurav.kumar@example.com",
+        contact: "9876543210",
+        type: "employee",
+        reference_id: "Acme Contact ID 12345",
+        notes: {
+          notes_key_1: "Tea, Earl Grey, Hot",
+          notes_key_2: "Tea, Earl Grey… decaf.",
+        },
+      },
+    },
+    queue_if_low_balance: true,
+    reference_id: "Acme Transaction ID 12345",
+    narration: "Acme Corp Fund Transfer",
+    notes: {
+      notes_key_1: "Beam me up Scotty",
+      notes_key_2: "Engage",
+    },
+  };
+  const options = {
+    method: "POST",
+    url: process.env.RAZORPAY_URL + "/v1/payouts",
+    auth: {
+      username: process.env.RAZORPAY_KEY_ID,
+      password: process.env.RAZORPAY_KEY_SECRET,
+    },
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    data: {
+      ...payoutRequest,
+    },
+  };
+
+  const urlData = await axios.request(options);
+}
+
+
+export { paymentInitated, payoutInitated, refundInitiated, checkStatus, addToWallet, makePayment };

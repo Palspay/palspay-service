@@ -9,7 +9,7 @@ const paymentInitated = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data = await paymentService.paymentInitated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Payment succesfully', data });
+    res.status(httpStatus.OK).send({ message: 'Payment succesfully', data });
 });
 
 const payoutInitated = catchAsync(async (req, res) => {
@@ -19,7 +19,7 @@ const payoutInitated = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data=await paymentService.payoutInitated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Payout succesfully',data:{data} });
+    res.status(httpStatus.OK).send({ message: 'Payout succesfully',data:{data} });
 });
 
 const refundInitiated = catchAsync(async (req, res) => {
@@ -29,7 +29,7 @@ const refundInitiated = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data=await paymentService.refundInitiated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Refund succesfully',data:{data} });
+    res.status(httpStatus.OK).send({ message: 'Refund succesfully',data:{data} });
 });
 
 const addToWallet = catchAsync(async (req, res) => {
@@ -39,8 +39,18 @@ const addToWallet = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data=await paymentService.addToWallet(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Refund succesfully',data:{data} });
+    res.status(httpStatus.OK).send({ message: 'Added to wallet',data:{data} });
 });
+
+const makePayment = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const data=await paymentService.makePayment(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Payment succesfully',data:{data} });
+})
 
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
@@ -61,4 +71,4 @@ const addToWallet = catchAsync(async (req, res) => {
 //     // checkStatus
 // };
 
-export { paymentInitated, payoutInitated, refundInitiated, addToWallet }
+export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment }

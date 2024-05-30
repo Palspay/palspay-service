@@ -9,7 +9,7 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
     const user = await userService.getUserById({ _id: decoded.userId });
     if (!user) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
+        return next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
     }
     req.userId = user._id;
     req.email = user.email;
@@ -23,7 +23,7 @@ const authAdmin = async (req, res, next) => {
     const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
     const user = await userService.getUserById({ _id: decoded.userId });
     if (!user && user.user_type !== 'ADMIN') {
-        throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
+        return next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
     }
     req.userId = user._id;
     req.email = user.email;
