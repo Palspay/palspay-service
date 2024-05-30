@@ -116,7 +116,7 @@ const makePayment = async (paymentData) => {
   const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.group_id },
     { $push: { transactions: paymentData.transactions } }, { new: true }
   )
-  await razorpayPayout(paymentInfo);
+  const response = await razorpayPayout(paymentData);
   return response;
 };
 
