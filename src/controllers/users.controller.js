@@ -20,7 +20,7 @@ const addFriends = catchAsync(async (req, res) => {
 
 const getFriends = catchAsync(async (req, res) => {
     const friends = await userService.getFriendsById(req.userId);
-    res.status(httpStatus.OK).send({ message: 'Data Loading', data: { friends } });
+    res.status(httpStatus.OK).send({ message: 'Friends List', data: { friends } });
 })
 
 

@@ -8,6 +8,7 @@ const groupWalletSchema = new mongoose.Schema({
         amount: { type: Number },
         timestamp: { type: Date, default: Date.now },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+        vendorId: { type: String }
     }],
 });
 
@@ -36,20 +37,20 @@ groupWalletSchema.pre('findOneAndUpdate', async function(next) {
 });
 
 // Post hook to handle update of multiple transactions
-groupWalletSchema.post('findOneAndUpdate', async function(doc) {
-    if (doc) {
-        doc.balance = doc.transactions.reduce((acc, transaction) => {
-            if (transaction.type === 'DEPOSIT') {
-                return acc + transaction.amount;
-            } else if (['WITHDRAWAL', 'PAYMENT'].includes(transaction.type)) {
-                return acc - transaction.amount;
-            }
-            return acc;
-        }, 0);
+// groupWalletSchema.post('findOneAndUpdate', async function(doc) {
+//     if (doc) {
+//         doc.balance = doc.transactions.reduce((acc, transaction) => {
+//             if (transaction.type === 'DEPOSIT') {
+//                 return acc + transaction.amount;
+//             } else if (['WITHDRAWAL', 'PAYMENT'].includes(transaction.type)) {
+//                 return acc - transaction.amount;
+//             }
+//             return acc;
+//         }, 0);
 
-        await doc.save();
-    }
-});
+//         await doc.save();
+//     }
+// });
 // /**
 //  * @typedef GroupWallet
 //  */

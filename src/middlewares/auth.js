@@ -5,31 +5,38 @@ const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const { getCurrentDateTime } = require('./../constants/constant');
 const auth = async (req, res, next) => {
-    const token = req.headers['authorization'];
-    const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
-    const user = await userService.getUserById({ _id: decoded.userId });
-    if (!user) {
-        return next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
+    try {
+        const token = req.headers['authorization'];
+        const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
+        const user = await userService.getUserById({ _id: decoded.userId });
+        if (!user) {
+            throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
+        }
+        req.userId = user._id;
+        req.email = user.email;
+        req.currentDate = await getCurrentDateTime();
+        next();
+    } catch (error) {
+        next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
     }
-    req.userId = user._id;
-    req.email = user.email;
-
-    req.currentDate = await getCurrentDateTime();
-    next();
 }
 
 const authAdmin = async (req, res, next) => {
-    const token = req.headers['authorization'];
-    const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
-    const user = await userService.getUserById({ _id: decoded.userId });
-    if (!user && user.user_type !== 'ADMIN') {
-        return next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
-    }
-    req.userId = user._id;
-    req.email = user.email;
+    try {
+        const token = req.headers['authorization'];
+        const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
+        const user = await userService.getUserById({ _id: decoded.userId });
+        if (!user && user.user_type !== 'ADMIN') {
+            throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
+        }
+        req.userId = user._id;
+        req.email = user.email;
 
-    req.currentDate = await getCurrentDateTime();
-    next();
+        req.currentDate = await getCurrentDateTime();
+        next();
+    } catch (error) {
+        next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
+    }
 }
 module.exports = {
     auth, authAdmin

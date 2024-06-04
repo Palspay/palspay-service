@@ -427,9 +427,8 @@ const individualExpanse = async (data) => {
         // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
 
-        let lentAmount = 0,
-            borrowedAmount = 0;
         for await (let item of expanse) {
+            let lentAmount = 0, borrowedAmount = 0;
             item.you_lent = 0;
             item.you_borrowed = 0;
             let non_group = [];

@@ -6,14 +6,14 @@ import crypto from "crypto";
 import axios from "axios";
 import razorpay from "../utills/razorpay";
 import GroupWallet from "../models/group-wallet.modal";
+import { User } from "../models";
+import { email } from "../config/config";
 var {
   validatePaymentVerification,
 } = require("razorpay/dist/utils/razorpay-utils");
 const paymentInitated = async (paymentData) => {
   const { amount, paidTo, userId, groupId } = paymentData;
   try {
-    // const merchantTransactionId =
-    //   "MTRX" + Math.floor(Math.random() * 1000000000);
     const order = await razorpay.orders.create({
       amount: amount,
       currency: "INR",
@@ -51,27 +51,64 @@ const payoutInitated = async (payoutData) => {
     _id: transactionId
   });
 
-  const validPayment = validatePaymentVerification(
-    // @ts-ignore
-    { order_id: data?.paymentData?.id, payment_id: paymentId },
-    signature,
-    process.env.RAZORPAY_KEY_SECRET
-  );
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await validatePayment(data, paymentId, signature);
+    const userData = await User.findOne({ _id: data.userId });
+    if (!userData) {
+      throw new ApiError(httpStatus.NOT_FOUND, "user not found");
+    }
+    if (!userData.vpa || userData.vpa === "") {
+      throw new ApiError(httpStatus.NOT_FOUND, "VPA not set for receiver");
+    }
 
-  if (!validPayment) {
-    throw new ApiError("Payment verification failed", httpStatus.BAD_REQUEST);
+    const paymentInfo = {
+      status: "PAYOUT_INITITATED",
+    };
+    const response = await Transactions.findOneAndUpdate(
+      { _id: transactionId },
+      { $set: { ...paymentInfo } }
+    ).lean();
+
+    const payoutData = {
+      amount: data.amount,
+      vpa: userData.vpa,
+      name: userData.name,
+      userId: userData._id,
+      email: userData.email,
+      mobile: userData.mobile,
+      transactionId: data._id
+    }
+    const payoutResponse = await razorpayPayout(payoutData);
+    if (payoutResponse.status === 200) {
+      await session.commitTransaction();
+      session.endSession();
+      return { paymentStatus: payoutResponse?.data?.status };
+    }
+    return response;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    const refundResponse = await razorpay.payments.refund(paymentId, {
+      amount: data.amount,
+      speed: "normal",
+      notes: {
+        reason: "Payout failure",
+      },
+    });
+
+    if (refundResponse.status !== 'processed') {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        "Internal Server Error, Contact admin for refund."
+      );
+    }
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error, Refund initiated."
+    );
   }
-
-  await razorpayPayout(data);
-
-  const paymentInfo = {
-    status: "PAYOUT_INITITATED",
-  };
-  const response = await Transactions.findOneAndUpdate(
-    { _id: transactionId },
-    { $set: { ...paymentInfo } }
-  ).lean();
-  return response;
 };
 
 const refundInitiated = async (refundData) => {
@@ -88,19 +125,14 @@ const refundInitiated = async (refundData) => {
 
 const addToWallet = async (paymentData) => {
   try {
-    const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.group_id },
-      { $push: { transactions: paymentData.transactions } }, { new: true }
-    )
-    const { amount, paidTo, userId, groupId } = paymentData;
-    const order = await razorpay.orders.create({
-      amount: amount,
-      currency: "INR",
-      partial_payment: false,
-      notes: {
-        groupId: groupId,
-      },
+    const { paymentId, signature, transactionId } = paymentData;
+    const data = await Transactions.findOne({
+      _id: transactionId
     });
-    
+    await validatePayment(data, paymentId, signature);
+    const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
+      { $push: { transactions: { type: 'DEPOSIT', amount: paymentData.amount, userId: paymentData.userId } } }, { new: true }
+    )
     return wallet;
   }
   catch (error) {
@@ -112,12 +144,45 @@ const makePayment = async (paymentData) => {
   const transactionInfo = {
     type: "PAYMENT",
     amount: paymentData.amount,
+    vendorId: paymentData.vpa
   };
-  const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.group_id },
-    { $push: { transactions: paymentData.transactions } }, { new: true }
-  )
-  const response = await razorpayPayout(paymentData);
-  return response;
+  const wallet = await GroupWallet.findOne({
+    group_id: paymentData.groupId
+  });
+
+  if (wallet.balance < paymentData.amount) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Insufficient Balance");
+  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
+      { $push: { transactions: transactionInfo } }, { new: true }
+    )
+    const payoutData = {
+      amount: paymentData.amount,
+      vpa: paymentData.vpa,
+      name: paymentData.name,
+      userId: paymentData.vpa,
+      email: paymentData.email,
+      mobile: paymentData.mobile,
+      transactionId: ""
+    }
+    const payoutResponse = await razorpayPayout(payoutData);
+    if (payoutResponse.status === 200) {
+      await session.commitTransaction();
+      session.endSession();
+      return { paymentStatus: payoutResponse?.data?.status };
+    }
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error, Payment failed."
+    );
+  }
+
 };
 
 const checkStatus = async (body) => {
@@ -163,37 +228,58 @@ const checkStatus = async (body) => {
   }
 };
 
+async function validatePayment(data, paymentId, signature) {
+  const validPayment = validatePaymentVerification(
+    // @ts-ignore
+    { order_id: data?.paymentData?.id, payment_id: paymentId },
+    signature,
+    process.env.RAZORPAY_KEY_SECRET
+  );
+
+  if (!validPayment) {
+    const order = await razorpay.payments.refund(paymentId, {
+      amount: data.amount,
+      speed: "normal",
+      notes: {
+        reason: "Payout failure",
+      },
+    });
+    console.log(order);
+    throw new ApiError(httpStatus.BAD_REQUEST, "Payment verification failed");
+  }
+}
+
 async function razorpayPayout(data) {
   const payoutRequest = {
-    account_number: "2323230082686509",
+    account_number: process.env.RAZORPAY_ACCOUNT_NUMBER,
     amount: data.amount,
     currency: "INR",
     mode: "UPI",
-    purpose: "refund",
+    purpose: "payout",
     fund_account: {
       account_type: "vpa",
       vpa: {
-        address: "gauravkumar@exampleupi",
+        address: data.vpa,
       },
       contact: {
-        name: "Gaurav Kumar",
-        email: "gaurav.kumar@example.com",
-        contact: "9876543210",
+        name: data.name,
+        email: data.email,
+        contact: data.mobile,
         type: "employee",
-        reference_id: "Acme Contact ID 12345",
-        notes: {
-          notes_key_1: "Tea, Earl Grey, Hot",
-          notes_key_2: "Tea, Earl Grey… decaf.",
-        },
+        reference_id: data.userId,
+        // notes: {
+        //   notes_key_1: "Tea, Earl Grey, Hot",
+        //   notes_key_2: "Tea, Earl Grey… decaf.",
+        // },
       },
     },
     queue_if_low_balance: true,
-    reference_id: "Acme Transaction ID 12345",
-    narration: "Acme Corp Fund Transfer",
-    notes: {
-      notes_key_1: "Beam me up Scotty",
-      notes_key_2: "Engage",
-    },
+    reference_id: data.transactionId,
+    narration: "PalsPay payment",
+    // notes: {
+    //   notes_key_1: "Beam me up Scotty",
+    //   notes_key_2: "Engage",
+    // },
   };
   const options = {
     method: "POST",
@@ -210,8 +296,13 @@ async function razorpayPayout(data) {
       ...payoutRequest,
     },
   };
-
-  const urlData = await axios.request(options);
+  try {
+    const response = await axios.request(options);
+    return response
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
 
 
