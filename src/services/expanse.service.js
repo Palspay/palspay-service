@@ -349,18 +349,24 @@ const fetchExpanse = async (data) => {
     }
 };
 const individualExpanse = async (data) => {
+    const matchStage = {
+        $match: {
+            'members.memberId': data.userId,
+            is_deleted: false,
+            groupId: { $eq: "" }
+        }
+    };
+
+    if (data.friendId) {
+        matchStage.$match['members.memberId'] = {
+            $all: [
+                data.userId,
+                data.friendId
+            ]
+        };
+    }
     try {
-        let agg = [{
-            $match: {
-                groupId: { $eq: "" },
-                is_deleted: false,
-                // userId: data.userId,
-                $or: [
-                    // { "addPayer.from": data.userId },
-                    { "members.memberId": data.userId },
-                ]
-            }
-        },
+        let agg = [matchStage,
         { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
         { $unwind: "$usersData" },
         {

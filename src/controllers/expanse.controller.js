@@ -120,12 +120,12 @@ const fetchExpanse = catchAsync(async (req, res) => {
     }
 });
 const individualExpanse = catchAsync(async (req, res) => {
-
-    let userId = (req.query.friendId) ? new ObjectId(req.query.friendId) : req.userId;
+    let friendId = (req.query.friendId) ? new ObjectId(req.query.friendId) : null;
 
     const mergedBody = {
         ...req.body,
-        userId: userId,
+        userId: req.userId,
+        friendId: friendId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.individualExpanse(mergedBody);
