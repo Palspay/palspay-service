@@ -158,6 +158,8 @@ const individualExpanse = catchAsync(async (req, res) => {
             }
         }
         expanse.overall = total_lent - total_borrowed;
+        expanse.total_lent = total_lent;
+        expanse.total_borrowed = total_borrowed;
         if (owes_arr.length > 0) {
             owes_arr.forEach(item => {
                 const key = `${item.from_id}_${item.from}`;
