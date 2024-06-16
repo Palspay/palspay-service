@@ -41,6 +41,12 @@ const createUser = async (userBody) => {
     return { userId: user._id, otp: user.otp };
 };
 
+const createUserWithoutOTP = async (userBody) => {
+    userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const user = await User.create(userBody);
+    return { userId: user._id, email: user.email };
+}
+
 const loginUserWithEmailAndPassword = async (userBody) => {
     const user = await userService.getUserByEmail(userBody.email);
     if (!user) {
@@ -122,6 +128,7 @@ const createNewPassword = async (data) => {
 
 module.exports = {
     createUser,
+    createUserWithoutOTP,
     generateToken,
     loginUserWithEmailAndPassword,
     verifyOtp,

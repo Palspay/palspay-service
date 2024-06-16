@@ -16,5 +16,6 @@ router.post('/verify-user', validate(authValidation.verifyUser), authController.
 // @ts-ignore
 router.post('/forgot-password', validate(authValidation.createPassword), authController.createNewPassword);
 
+router.post('/googleLogin', validate(authValidation.googleLogin), authController.googleLogin);
 
 module.exports = router;

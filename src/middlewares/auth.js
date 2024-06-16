@@ -4,10 +4,12 @@ const config = require('../config/config');
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const { getCurrentDateTime } = require('./../constants/constant');
+// @ts-ignore
 const auth = async (req, res, next) => {
     try {
         const token = req.headers['authorization'];
         const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
+        // @ts-ignore
         const user = await userService.getUserById({ _id: decoded.userId });
         if (!user) {
             throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
@@ -21,10 +23,12 @@ const auth = async (req, res, next) => {
     }
 }
 
+// @ts-ignore
 const authAdmin = async (req, res, next) => {
     try {
         const token = req.headers['authorization'];
         const decoded = jwt.verify(token, config.jwt.public_key, { algorithms: ['RS256'] });
+        // @ts-ignore
         const user = await userService.getUserById({ _id: decoded.userId });
         if (!user && user.user_type !== 'ADMIN') {
             throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
