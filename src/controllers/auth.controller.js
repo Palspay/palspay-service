@@ -49,7 +49,7 @@ export const createNewPassword = catchAsync(async (req, res) => { //Create a new
     }
 });
 
-export const googleLogin = () => catchAsync(async (req, res) => {
+export const googleLogin = catchAsync(async (req, res) => {
     // Build Firebase credential with the Google ID token.
     const credential = GoogleAuthProvider.credential(req.body.token);
     // Sign in with credential from the Google user.
