@@ -43,8 +43,9 @@ const createUser = async (userBody) => {
 
 const createUserWithoutOTP = async (userBody) => {
     userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    userBody['is_otp_verify'] = true;
     const user = await User.create(userBody);
-    return { userId: user._id, email: user.email };
+    return user;
 }
 
 const loginUserWithEmailAndPassword = async (userBody) => {

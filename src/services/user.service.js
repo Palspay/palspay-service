@@ -16,9 +16,10 @@ const activityService = require('./activity.service');
  * @param {string} email
  * @returns {Promise<User>}
  */
-const getUserByEmail = async (email) => {
-    return User.findOne({ email, is_deleted: false, is_otp_verify: true });
+const getUserByEmail = async (email, verifyOtp = true) => {
+    return User.findOne({ email, is_deleted: false, is_otp_verify: verifyOtp });
 };
+
 
 const getUserById = async (userId) => {
     return User.findOne({ _id: userId, is_deleted: false });

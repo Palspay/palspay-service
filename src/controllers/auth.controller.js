@@ -1,8 +1,8 @@
 import httpStatus from 'http-status'
 import catchAsync from './../utills/catchAsync';
 import { authService, userService } from './../services';
-import { getAuth, signInWithCredential, GoogleAuthProvider } from "firebase/auth";
 import { generateToken } from '../services/auth.service';
+import admin from 'firebase-admin';
 
 export const register = catchAsync(async (req, res) => {
     const data = await authService.createUser(req.body);
@@ -50,34 +50,52 @@ export const createNewPassword = catchAsync(async (req, res) => { //Create a new
 });
 
 export const googleLogin = catchAsync(async (req, res) => {
-    // Build Firebase credential with the Google ID token.
-    const credential = GoogleAuthProvider.credential(req.body.token);
-    // Sign in with credential from the Google user.
-    const auth = getAuth();
-
-    signInWithCredential(auth, credential).then(async (response) => {
-        const user = response.user;
+    try {
+        const adminAuth = admin.auth()
+        // @ts-ignore
+        const decodedToken = await adminAuth.verifyIdToken(req.body.token);
+        const uid = decodedToken.uid;
+        // Retrieve the user record from Firebase
+        const user = await admin.auth().getUser(uid);
         const email = user.email;
         const name = user.displayName;
         const mobile = user.phoneNumber
-        const isEmailExits = await userService.getUserByEmail(email);
-        if (isEmailExits) {
-            const access_token = await generateToken(user);
-            res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data: access_token });
-        } else {
-            const userCreated = await authService.createUserWithoutOTP({ email, name, mobile });
-            const access_token = await generateToken(userCreated);
-            res.status(httpStatus.CREATED).send({ message: 'User Created', data: access_token });
-        }
-    }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
-        // The AuthCredential type that was used.
-        // const credential = GoogleAuthProvider.credentialFromError(error);
-        res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [errorCode, errorMessage, email] });
-    });
+        const dp = user.photoURL
+        const existingUser = await userService.getUserByEmail(email, false);
+        if (existingUser) {
+            const access_token = await generateToken(existingUser);
+            const data = {
+                access_token,
+                // @ts-ignore
+                is_passcode_enter: existingUser.is_passcode_enter,
+                name: existingUser.name,
+                // @ts-ignore
+                email: existingUser.email,
+                // @ts-ignore
+                user_id: existingUser.id,
+                // @ts-ignore
+                currency: existingUser.currency,
 
+            }
+            res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data });
+        } else {
+            const userCreated = await authService.createUserWithoutOTP({ email, name, mobile, dp, gmail_id: uid });
+            const access_token = await generateToken(userCreated);
+            // @ts-ignore
+            const data = {
+                access_token,
+                is_passcode_enter: userCreated.is_passcode_enter,
+                name: userCreated.name,
+                email: userCreated.email,
+                user_id: userCreated.id,
+                currency: userCreated.currency,
+
+            }
+            res.status(httpStatus.CREATED).send({ message: 'User Created', data });
+        }
+    } catch (error) {
+        // Handle error
+        console.log(error);
+        res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
+    }
 })
