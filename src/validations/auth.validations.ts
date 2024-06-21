@@ -7,7 +7,8 @@ export const register = {
         password: Joi.string().required().custom(password),
         name: Joi.string().required(),
         mobile: Joi.string().required(),
-        user_type:Joi.string().optional()
+        user_type:Joi.string().optional(),
+        vpa:Joi.string().optional()
     }),
 };
 export const login = {

@@ -77,7 +77,7 @@ export const googleLogin = catchAsync(async (req, res) => {
                 currency: existingUser.currency,
 
             }
-            res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data });
+            res.status(httpStatus.OK).send({ message: 'Login Sucessfully', data });
         } else {
             const userCreated = await authService.createUserWithoutOTP({ email, name, mobile, dp, gmail_id: uid });
             const access_token = await generateToken(userCreated);
