@@ -13,6 +13,15 @@ async function getCurrentDateTime(timezone='Asia/Kolkata') {
     return Date.parse(currentDate);
 }
 
+const EXPANSE_TYPE = {
+    SPLIT_EQUALLY: "SPLIT_EQUALLY",
+    SPLIT_UNEQUALLY: "SPLIT_UNEQUALLY",
+    SPLIT_BY_PERCENTAGE: "SPLIT_BY_PERCENTAGE",
+    SPLIT_BY_SHARE: "SPLIT_BY_SHARE",
+    SPLIT_BY_ADJUSTMENT: "SPLIT_BY_ADJUSTMENT",
+}
+
 module.exports = {
-    getCurrentDateTime
+    getCurrentDateTime,
+    EXPANSE_TYPE
 };
