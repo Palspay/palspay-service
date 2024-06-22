@@ -51,6 +51,11 @@ const getMyGroups = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Group list fetched succesfully', data: { groupsList } });
 });
 
+const getUserDetails = catchAsync(async (req, res) => {
+    const userId = req.params.user_id
+    const userDetails = await userService.getUserDetails(userId);
+    res.status(httpStatus.OK).send({ message: 'User details fetched succesfully', data: userDetails });
+})
 const setPasscode = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -173,5 +178,6 @@ module.exports = {
     deleteGroup,
     removeFriend,
     takePlan,
-    getActivity
+    getActivity,
+    getUserDetails
 };

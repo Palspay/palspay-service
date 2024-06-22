@@ -15,6 +15,7 @@ router.post('/groups', auth, validate(uservalidation.createGroup), userControlle
 
 router.get('/group-details/:group_id', auth, userController.getMembersByGroupId);
 router.get('/mygroups', auth, userController.getMyGroups);
+router.get('/user/:user_id', auth, userController.getUserDetails);
 // @ts-ignore
 router.post('/setpasscode', auth, validate(uservalidation.setPasscode), userController.setPasscode);
 // @ts-ignore

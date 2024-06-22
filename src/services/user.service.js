@@ -76,6 +76,13 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
+const getUserDetails = async (userId) => {
+    const user = await User.findOne({ _id: userId }).select('name email vpa');
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    return user;
+}
 const addFriends = async (userData) => {
     try {
         const promises = [];
@@ -407,5 +414,6 @@ module.exports = {
     leaveGroup,
     deleteGroup,
     removeFriend,
-    takePlan
+    takePlan,
+    getUserDetails
 };

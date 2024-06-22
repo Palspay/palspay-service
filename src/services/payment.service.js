@@ -55,7 +55,7 @@ const payoutInitated = async (payoutData) => {
   session.startTransaction();
   try {
     await validatePayment(data, paymentId, signature);
-    const userData = await User.findOne({ _id: data.userId });
+    const userData = await User.findOne({ _id: data.paidTo });
     if (!userData) {
       throw new ApiError(httpStatus.NOT_FOUND, "user not found");
     }
@@ -88,6 +88,7 @@ const payoutInitated = async (payoutData) => {
     }
     return response;
   } catch (error) {
+    console.log(error);
     await session.abortTransaction();
     session.endSession();
     const refundResponse = await razorpay.payments.refund(paymentId, {
