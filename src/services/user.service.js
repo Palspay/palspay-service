@@ -77,7 +77,7 @@ async function areFriends(userId) {
 }
 
 const getUserDetails = async (userId) => {
-    const user = await User.findOne({ _id: userId }).select('name email vpa');
+    const user = await User.findOne({ _id: userId }).select('name email vpa mobile');
     if (!user) {
         throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
     }
