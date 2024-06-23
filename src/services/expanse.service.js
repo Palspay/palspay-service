@@ -191,7 +191,7 @@ const getGroupExpanse = async (userData) => {
 const fetchExpanse = async (data) => {
     try {
         let agg = [
-            { $match: { _id: new ObjectId(data.expanseId), is_deleted: false } },
+            { $match: { _id: new ObjectId(data.id), is_deleted: false } },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
             { $unwind: "$usersData" },
             {
@@ -260,6 +260,7 @@ const fetchExpanse = async (data) => {
 
             // splitEqually
             if (item.splitEqually.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_EQUALLY
                 for await (let per of item.splitEqually) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -274,6 +275,7 @@ const fetchExpanse = async (data) => {
             }
             // splitUnequally
             if (item.splitUnequally.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_UNEQUALLY
                 for await (let per of item.splitUnequally) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -288,6 +290,7 @@ const fetchExpanse = async (data) => {
             }
             // splitByPercentage
             if (item.splitByPercentage.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_PERCENTAGE
                 for await (let per of item.splitByPercentage) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -302,6 +305,7 @@ const fetchExpanse = async (data) => {
             }
             // splitByShare
             if (item.splitByShare.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_SHARE
                 for await (let per of item.splitByShare) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -317,6 +321,7 @@ const fetchExpanse = async (data) => {
 
             // splitByAdjustments
             if (item.splitByAdjustments.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_ADJUSTMENT
                 for await (let per of item.splitByAdjustments) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })

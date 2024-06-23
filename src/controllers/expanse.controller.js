@@ -109,6 +109,7 @@ const getExpanse = catchAsync(async (req, res) => {
 const fetchExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
+        id: req.params.id,
         userId: req.userId,
         currentDate: req.currentDate
     };
