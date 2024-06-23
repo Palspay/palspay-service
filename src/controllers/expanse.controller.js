@@ -172,7 +172,7 @@ const individualExpanse = catchAsync(async (req, res) => {
             });
             expanse.owes_arr = result;
         } else {
-            expanse.owes_arr = {};
+            expanse.owes_arr = [];
         }
         if (owe_arr.length > 0) {
             owe_arr.forEach(item => {
@@ -187,7 +187,7 @@ const individualExpanse = catchAsync(async (req, res) => {
             });
             expanse.owe_arr = owe_result;
         } else {
-            expanse.owe_arr = {};
+            expanse.owe_arr = [];
         }
 
         res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse, groupDetails });
