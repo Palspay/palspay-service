@@ -46,13 +46,13 @@ const getExpanse = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data = await userExpanse.getGroupExpanse(mergedBody);
-    if (data && data.length > 0) {
+    if (data) {
         let total_lent = 0,
             total_borrowed = 0,
             owe_arr = [],
             owes_arr = [];
         for await (let item of data.expanseList) {
-            mergedBody.expanseId = item._id;
+            mergedBody.id = item._id;
             item.expanseData = await userExpanse.fetchExpanse(mergedBody);
             total_lent += parseFloat(item.expanseData.you_lent);
             total_borrowed += parseFloat(item.expanseData.you_borrowed);
