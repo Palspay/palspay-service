@@ -42,6 +42,20 @@ const authAdmin = async (req, res, next) => {
         next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
     }
 }
+
+const authGroupOwner = async (req, res, next) => {
+    try {
+        const groupId = req.params.group_id;
+        const groupDetails = await userService.getGroupDetails(groupId);
+        // @ts-ignore
+        if (!groupDetails || !groupDetails.group_owner || !req.userId.id.equals(groupDetails.group_owner.id)) {
+            throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token');
+        }
+        next();
+    } catch (error) {
+        next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
+    }
+}
 module.exports = {
-    auth, authAdmin
+    auth, authAdmin, authGroupOwner
 };

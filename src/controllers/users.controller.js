@@ -34,12 +34,24 @@ const createGroups = catchAsync(async (req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Group Create succesfully', data: { group_id: group_id._id } });
 });
 
+const groupSettings = catchAsync(async (req, res) => {
+    const mergedBody = {
+        userId: req.userId,
+        owner_only_payment: req.body.owner_only_payment,
+        group_name: req.body.group_name,
+        group_icon: req.body.group_icon,
+        groupId: req.params.group_id,
+        currentDate: req.currentDate
+    };
+    const updatedGroup = await userService.updateGroupPreference(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Group Settings updated', data: updatedGroup });
+})
 
 const getMembersByGroupId = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
-        groupId: req.params.group_id, 
+        groupId: req.params.group_id,
         currentDate: req.currentDate
     };
     const groupsDetails = await userService.getMembersByGroupId(mergedBody);
@@ -164,6 +176,11 @@ const getActivity = catchAsync(async (req, res) => {
     const activity = await activityService.getActivity(req.userId);
     res.status(httpStatus.OK).send({ message: 'Data Loading', data: { activity } });
 })
+
+const getTransactions = catchAsync(async (req, res) => {
+    const transactions = await userService.getTransactions(req.userId);
+    res.status(httpStatus.OK).send({ message: 'Transactions Fetched', data: { transactions } });
+})
 module.exports = {
     addFriends,
     getFriends,
@@ -179,5 +196,7 @@ module.exports = {
     removeFriend,
     takePlan,
     getActivity,
-    getUserDetails
+    getUserDetails,
+    groupSettings,
+    getTransactions
 };

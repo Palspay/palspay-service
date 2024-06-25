@@ -4,6 +4,7 @@ const groupSchema = new mongoose.Schema({
     group_name: { type: String, required: true },
     group_icon: { type: String, default: 'abcgd.png' },
     group_owner: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+    owner_only_payment: { type: Boolean, default: false },
     created_by: {
         type: String
     },

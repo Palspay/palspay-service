@@ -1,4 +1,4 @@
-import { paymentService } from '../services';
+import { paymentService, userService } from '../services';
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
 
@@ -28,7 +28,7 @@ const refundInitiated = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const data = await paymentService.refundInitiated(mergedBody);
+    const data = await paymentService.initiateRefund(mergedBody);
     res.status(httpStatus.OK).send({ message: 'Refund succesfully', data: { data } });
 });
 
@@ -48,6 +48,11 @@ const makePayment = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
+    const group_details = await userService.getGroupDetails(mergedBody.groupId);
+    if(group_details.owner_only_payment && !req.userId.id.equals(group_details.group_owner.id)){
+        res.status(httpStatus.UNAUTHORIZED).send({ message: 'Not Authorised to make payment, Contact group admin', data: {} });
+        return
+    }
     const data = await paymentService.makePayment(mergedBody);
     res.status(httpStatus.OK).send({ message: 'Payment successful', data });
 })

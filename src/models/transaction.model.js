@@ -7,6 +7,8 @@ const PaymentStatus = {
   PAYOUT_INITITATED: "PAYOUT_INITITATED",
   PAYOUT_FAILED: "PAYOUT_FAILED",
   PAYMENT_COMPLETED: "PAYMENT_COMPLETED",
+  REFUND_INITITATED: "REFUND_INITITATED",
+  REFUND_FAILED: "REFUND_FAILED",
 };
 const transactionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
@@ -50,6 +52,6 @@ transactionSchema.set("versionKey", false);
 // /**
 //  * @typedef Groups
 //  */
-const Transactions = mongoose.model("transactions", transactionSchema);
+const Transaction = mongoose.model("transaction", transactionSchema);
 
-module.exports = { Transactions, PaymentStatus };
+module.exports = { Transaction, PaymentStatus };

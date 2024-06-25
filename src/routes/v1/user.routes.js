@@ -2,7 +2,7 @@ const express = require('express');
 const validate = require('../../middlewares/validate');
 const uservalidation = require('../../validations/user.validations');
 const userController = require('../../controllers/users.controller');
-const {auth} = require('../../middlewares/auth');
+const { auth, authGroupOwner } = require('../../middlewares/auth');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs');
@@ -27,17 +27,19 @@ router.post('/uploads', userController.uploadFile);
 
 router.put('/leave-group', auth, userController.leaveGroup);
 router.put('/leave-group/:group_id', auth, userController.leaveGroup);
+router.put('/group-settings/:group_id', auth, authGroupOwner, userController.groupSettings);
 
-router.delete('/delete-group', auth,userController.deleteGroup);
-router.delete('/delete-group/:group_id', auth,userController.deleteGroup);
+router.delete('/delete-group', auth, userController.deleteGroup);
+router.delete('/delete-group/:group_id', auth, userController.deleteGroup);
 
-router.delete('/remove-friend', auth,userController.removeFriend);
-router.delete('/remove-friend/:user_id', auth,userController.removeFriend);
+router.delete('/remove-friend', auth, userController.removeFriend);
+router.delete('/remove-friend/:user_id', auth, userController.removeFriend);
 
 // @ts-ignore
 router.post('/take-plan', auth, validate(uservalidation.takePlan), userController.takePlan);
 
 router.get('/activity', auth, userController.getActivity);
+router.get('/transactions', auth, userController.getTransactions);
 
 
 

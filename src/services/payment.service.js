@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import ApiError from "../utills/ApiError";
 import mongoose from "mongoose";
-import { Transactions, PaymentStatus } from "../models/transaction.model";
+import { Transaction, PaymentStatus } from "../models/transaction.model";
 import crypto from "crypto";
 import axios from "axios";
 import razorpay from "../utills/razorpay";
@@ -29,7 +29,7 @@ const paymentInitated = async (paymentData) => {
       status: PaymentStatus.PAYMENT_INITIATED,
       paymentData: order,
     };
-    const data = await Transactions.create(orderData);
+    const data = await Transaction.create(orderData);
     return {
       // @ts-ignore
       orderId: data?.paymentData?.id,
@@ -47,10 +47,9 @@ const paymentInitated = async (paymentData) => {
 
 const payoutInitated = async (payoutData) => {
   const { paymentId, signature, transactionId } = payoutData;
-  const data = await Transactions.findOne({
+  const data = await Transaction.findOne({
     _id: transactionId
   });
-
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -62,16 +61,7 @@ const payoutInitated = async (payoutData) => {
     if (!userData.vpa || userData.vpa === "") {
       throw new ApiError(httpStatus.NOT_FOUND, "VPA not set for receiver");
     }
-
-    const paymentInfo = {
-      status: "PAYOUT_INITITATED",
-    };
-    const response = await Transactions.findOneAndUpdate(
-      { _id: transactionId },
-      { $set: { ...paymentInfo } }
-    ).lean();
-
-    const payoutData = {
+    const razorpayPayoutData = {
       amount: data.amount,
       vpa: userData.vpa,
       name: userData.name,
@@ -80,31 +70,33 @@ const payoutInitated = async (payoutData) => {
       mobile: userData.mobile,
       transactionId: data._id
     }
-    const payoutResponse = await razorpayPayout(payoutData);
+    const payoutResponse = await razorpayPayout(razorpayPayoutData);
     if (payoutResponse.status === 200) {
+      const paymentInfo = {
+        status: PaymentStatus.PAYMENT_COMPLETED,
+      };
+      await Transaction.findOneAndUpdate(
+        { _id: transactionId },
+        { $set: { ...paymentInfo } }
+      ).lean();
       await session.commitTransaction();
       session.endSession();
       return { paymentStatus: payoutResponse?.data?.status };
-    }
-    return response;
-  } catch (error) {
-    console.log(error);
-    await session.abortTransaction();
-    session.endSession();
-    const refundResponse = await razorpay.payments.refund(paymentId, {
-      amount: data.amount,
-      speed: "normal",
-      notes: {
-        reason: "Payout failure",
-      },
-    });
-
-    if (refundResponse.status !== 'processed') {
+    } else {
       throw new ApiError(
         httpStatus.INTERNAL_SERVER_ERROR,
-        "Internal Server Error, Contact admin for refund."
+        "Internal Server Error, Razorpay payout failed."
       );
     }
+  } catch (error) {
+    const refundData = {
+      paymentId,
+      amount: data.amount,
+      reason: "Payout failure",
+    }
+    initiateRefund(refundData);
+    await session.commitTransaction();
+    session.endSession();
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
       "Internal Server Error, Refund initiated."
@@ -112,31 +104,67 @@ const payoutInitated = async (payoutData) => {
   }
 };
 
-const refundInitiated = async (refundData) => {
+const initiateRefund = async (refundData) => {
   // @ts-ignore
-  const { paymentId } = refundData;
-  const paymentInfo = {
-    status: "REFUND_INITITATED",
-  };
-  await Transactions.findOneAndUpdate(
-    { _id: new mongoose.Types.ObjectId(paymentId) },
-    { $set: { ...paymentInfo } }
-  ).lean();
+  try {
+    const { paymentId } = refundData;
+    let paymentInfo = {
+      status: PaymentStatus.REFUND_INITITATED,
+    };
+    const refundResponse = await razorpay.payments.refund(paymentId, {
+      amount: refundData.amount,
+      speed: "normal",
+      notes: {
+        reason: refundData.reason
+      },
+    });
+    if (refundResponse.status !== 'processed') {
+      paymentInfo = {
+        status: PaymentStatus.REFUND_FAILED
+      };
+    }
+    await Transaction.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(paymentId) },
+      { $set: { ...paymentInfo } }
+    ).lean();
+  } catch (error) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error, Error in refund, contact admin."
+    );
+  }
 };
 
 const addToWallet = async (paymentData) => {
+  const { paymentId, signature, transactionId } = paymentData;
+  let transaction;
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { paymentId, signature, transactionId } = paymentData;
-    const data = await Transactions.findOne({
-      _id: transactionId
-    });
-    await validatePayment(data, paymentId, signature);
-    const wallet = await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
-      { $push: { transactions: { type: 'DEPOSIT', amount: paymentData.amount, userId: paymentData.userId } } }, { new: true }
+    const paymentInfo = {
+      status: PaymentStatus.PAYMENT_COMPLETED
+    };
+    transaction = await Transaction.findOneAndUpdate(
+      { _id: transactionId },
+      { $set: { ...paymentInfo } }
+    ).lean();
+    await validatePayment(transaction, paymentId, signature);
+    const wallet = await GroupWallet.findOneAndUpdate({ group_id: transaction.groupId },
+      { $push: { transactions: { type: 'DEPOSIT', amount: transaction.amount, userId: transaction.userId } } }, { new: true }
     )
     return wallet;
   }
   catch (error) {
+    if (transaction) {
+      const refundData = {
+        paymentId,
+        amount: transaction.amount,
+        reason: "Error in adding to wallet",
+      }
+      initiateRefund(refundData);
+      await session.commitTransaction();
+      session.endSession();
+    }
     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, error);
   }
 };
@@ -160,7 +188,7 @@ const makePayment = async (paymentData) => {
     await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
       { $push: { transactions: transactionInfo } }, { new: true }
     )
-    const payoutData = {
+    const razorpayPayoutData = {
       amount: paymentData.amount,
       vpa: paymentData.vpa,
       name: paymentData.name,
@@ -169,7 +197,7 @@ const makePayment = async (paymentData) => {
       mobile: paymentData.mobile,
       transactionId: ""
     }
-    const payoutResponse = await razorpayPayout(payoutData);
+    const payoutResponse = await razorpayPayout(razorpayPayoutData);
     if (payoutResponse.status === 200) {
       await session.commitTransaction();
       session.endSession();
@@ -213,7 +241,7 @@ const checkStatus = async (body) => {
         paymentData: status.data.data.paymentInstrument,
         status: status.data.success ? "Success" : "Failed",
       };
-      await Transactions.findOneAndUpdate(
+      await Transaction.findOneAndUpdate(
         { merchantTransactionId: status.data.data.merchantTransactionId },
         { $set: paymentInfo }
       ).lean();
@@ -307,4 +335,4 @@ async function razorpayPayout(data) {
 }
 
 
-export { paymentInitated, payoutInitated, refundInitiated, checkStatus, addToWallet, makePayment };
+export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment };
