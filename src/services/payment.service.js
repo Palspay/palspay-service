@@ -26,6 +26,7 @@ const paymentInitated = async (paymentData) => {
       userId,
       paidTo,
       amount,
+      groupId,
       status: PaymentStatus.PAYMENT_INITIATED,
       paymentData: order,
     };
@@ -94,7 +95,7 @@ const payoutInitated = async (payoutData) => {
       amount: data.amount,
       reason: "Payout failure",
     }
-    initiateRefund(refundData);
+    await initiateRefund(refundData);
     await session.commitTransaction();
     session.endSession();
     throw new ApiError(
@@ -161,7 +162,7 @@ const addToWallet = async (paymentData) => {
         amount: transaction.amount,
         reason: "Error in adding to wallet",
       }
-      initiateRefund(refundData);
+      await initiateRefund(refundData);
       await session.commitTransaction();
       session.endSession();
     }
