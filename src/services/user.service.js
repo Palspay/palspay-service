@@ -1,3 +1,5 @@
+import GroupWallet from '../models/group-wallet.modal';
+
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
@@ -195,6 +197,7 @@ const addFriends = async (userData) => {
 }
 const createGroups = async (groupData) => {
     try {
+        // create group
         groupData['created_by'] = groupData.userId;
         groupData['group_owner'] = groupData.userId;
         groupData['creation_date'] = groupData.usecurrentDaterId;
@@ -203,8 +206,21 @@ const createGroups = async (groupData) => {
             description: 'You created a new group ' + groupData.group_name,
             user_id: groupData.userId
         }
+
+        // Create activity
         await activityService.createActivity(obj);
         const createdGroup = await group.save();
+
+        // Setup group wallet
+
+        const groupWallet = await GroupWallet.create({
+            group_id: group._id,
+            balance: 0,
+            transactions: []
+        })
+        createdGroup['group_wallet'] = groupWallet._id;
+        
+        // create group members
         await GroupMember.create({
             group_id: createdGroup._id,
             member_id: groupData.userId,
