@@ -9,7 +9,7 @@ const fs = require('fs');
 const mime = require('mime');
 const { getCommonGroups } = require('../../controllers/users.controller');
 
-router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
+router.post('/addfriends', auth, validate(uservalidation.addfriends), userController.addFriends);
 router.get('/friends', auth, userController.getFriends);
 router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
 
