@@ -7,6 +7,8 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const mime = require('mime');
+const { getCommonGroups } = require('../../controllers/users.controller');
+
 router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
 router.get('/friends', auth, userController.getFriends);
 router.post('/groups', auth, validate(useralidation.createGroup), userController.createGroups);
@@ -33,7 +35,9 @@ router.post('/take-plan', auth, validate(useralidation.takePlan), userController
 
 router.get('/activity', auth, userController.getActivity);
 
+router.get('/common-groups/:userId', auth, getCommonGroups);
 
+router.get('/group-wallet/:groupId', auth, userController.getGroupWallet);
 
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;

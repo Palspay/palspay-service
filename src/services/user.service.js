@@ -10,6 +10,8 @@ const moment = require('moment-timezone');
 const Plans = require('./../models/plan.model');
 const Activity = require('../models/activity.model');
 const activityService = require('./activity.service');
+const GroupMembersList = require('../models/GroupMembersList'); 
+const GroupWallet = require('../models/group-wallet.modal');
 
 /**
  * Get user by email
@@ -82,6 +84,13 @@ const addFriends = async (userData) => {
         const activityArray = [];
         const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId, is_friendship: true }).exec();
         const group = await Groups.findOne({ _id: new mongoose.Types.ObjectId(userData.group_id) }).exec();
+
+        let groupMembersList = await GroupMembersList.findOne({ group_id: userData.group_id });
+        if (!groupMembersList) {
+            groupMembersList = new GroupMembersList({ group_id: userData.group_id, members: [] });
+        }
+
+
         for (const mobileNumber of userData.mobile) {
             const { name, mobile } = mobileNumber;
             const isExits = await getUserByMobile(mobile);
@@ -113,6 +122,7 @@ const addFriends = async (userData) => {
                                 creation_date: userData.usecurrentDaterId,
                             })
                         );
+                        groupMembersList.members.push(isExits._id); // Add to the new collection
                         tokenData.push({
                             mobile: isExits.mobile,
                             name: isExits.name,
@@ -150,6 +160,7 @@ const addFriends = async (userData) => {
                             creation_date: userData.usecurrentDaterId,
                         })
                     );
+                    groupMembersList.members.push(newUser._id); // Add to the new collection
                     activityArray.push(
                         Activity.create({
                             description: 'you addedd ' + name + ' to the ' + group.group_name,
@@ -171,7 +182,9 @@ const addFriends = async (userData) => {
                     creation_date: userData.usecurrentDaterId,
                 })
             );
+            groupMembersList.members.push(userData.userId); // Add to the new collection
         }
+        promises.push(groupMembersList.save()); // Save the updated members list
         await Promise.all(promises);
         await Promise.all(activityArray);
         return tokenData;
@@ -387,6 +400,37 @@ const takePlan = async (data, id) => {
     return updateData
 }
 
+const findCommonGroups = async (currentUserId, otherUserId) => {
+    try {
+        const currentUserGroups = await GroupMember.find({ member_id: currentUserId }).select('group_id').exec();
+        const otherUserGroups = await GroupMember.find({ member_id: otherUserId }).select('group_id').exec();
+
+        const currentUserGroupIds = currentUserGroups.map(group => group.group_id.toString());
+        const otherUserGroupIds = otherUserGroups.map(group => group.group_id.toString());
+
+        const commonGroupIds = currentUserGroupIds.filter(groupId => otherUserGroupIds.includes(groupId));
+
+        const commonGroups = await Groups.find({ _id: { $in: commonGroupIds } }).exec();
+        
+        return commonGroups;
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
+const getGroupWalletByGroupId = async (groupId) => {
+    try {
+        const groupWallet = await GroupWallet.findOne({ group_id: groupId }).exec();
+        if (!groupWallet) {
+            throw new ApiError(httpStatus.NOT_FOUND, 'Group wallet not found');
+        }
+        return groupWallet;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
 module.exports = {
     getUserByEmail,
     getUserById,
@@ -404,5 +448,7 @@ module.exports = {
     leaveGroup,
     deleteGroup,
     removeFriend,
-    takePlan
+    takePlan,
+    findCommonGroups,
+    getGroupWalletByGroupId
 };
