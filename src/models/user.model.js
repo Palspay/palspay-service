@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -16,6 +16,9 @@ const userSchema = mongoose.Schema({
     password: {
         type: String,
     },
+    vpa: {
+        type: String
+    },
     mobile: {
         type: String,
         require: true
@@ -23,10 +26,6 @@ const userSchema = mongoose.Schema({
     is_deleted: {
         type: Boolean,
         default: false
-    },
-    otp: {
-        type: Number,
-        default: null
     },
     fb_id: {
         type: String,
@@ -84,16 +83,14 @@ const userSchema = mongoose.Schema({
         type: String,
         default: 'USER',
     },
-    plan_id:{ type: mongoose.Schema.Types.ObjectId, ref: 'plans' },
+    plan_id: { type: mongoose.Schema.Types.ObjectId, ref: 'plans' },
     plan_expired: {
         type: Number,
     },
     plan_selected_date: {
         type: Number,
     }
-},
-
-);
+});
 
 
 
@@ -108,9 +105,9 @@ userSchema.pre('save', async function (next) {
 userSchema.set('versionKey', false);
 
 
-/**
- * @typedef User
- */
+// /**
+//  * @typedef User
+//  */
 const User = mongoose.model('users', userSchema);
 
 module.exports = User;

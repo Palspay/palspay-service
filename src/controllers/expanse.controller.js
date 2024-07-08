@@ -4,7 +4,7 @@ const { userExpanse } = require('../services');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 
-const addExpanse = catchAsync(async(req, res) => {
+const addExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
@@ -15,7 +15,7 @@ const addExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses add succesfully', data: { expanse_id: expanse_id._id } });
 });
 
-const updateExpanse = catchAsync(async(req, res) => {
+const updateExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;
     const mergedBody = {
         ...req.body,
@@ -27,7 +27,7 @@ const updateExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses updated succesfully', data: { expanse_id: expanse_id._id } });
 });
 
-const deleteExpanse = catchAsync(async(req, res) => {
+const deleteExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;
     const mergedBody = {
         ...req.body,
@@ -39,38 +39,38 @@ const deleteExpanse = catchAsync(async(req, res) => {
     res.status(httpStatus.OK).send({ message: 'Delete expanse succesfully', data: { expanseData } });
 });
 
-const getExpanse = catchAsync(async(req, res) => {
+const getExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.getGroupExpanse(mergedBody);
+    if (data) {
+        let total_lent = 0,
+            total_borrowed = 0,
+            owe_arr = [],
+            owes_arr = [];
+        for await (let item of data.expanseList) {
+            mergedBody.id = item._id;
+            item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+            total_lent += parseFloat(item.expanseData.you_lent);
+            total_borrowed += parseFloat(item.expanseData.you_borrowed);
+            let borrowed = parseFloat(item.expanseData.you_borrowed)
+            let lent = parseFloat(item.expanseData.you_lent)
 
-    let total_lent = 0,
-        total_borrowed = 0,
-        owe_arr = [],
-        owes_arr = [];
-    for await (let item of data.expanseList) {
-        mergedBody.expanseId = item._id;
-        item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-        total_lent += parseFloat(item.expanseData.you_lent);
-        total_borrowed += parseFloat(item.expanseData.you_borrowed);
-        let borrowed = parseFloat(item.expanseData.you_borrowed)
-        let lent = parseFloat(item.expanseData.you_lent)
-
-        if (borrowed > 0) {
-            owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
-        }
-        if (lent > 0) {
-            for await (let payer of item.expanseData.expanse_details) {
-                if (payer.type == "owes")
-                    owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+            if (borrowed > 0) {
+                owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
+            }
+            if (lent > 0) {
+                for await (let payer of item.expanseData.expanse_details) {
+                    if (payer.type == "owes")
+                        owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                }
             }
         }
-    }
-    if (data) {
         data.overall = total_lent - total_borrowed;
+        // @ts-ignore
         const owe_sums = {};
         const sums = {};
 
@@ -87,6 +87,7 @@ const getExpanse = catchAsync(async(req, res) => {
 
         owe_arr.forEach(item => {
             const key = `${item.to_id}_${item.to}`;
+            // @ts-ignore
             sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
         });
 
@@ -105,9 +106,10 @@ const getExpanse = catchAsync(async(req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
 });
-const fetchExpanse = catchAsync(async(req, res) => {
+const fetchExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
+        id: req.params.id,
         userId: req.userId,
         currentDate: req.currentDate
     };
@@ -118,13 +120,13 @@ const fetchExpanse = catchAsync(async(req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
 });
-const individualExpanse = catchAsync(async(req, res) => {
-
-    let userId = (req.query.friendId) ? new ObjectId(req.query.friendId) : req.userId;
+const individualExpanse = catchAsync(async (req, res) => {
+    let friendId = (req.query.friendId) ? new ObjectId(req.query.friendId) : null;
 
     const mergedBody = {
         ...req.body,
-        userId: userId,
+        userId: req.userId,
+        friendId: friendId,
         currentDate: req.currentDate
     };
     const data = await userExpanse.individualExpanse(mergedBody);
@@ -138,27 +140,27 @@ const individualExpanse = catchAsync(async(req, res) => {
             groupDetails = {};
         for await (let item of data) {
             mergedBody.expanseId = item._id;
-            item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-            total_lent += parseFloat(item.expanseData.you_lent);
-            total_borrowed += parseFloat(item.expanseData.you_borrowed);
-            let borrowed = parseFloat(item.expanseData.you_borrowed)
-            let lent = parseFloat(item.expanseData.you_lent)
+            // item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+            total_lent += parseFloat(item.you_lent);
+            total_borrowed += parseFloat(item.you_borrowed);
+            let borrowed = parseFloat(item.you_borrowed)
+            let lent = parseFloat(item.you_lent)
 
             groupDetails = await userExpanse.getGroupByUser(mergedBody); //group details for linked user
 
             if (borrowed > 0) {
-                // console.log(item, "payer", borrowed);
                 owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
             }
             if (lent > 0) {
-                for await (let payer of item.expanseData.expanse_details) {
+                for await (let payer of item.expanse_details) {
                     if (payer.type == "owes")
                         owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
                 }
             }
         }
         expanse.overall = total_lent - total_borrowed;
-        // console.log(owes_arr, "owes_arr", owe_arr);
+        expanse.total_lent = total_lent;
+        expanse.total_borrowed = total_borrowed;
         if (owes_arr.length > 0) {
             owes_arr.forEach(item => {
                 const key = `${item.from_id}_${item.from}`;
@@ -171,11 +173,12 @@ const individualExpanse = catchAsync(async(req, res) => {
             });
             expanse.owes_arr = result;
         } else {
-            expanse.owes_arr = {};
+            expanse.owes_arr = [];
         }
         if (owe_arr.length > 0) {
             owe_arr.forEach(item => {
                 const key = `${item.to_id}_${item.to}`;
+                // @ts-ignore
                 sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
             });
 
@@ -185,7 +188,7 @@ const individualExpanse = catchAsync(async(req, res) => {
             });
             expanse.owe_arr = owe_result;
         } else {
-            expanse.owe_arr = {};
+            expanse.owe_arr = [];
         }
 
         res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse, groupDetails });

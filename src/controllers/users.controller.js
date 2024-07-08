@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 // const { use } = require('../routes/v1/user.routes');
 const activityService = require('./../services/activity.service');
+// @ts-ignore
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
@@ -22,7 +23,7 @@ const addFriends = catchAsync(async (req, res) => {
 
 const getFriends = catchAsync(async (req, res) => {
     const friends = await userService.getFriendsById(req.userId);
-    res.status(httpStatus.OK).send({ message: 'Data Loading', data: { friends } });
+    res.status(httpStatus.OK).send({ message: 'Friends List', data: { friends } });
 })
 
 
@@ -36,23 +37,40 @@ const createGroups = catchAsync(async (req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Group Create succesfully', data: { group_id: group_id._id } });
 });
 
+const groupSettings = catchAsync(async (req, res) => {
+    const mergedBody = {
+        userId: req.userId,
+        owner_only_payment: req.body.owner_only_payment,
+        group_name: req.body.group_name,
+        group_icon: req.body.group_icon,
+        groupId: req.params.group_id,
+        currentDate: req.currentDate
+    };
+    const updatedGroup = await userService.updateGroupPreference(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Group Settings updated', data: updatedGroup });
+})
 
 const getMembersByGroupId = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
-        groupId: req.params.group_id, 
+        groupId: req.params.group_id,
         currentDate: req.currentDate
     };
     const groupsDetails = await userService.getMembersByGroupId(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsDetails } });
+    res.status(httpStatus.OK).send({ message: 'Group details fetched succesfully', data: { groupsDetails } });
 });
 
 const getMyGroups = catchAsync(async (req, res) => {
     const groupsList = await userService.getMyGroups(req.userId);
-    res.status(httpStatus.OK).send({ message: 'Data Load succesfully', data: { groupsList } });
+    res.status(httpStatus.OK).send({ message: 'Group list fetched succesfully', data: { groupsList } });
 });
 
+const getUserDetails = catchAsync(async (req, res) => {
+    const userId = req.params.user_id
+    const userDetails = await userService.getUserDetails(userId);
+    res.status(httpStatus.OK).send({ message: 'User details fetched succesfully', data: userDetails });
+})
 const setPasscode = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -162,6 +180,12 @@ const getActivity = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Data Loading', data: { activity } });
 })
 
+
+const getTransactions = catchAsync(async (req, res) => {
+    const transactions = await userService.getTransactions(req.userId);
+    res.status(httpStatus.OK).send({ message: 'Transactions Fetched', data: { transactions } });
+})
+
 const getCommonGroups = async (req, res, next) => {
     console.log('GET common-groups  route was called');
     try {
@@ -184,6 +208,7 @@ const getGroupWallet = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Group wallet fetched successfully', data: { groupWallet } });
 });
 
+
 module.exports = {
     addFriends,
     getFriends,
@@ -199,6 +224,10 @@ module.exports = {
     removeFriend,
     takePlan,
     getActivity,
+    getUserDetails,
+    groupSettings,
+    getTransactions,
     getCommonGroups,
     getGroupWallet 
+
 };

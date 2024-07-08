@@ -1,3 +1,5 @@
+import GroupWallet from '../models/group-wallet.modal';
+
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
@@ -9,6 +11,7 @@ const mongoose = require('mongoose');
 const moment = require('moment-timezone');
 const Plans = require('./../models/plan.model');
 const Activity = require('../models/activity.model');
+const { Transaction, PaymentStatus } = require('../models/transaction.model');
 const activityService = require('./activity.service');
 const GroupMembersList = require('../models/GroupMembersList'); 
 const GroupWallet = require('../models/group-wallet.modal');
@@ -18,9 +21,10 @@ const GroupWallet = require('../models/group-wallet.modal');
  * @param {string} email
  * @returns {Promise<User>}
  */
-const getUserByEmail = async (email) => {
-    return User.findOne({ email, is_deleted: false, is_otp_verify: true });
+const getUserByEmail = async (email, verifyOtp = true) => {
+    return User.findOne({ email, is_deleted: false, is_otp_verify: verifyOtp });
 };
+
 
 const getUserById = async (userId) => {
     return User.findOne({ _id: userId, is_deleted: false });
@@ -77,6 +81,13 @@ async function areFriends(userId) {
     return user1Friends;
 }
 
+const getUserDetails = async (userId) => {
+    const user = await User.findOne({ _id: userId }).select('name email vpa mobile');
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    return user;
+}
 const addFriends = async (userData) => {
     try {
         const promises = [];
@@ -199,6 +210,7 @@ const addFriends = async (userData) => {
 }
 const createGroups = async (groupData) => {
     try {
+        // create group
         groupData['created_by'] = groupData.userId;
         groupData['group_owner'] = groupData.userId;
         groupData['creation_date'] = groupData.usecurrentDaterId;
@@ -207,8 +219,21 @@ const createGroups = async (groupData) => {
             description: 'You created a new group ' + groupData.group_name,
             user_id: groupData.userId
         }
+
+        // Create activity
         await activityService.createActivity(obj);
         const createdGroup = await group.save();
+
+        // Setup group wallet
+
+        const groupWallet = await GroupWallet.create({
+            group_id: group._id,
+            balance: 0,
+            transactions: []
+        })
+        createdGroup['group_wallet'] = groupWallet._id;
+        
+        // create group members
         await GroupMember.create({
             group_id: createdGroup._id,
             member_id: groupData.userId,
@@ -225,6 +250,7 @@ const createGroups = async (groupData) => {
     }
 
 }
+
 
 const getMembersByGroupId = async (userData) => {
     try {
@@ -258,6 +284,40 @@ const getMembersByGroupId = async (userData) => {
     }
 };
 
+const getGroupDetails = async (groupId) => {
+    try {
+        const groupDetails = await Groups.findById(groupId).exec();
+        return groupDetails;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
+const updateGroupPreference = async (groupData) => {
+    try {
+        const updateFields = {
+            modification_date: groupData.currentDate,
+            modified_by: groupData.userId
+        };
+        // Conditionally add fields to the update object
+        if (groupData.group_name !== undefined) {
+            updateFields.group_name = groupData.group_name;
+        }
+        if (groupData.group_icon !== undefined) {
+            updateFields.group_icon = groupData.group_icon;
+        }
+        if (groupData.owner_only_payment !== undefined) {
+            updateFields.owner_only_payment = groupData.owner_only_payment;
+        }
+        const updatedGroup = await Groups.findByIdAndUpdate({ _id: groupData.groupId }, { $set: updateFields }, { new: true });
+        if (!updatedGroup) {
+            throw new Error('Group not found or unable to update');
+        }
+        return updatedGroup;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Error updating group: ${error.message}`);
+    }
+}
 const getMyGroups = async (userId) => {
     try {
         const groupsList = await Groups.aggregate([
@@ -391,14 +451,55 @@ const takePlan = async (data, id) => {
         data['plan_expired'] = originalDate.getTime();
     } else if (data.plan_type === 'Monthly') {
         originalDate.setMonth(originalDate.getMonth() + 1);
+        // @ts-ignore
         if (originalDate.getDate() !== new Date(originalTimestamp).getDate()) {
             originalDate.setDate(0);
         }
+        // @ts-ignore
         data['plan_expired'] = Date.parse(originalDate.getTime());
     }
     const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();
     return updateData
 }
+
+const getTransactions = async (userId) => {
+    try {
+        const transactions = await Transaction.aggregate([
+            {
+                $match: {
+                    userId: userId,
+                    is_deleted: false,
+                    status: PaymentStatus.PAYMENT_COMPLETED
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'paidTo',
+                    foreignField: '_id',
+                    as: 'paidToUser'
+                }
+            },
+            {
+                $unwind: '$paidToUser'
+            },
+            {
+                $project: {
+                    _id: 1,
+                    amount: 1,
+                    paidTo: {
+                        _id: '$paidToUser._id', // Include the paidTo ID
+                        name: '$paidToUser.name' // Include the name of the user
+                    }
+                }
+            }
+        ]);
+
+        return transactions;
+    } catch (error) {
+        throw new Error('Error retrieving transactions: ' + error.message);
+    }
+};
 
 const findCommonGroups = async (currentUserId, otherUserId) => {
     try {
@@ -431,6 +532,7 @@ const getGroupWalletByGroupId = async (groupId) => {
     }
 }
 
+
 module.exports = {
     getUserByEmail,
     getUserById,
@@ -449,6 +551,10 @@ module.exports = {
     deleteGroup,
     removeFriend,
     takePlan,
+    getUserDetails,
+    getGroupDetails,
+    updateGroupPreference,
+    getTransactions,
     findCommonGroups,
     getGroupWalletByGroupId
 };

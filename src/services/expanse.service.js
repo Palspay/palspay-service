@@ -1,15 +1,17 @@
+import { EXPANSE_TYPE } from '../constants/constant';
+
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const Expanse = require('../models/expanse.model');
 const mongoose = require('mongoose');
+// @ts-ignore
 const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 const activityService = require('./activity.service');
 
 const createExpanse = async (expanseData) => {
     try {
-        expanseData['userId'] = expanseData.userId;
         var imagesArray = [];
         if (expanseData?.imageArray?.length > 0) {
             for await (let item of expanseData.imageArray) {
@@ -129,13 +131,18 @@ const getGroupExpanse = async (userData) => {
             },
         ];
 
+        // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
+        if(expanse.length == 0){
+            return [];
+        }
+        // @ts-ignore
         let dataArr = [];
 
-        const expanseList = expanse[0].expanseList;
-        const groupsMembers = expanse[0].groupsMembers;
-        const totalExpanse = expanse[0].total;
-        const groupsMembersCount = expanse[0].groupsMembersCount;
+        const expanseList = expanse[0]?.expanseList;
+        const groupsMembers = expanse[0]?.groupsMembers;
+        const totalExpanse = expanse[0]?.total;
+        const groupsMembersCount = expanse[0]?.groupsMembersCount;
         const equalShare = totalExpanse / groupsMembersCount;
 
         const memberAmounts = {};
@@ -160,11 +167,16 @@ const getGroupExpanse = async (userData) => {
             var owesYou = 0;
             var youOwe = 0;
             const amountPaid = memberAmounts[memberId];
+            // @ts-ignore
             const balances = parseFloat(equalShare).toFixed(2) - parseFloat(amountPaid).toFixed(2);
             const balance = balances.toFixed(2);
+            // @ts-ignore
             if (balance > 0) {
+                // @ts-ignore
                 owesYou = balance;
+            // @ts-ignore
             } else if (balance < 0) {
+                // @ts-ignore
                 youOwe = balance;
             }
             resultArray.push({ memberId, amountPaid, equalShare: Number(equalShare.toFixed(2)), owesYou: Number(owesYou), youOwe: Number(youOwe) });
@@ -179,7 +191,7 @@ const getGroupExpanse = async (userData) => {
 const fetchExpanse = async (data) => {
     try {
         let agg = [
-            { $match: { _id: new ObjectId(data.expanseId), is_deleted: false } },
+            { $match: { _id: new ObjectId(data.id), is_deleted: false } },
             { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
             { $unwind: "$usersData" },
             {
@@ -248,6 +260,7 @@ const fetchExpanse = async (data) => {
 
             // splitEqually
             if (item.splitEqually.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_EQUALLY
                 for await (let per of item.splitEqually) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -262,6 +275,7 @@ const fetchExpanse = async (data) => {
             }
             // splitUnequally
             if (item.splitUnequally.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_UNEQUALLY
                 for await (let per of item.splitUnequally) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -276,6 +290,7 @@ const fetchExpanse = async (data) => {
             }
             // splitByPercentage
             if (item.splitByPercentage.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_PERCENTAGE
                 for await (let per of item.splitByPercentage) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -290,6 +305,7 @@ const fetchExpanse = async (data) => {
             }
             // splitByShare
             if (item.splitByShare.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_SHARE
                 for await (let per of item.splitByShare) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -305,6 +321,7 @@ const fetchExpanse = async (data) => {
 
             // splitByAdjustments
             if (item.splitByAdjustments.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_ADJUSTMENT
                 for await (let per of item.splitByAdjustments) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -339,18 +356,24 @@ const fetchExpanse = async (data) => {
     }
 };
 const individualExpanse = async (data) => {
+    const matchStage = {
+        $match: {
+            'members.memberId': data.userId,
+            is_deleted: false,
+            groupId: { $eq: "" }
+        }
+    };
+
+    if (data.friendId) {
+        matchStage.$match['members.memberId'] = {
+            $all: [
+                data.userId,
+                data.friendId
+            ]
+        };
+    }
     try {
-        let agg = [{
-            $match: {
-                groupId: { $eq: "" },
-                is_deleted: false,
-                // userId: data.userId,
-                $or: [
-                    // { "addPayer.from": data.userId },
-                    { "members.memberId": data.userId },
-                ]
-            }
-        },
+        let agg = [matchStage,
         { "$lookup": { "from": "users", "localField": "userId", "foreignField": "_id", "as": "usersData" }, },
         { $unwind: "$usersData" },
         {
@@ -414,17 +437,18 @@ const individualExpanse = async (data) => {
             },
         },
         ];
+        // @ts-ignore
         const expanse = await Expanse.aggregate(agg);
 
-        let lentAmount = 0,
-            borrowedAmount = 0;
         for await (let item of expanse) {
+            let lentAmount = 0, borrowedAmount = 0;
             item.you_lent = 0;
             item.you_borrowed = 0;
             let non_group = [];
 
             // splitEqually
             if (item.splitEqually.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_EQUALLY
                 for await (let per of item.splitEqually) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -439,6 +463,7 @@ const individualExpanse = async (data) => {
             }
             // splitUnequally
             if (item.splitUnequally.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_UNEQUALLY
                 for await (let per of item.splitUnequally) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -453,6 +478,7 @@ const individualExpanse = async (data) => {
             }
             // splitByPercentage
             if (item.splitByPercentage.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_PERCENTAGE
                 for await (let per of item.splitByPercentage) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -467,6 +493,7 @@ const individualExpanse = async (data) => {
             }
             // splitByShare
             if (item.splitByShare.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_SHARE
                 for await (let per of item.splitByShare) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -482,6 +509,7 @@ const individualExpanse = async (data) => {
 
             // splitByAdjustments
             if (item.splitByAdjustments.length > 0) {
+                item['expanseType'] = EXPANSE_TYPE.SPLIT_BY_ADJUSTMENT
                 for await (let per of item.splitByAdjustments) {
                     if (per.memberId.toString() == data.userId.toString()) {
                         non_group.push({ type: "owe", memberId: per.memberId, amount: per.amount })
@@ -500,7 +528,6 @@ const individualExpanse = async (data) => {
             } else {
                 item.you_lent = lentAmount.toFixed(2);
             }
-            lentAmount = 0, borrowedAmount = 0;
         }
         for await (let exp of expanse) {
             for await (let item of exp.expanse_details) {
@@ -522,7 +549,7 @@ const getGroupByUser = async (userData) => {
     try {
         let agg;
         agg = [
-            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId } },
+            { $match: { groupId: { $ne: '' }, "members.memberId": userData.userId, is_deleted: false } },
             {
                 $addFields: {
                     groupIdObjectId: {

@@ -1,6 +1,6 @@
+import { paymentService, userService } from '../services';
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
-const { paymentService } = require('./../services');
 
 const paymentInitated = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -9,7 +9,7 @@ const paymentInitated = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data = await paymentService.paymentInitated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Payment succesfully',data:{data} });
+    res.status(httpStatus.OK).send({ message: 'Payment succesfully', data });
 });
 
 const payoutInitated = catchAsync(async (req, res) => {
@@ -18,8 +18,8 @@ const payoutInitated = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const data=await paymentService.payoutInitated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Payout succesfully',data:{data} });
+    const data = await paymentService.payoutInitated(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Payout successfull', data });
 });
 
 const refundInitiated = catchAsync(async (req, res) => {
@@ -28,9 +28,34 @@ const refundInitiated = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate
     };
-    const data=await paymentService.refundInitiated(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Refund succesfully',data:{data} });
+    const data = await paymentService.initiateRefund(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Refund succesfully', data: { data } });
 });
+
+const addToWallet = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const data = await paymentService.addToWallet(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Added to wallet', data });
+});
+
+const makePayment = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const group_details = await userService.getGroupDetails(mergedBody.groupId);
+    if(group_details.owner_only_payment && !req.userId.id.equals(group_details.group_owner.id)){
+        res.status(httpStatus.UNAUTHORIZED).send({ message: 'Not Authorised to make payment, Contact group admin', data: {} });
+        return
+    }
+    const data = await paymentService.makePayment(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Payment successful', data });
+})
 
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
@@ -44,9 +69,11 @@ const refundInitiated = catchAsync(async (req, res) => {
 // });
 
 
-module.exports = {
-    paymentInitated,
-    payoutInitated,
-    refundInitiated
-    // checkStatus
-};
+// module.exports = {
+//     paymentInitated,
+//     payoutInitated,
+//     refundInitiated
+//     // checkStatus
+// };
+
+export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment }

@@ -5,6 +5,7 @@ const adminController = require('../../controllers/admin.controller');
 const {authAdmin} = require('../../middlewares/auth');
 const router = express.Router();
 
+// @ts-ignore
 router.post('/createplan', authAdmin,  validate(adminValidation.createPlans),adminController.createPlans);
 
 module.exports = router;

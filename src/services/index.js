@@ -1,8 +1,8 @@
-authService = require('./auth.service');
-userService = require('./user.service');
-userExpanse = require('./expanse.service');
-adminService=require('./admin.service');
-paymentService=require('./payment.service')
+const authService = require('./auth.service');
+const userService = require('./user.service');
+const userExpanse = require('./expanse.service');
+const adminService=require('./admin.service');
+const paymentService=require('./payment.service')
 module.exports = {
     authService,
     userService,
