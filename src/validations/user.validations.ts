@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const { password, passcode } = require('./custom.validations');
 
-const addfriends = {
+export const addFriends = {
     body: Joi.object({
         mobile: Joi.array()
             .items(
@@ -58,7 +58,7 @@ const takePlan = {
 }
 
 module.exports = {
-    addfriends,
+    addFriends,
     createGroup,
     createExpanse,
     groupDetailsByGroupId,

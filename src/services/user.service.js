@@ -1,5 +1,3 @@
-import GroupWallet from '../models/group-wallet.modal';
-
 const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');

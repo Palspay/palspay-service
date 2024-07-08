@@ -1,6 +1,6 @@
 const express = require('express');
 const validate = require('../../middlewares/validate');
-const useralidation = require('../../validations/user.validations');
+const userValidation = require('../../validations/user.validations');
 const userController = require('../../controllers/users.controller');
 const { auth, authGroupOwner } = require('../../middlewares/auth');
 const router = express.Router();
@@ -9,21 +9,21 @@ const fs = require('fs');
 const mime = require('mime');
 
 // router.post('/addfriends', auth, validate(uservalidation.addfriends), userController.addFriends);
-router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
+router.post('/addfriends', auth, validate(userValidation.addFriends), userController.addFriends);
 
 const { getCommonGroups } = require('../../controllers/users.controller');
 
 router.get('/friends', auth, userController.getFriends);
 // @ts-ignore
-router.post('/groups', auth, validate(uservalidation.createGroup), userController.createGroups);
+router.post('/groups', auth, validate(userValidation.createGroup), userController.createGroups);
 
 router.get('/group-details/:group_id', auth, userController.getMembersByGroupId);
 router.get('/mygroups', auth, userController.getMyGroups);
 router.get('/user/:user_id', auth, userController.getUserDetails);
 // @ts-ignore
-router.post('/setpasscode', auth, validate(uservalidation.setPasscode), userController.setPasscode);
+router.post('/setpasscode', auth, validate(userValidation.setPasscode), userController.setPasscode);
 // @ts-ignore
-router.post('/edit-profile', auth, validate(uservalidation.profile), userController.editProfile);
+router.post('/edit-profile', auth, validate(userValidation.profile), userController.editProfile);
 
 router.get('/timezones', auth, userController.getAllTimezones);
 
@@ -40,7 +40,7 @@ router.delete('/remove-friend', auth, userController.removeFriend);
 router.delete('/remove-friend/:user_id', auth, userController.removeFriend);
 
 // @ts-ignore
-router.post('/take-plan', auth, validate(uservalidation.takePlan), userController.takePlan);
+router.post('/take-plan', auth, validate(userValidation.takePlan), userController.takePlan);
 
 router.get('/activity', auth, userController.getActivity);
 router.get('/transactions', auth, userController.getTransactions);

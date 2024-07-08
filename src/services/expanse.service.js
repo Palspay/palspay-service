@@ -10,7 +10,7 @@ const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 const activityService = require('./activity.service');
 
-const createExpanse = async (expanseData) => {
+export const createExpanse = async (expanseData) => {
     try {
         var imagesArray = [];
         if (expanseData?.imageArray?.length > 0) {
@@ -35,7 +35,8 @@ const createExpanse = async (expanseData) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const updateExpanse = async (expanseData) => {
+
+export const updateExpanse = async (expanseData) => {
     try {
         expanseData['userId'] = expanseData.userId;
         var imagesArray = [];
@@ -59,7 +60,7 @@ const updateExpanse = async (expanseData) => {
     }
 };
 
-const deleteExpanse = async (expanseData) => {
+export const deleteExpanse = async (expanseData) => {
     try {
         const expanse = await Expanse.findByIdAndUpdate({ _id: new ObjectId(expanseData.expanseId) }, { $set: { is_deleted: true } }, { new: true, useFindAndModify: false }).lean();
         const obj = {
@@ -74,7 +75,7 @@ const deleteExpanse = async (expanseData) => {
     }
 };
 
-const getGroupExpanse = async (userData) => {
+export const getGroupExpanse = async (userData) => {
     try {
         let { groupId } = userData
         let agg;
@@ -188,7 +189,7 @@ const getGroupExpanse = async (userData) => {
         throw new ApiError(httpStatus.NOT_FOUND, 'no data found');
     }
 };
-const fetchExpanse = async (data) => {
+export const fetchExpanse = async (data) => {
     try {
         let agg = [
             { $match: { _id: new ObjectId(data.id), is_deleted: false } },
@@ -355,7 +356,7 @@ const fetchExpanse = async (data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const individualExpanse = async (data) => {
+export const individualExpanse = async (data) => {
     const matchStage = {
         $match: {
             'members.memberId': data.userId,
@@ -545,7 +546,7 @@ const individualExpanse = async (data) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
-const getGroupByUser = async (userData) => {
+export const getGroupByUser = async (userData) => {
     try {
         let agg;
         agg = [
