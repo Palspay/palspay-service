@@ -7,11 +7,6 @@
     "start:dev": "nodemon src/index.js",
     "start:prod": "node src/index.js NODE_ENV=production",
     "test": "echo \"Error: no test specified\" && exit 1"
-//   "build": "npx tsc",
-//    "start": "node dist/index.js",
-//    "start:dev": "npx tsc && nodemon dist/index.js",
-//    "start:prod": "node dist/index.js NODE_ENV=production",
-//    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "nodejs",
