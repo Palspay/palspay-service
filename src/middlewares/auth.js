@@ -21,6 +21,12 @@ const auth = async (req, res, next) => {
     } catch (error) {
         next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid Token'));
     }
+    req.userId = user._id;
+    console.log(req.userId)
+    req.email = user.email;
+
+    req.currentDate = await getCurrentDateTime();
+    next();
 }
 
 // @ts-ignore
