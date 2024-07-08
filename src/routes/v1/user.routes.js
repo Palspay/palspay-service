@@ -1,6 +1,6 @@
 const express = require('express');
 const validate = require('../../middlewares/validate');
-const uservalidation = require('../../validations/user.validations');
+const useralidation = require('../../validations/user.validations');
 const userController = require('../../controllers/users.controller');
 const { auth, authGroupOwner } = require('../../middlewares/auth');
 const router = express.Router();
@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const mime = require('mime');
 
-router.post('/addfriends', auth, validate(uservalidation.addfriends), userController.addFriends);
+// router.post('/addfriends', auth, validate(uservalidation.addfriends), userController.addFriends);
 router.post('/addfriends', auth, validate(useralidation.addfriends), userController.addFriends);
 
 const { getCommonGroups } = require('../../controllers/users.controller');
