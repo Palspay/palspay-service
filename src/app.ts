@@ -66,7 +66,7 @@ app.options("*", cors());
 app.use("/v1", routes);
 
 app.get("/", (req, res) => {
-  res.send("Server is running");
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // send back a 404 error for any unknown api request

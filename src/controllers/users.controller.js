@@ -10,6 +10,7 @@ const activityService = require('./../services/activity.service');
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
+const { ReportedUser } = require('../models/reportedUser.model');
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -190,8 +191,6 @@ const getCommonGroups = async (req, res, next) => {
     try {
         const { userId } = req.params;
         const currentUserId = req.userId; // Assuming you are using some middleware to get the current user's ID
-        console.log(userId);
-        console.log(currentUserId);
         const commonGroups = await findCommonGroups(currentUserId, userId);
 
         res.status(httpStatus.OK).json(commonGroups);
@@ -206,6 +205,29 @@ const getGroupWallet = catchAsync(async (req, res) => {
     const groupWallet = await getGroupWalletByGroupId(groupId);
     res.status(httpStatus.OK).send({ message: 'Group wallet fetched successfully', data: { groupWallet } });
 });
+
+const reportUser = async (req, res) => {
+    try {
+        const { reportedUserId, reportedUserName, reportMessage } = req.body;
+
+        if (!reportedUserId || !reportedUserName || !reportMessage) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        const newReport = new ReportedUser({
+            reportedUserId,
+            reportedUserName,
+            reportMessage
+        });
+
+        await newReport.save();
+
+        res.status(201).json({ message: 'User reported successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
 
 module.exports = {
@@ -227,5 +249,6 @@ module.exports = {
     groupSettings,
     getTransactions,
     getCommonGroups,
-    getGroupWallet 
+    getGroupWallet,
+    reportUser 
 };

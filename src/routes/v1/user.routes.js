@@ -43,6 +43,7 @@ router.get('/transactions', auth, userController.getTransactions);
 
 router.get('/common-groups/:userId', auth, userController.getCommonGroups);
 router.get('/group-wallet/:groupId', auth, userController.getGroupWallet);
+router.post('/report-user', auth, userController.reportUser);
 
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;
