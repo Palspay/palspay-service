@@ -10,7 +10,12 @@ const activityService = require('./../services/activity.service');
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
+<<<<<<< HEAD
 const { ReportedUser } = require('../models/reportedUser.model');
+=======
+const ReportedUser = require('../models/reportedUser.model');
+const User = require('../models/user.model');
+>>>>>>> 8df3e33 (profile pic update api)
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -116,6 +121,30 @@ const uploadFile = catchAsync(async (req, res) => {
 
         const releativePath = path.join(req.file.filename);
         res.json({ message: 'File uploaded successfully', imagePath: releativePath });
+    });
+});
+
+const uploadUserProfilePicture = catchAsync(async (req, res) => {
+    upload.single('file')(req, res, async (err) => {
+        if (err) {
+            return res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
+        }
+        if (!req.file) {
+            return res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
+        }
+
+        const relativePath = `https://app.palspayapp.com/v1/users/uploads/${req.file.filename}`;
+
+        // Update user's dp field
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(httpStatus.NOT_FOUND).send({ message: 'User not found', data: {} });
+        }
+
+        user.dp = relativePath;
+        await user.save();
+
+        res.status(httpStatus.OK).json({ message: 'File uploaded successfully', imagePath: relativePath });
     });
 });
 
@@ -250,5 +279,6 @@ module.exports = {
     getTransactions,
     getCommonGroups,
     getGroupWallet,
-    reportUser 
+    reportUser,
+    uploadUserProfilePicture 
 };
