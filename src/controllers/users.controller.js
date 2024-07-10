@@ -8,6 +8,9 @@ const fs = require('fs');
 const activityService = require('./../services/activity.service');
 // @ts-ignore
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
+const { findCommonGroups } = require('../services/user.service');
+const { getGroupWalletByGroupId } = require('../services/user.service');
+
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -181,6 +184,30 @@ const getTransactions = catchAsync(async (req, res) => {
     const transactions = await userService.getTransactions(req.userId);
     res.status(httpStatus.OK).send({ message: 'Transactions Fetched', data: { transactions } });
 })
+
+const getCommonGroups = async (req, res, next) => {
+    console.log('GET common-groups  route was called');
+    try {
+        const { userId } = req.params;
+        const currentUserId = req.userId; // Assuming you are using some middleware to get the current user's ID
+        console.log(userId);
+        console.log(currentUserId);
+        const commonGroups = await findCommonGroups(currentUserId, userId);
+
+        res.status(httpStatus.OK).json(commonGroups);
+    } catch (error) {
+        console.log(req.userId);
+        next(error);
+    }
+}
+
+const getGroupWallet = catchAsync(async (req, res) => {
+    const { groupId } = req.params;
+    const groupWallet = await getGroupWalletByGroupId(groupId);
+    res.status(httpStatus.OK).send({ message: 'Group wallet fetched successfully', data: { groupWallet } });
+});
+
+
 module.exports = {
     addFriends,
     getFriends,
@@ -198,5 +225,7 @@ module.exports = {
     getActivity,
     getUserDetails,
     groupSettings,
-    getTransactions
+    getTransactions,
+    getCommonGroups,
+    getGroupWallet 
 };

@@ -41,7 +41,8 @@ router.post('/take-plan', auth, validate(uservalidation.takePlan), userControlle
 router.get('/activity', auth, userController.getActivity);
 router.get('/transactions', auth, userController.getTransactions);
 
-
+router.get('/common-groups/:userId', auth, userController.getCommonGroups);
+router.get('/group-wallet/:groupId', auth, userController.getGroupWallet);
 
 router.get('/uploads/:imageName', (req, res) => {
   const imageName = req.params.imageName;

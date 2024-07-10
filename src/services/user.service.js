@@ -13,6 +13,7 @@ const Plans = require('./../models/plan.model');
 const Activity = require('../models/activity.model');
 const { Transaction, PaymentStatus } = require('../models/transaction.model');
 const activityService = require('./activity.service');
+const GroupMembersList = require('../models/GroupMembersList.model'); 
 
 /**
  * Get user by email
@@ -488,6 +489,37 @@ const getTransactions = async (userId) => {
     }
 };
 
+const findCommonGroups = async (currentUserId, otherUserId) => {
+    try {
+        const currentUserGroups = await GroupMember.find({ member_id: currentUserId }).select('group_id').exec();
+        const otherUserGroups = await GroupMember.find({ member_id: otherUserId }).select('group_id').exec();
+
+        const currentUserGroupIds = currentUserGroups.map(group => group.group_id.toString());
+        const otherUserGroupIds = otherUserGroups.map(group => group.group_id.toString());
+
+        const commonGroupIds = currentUserGroupIds.filter(groupId => otherUserGroupIds.includes(groupId));
+
+        const commonGroups = await Groups.find({ _id: { $in: commonGroupIds } }).exec();
+        
+        return commonGroups;
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
+const getGroupWalletByGroupId = async (groupId) => {
+    try {
+        const groupWallet = await GroupWallet.findOne({ group_id: groupId }).exec();
+        if (!groupWallet) {
+            throw new ApiError(httpStatus.NOT_FOUND, 'Group wallet not found');
+        }
+        return groupWallet;
+    } catch (error) {
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+    }
+}
+
 module.exports = {
     getUserByEmail,
     getUserById,
@@ -509,5 +541,7 @@ module.exports = {
     getUserDetails,
     getGroupDetails,
     updateGroupPreference,
-    getTransactions
+    getTransactions,
+    findCommonGroups,
+    getGroupWalletByGroupId
 };
