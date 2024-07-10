@@ -66,7 +66,7 @@ app.options("*", cors());
 app.use("/v1", routes);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'src', 'index.html'));
 });
 
 // send back a 404 error for any unknown api request
