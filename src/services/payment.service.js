@@ -152,7 +152,7 @@ const addToWallet = async (paymentData) => {
     await validatePayment(transaction, paymentId, signature);
     const amount = parseFloat(transaction.amount);
     const wallet = await GroupWallet.findOneAndUpdate({ group_id: transaction.groupId },
-      { $push: { transactions: { type: 'DEPOSIT', amount: transaction.amount, userId: transaction.userId } } }, { new: true }
+      { $push: { transactions: { type: 'DEPOSIT', amount: amount, userId: transaction.userId } } }, { new: true }
     )
     return wallet;
   }
