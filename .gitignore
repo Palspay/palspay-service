@@ -5,3 +5,7 @@ node_modules/
 /package.lock.json
 /public/uploads
 /dist
+<<<<<<< HEAD
+=======
+firebase_cert.json
+>>>>>>> b332437 (added profile pic api)
