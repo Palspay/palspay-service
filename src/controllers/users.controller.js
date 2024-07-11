@@ -129,7 +129,7 @@ const uploadUserProfilePicture = catchAsync(async (req, res) => {
             return res.status(httpStatus.BAD_REQUEST).send({ message: 'File upload failed', data: {} });
         }
 
-        const relativePath = `https://app.palspayapp.com/v1/users/uploads/${req.file.filename}`;
+        const relativePath = path.join('uploads', req.file.filename);
 
         // Update user's dp field
         const user = await User.findById(req.userId);
