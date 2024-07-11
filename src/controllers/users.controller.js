@@ -10,12 +10,8 @@ const activityService = require('./../services/activity.service');
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
-<<<<<<< HEAD
-const { ReportedUser } = require('../models/reportedUser.model');
-=======
 const ReportedUser = require('../models/reportedUser.model');
 const User = require('../models/user.model');
->>>>>>> 8df3e33 (profile pic update api)
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
