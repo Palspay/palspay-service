@@ -200,6 +200,7 @@ const makePayment = async (paymentData) => {
       transactionId: ""
     }
     const payoutResponse = await razorpayPayout(razorpayPayoutData);
+    console.log('payoutResponse', payoutResponse);
     if (payoutResponse.status === 200) {
       await session.commitTransaction();
       session.endSession();
@@ -210,7 +211,7 @@ const makePayment = async (paymentData) => {
     session.endSession();
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
-      "Internal Server Error, Payment failed."
+      "Internal Server Error, Payment failed.", error.message
     );
   }
 
