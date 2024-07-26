@@ -334,7 +334,8 @@ const getMyGroups = async (userId) => {
                 $project: {
                     _id: 1,
                     group_name: 1,
-                    group_icon: 1
+                    group_icon: 1,
+                    owner_only_payment: 1
                 }
             }
         ]);
@@ -344,6 +345,7 @@ const getMyGroups = async (userId) => {
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 }
+
 const setPasscode = async (userBody) => {
     try {
         const user = await getUserById(userBody.userId);
