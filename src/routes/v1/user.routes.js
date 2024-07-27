@@ -29,6 +29,8 @@ router.put('/leave-group', auth, userController.leaveGroup);
 router.put('/leave-group/:group_id', auth, userController.leaveGroup);
 router.put('/group-settings/:group_id', auth, authGroupOwner, userController.groupSettings);
 
+router.get('/group/:group_id', userController.getGroup);
+
 router.delete('/delete-group', auth, userController.deleteGroup);
 router.delete('/delete-group/:group_id', auth, userController.deleteGroup);
 

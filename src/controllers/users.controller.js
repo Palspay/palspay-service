@@ -68,6 +68,17 @@ const getMyGroups = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Group list fetched succesfully', data: { groupsList } });
 });
 
+const getGroup = async (req, res) => {
+    const groupId = req.params.group_id;
+    try {
+        const group = await userService.getGroupById(groupId);
+        res.status(200).json(group);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 const getUserDetails = catchAsync(async (req, res) => {
     const userId = req.params.user_id
     const userDetails = await userService.getUserDetails(userId);
@@ -276,5 +287,6 @@ module.exports = {
     getCommonGroups,
     getGroupWallet,
     reportUser,
-    uploadUserProfilePicture 
+    uploadUserProfilePicture,
+    getGroup 
 };

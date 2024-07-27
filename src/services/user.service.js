@@ -346,6 +346,20 @@ const getMyGroups = async (userId) => {
     }
 }
 
+
+const getGroupById = async (groupId) => {
+    try {
+        const group = await Groups.findById(groupId).select('group_name group_icon group_owner owner_only_payment');
+        if (!group) {
+            throw new Error('Group not found');
+        }
+        return group;
+    } catch (error) {
+        throw error;
+    }
+};
+
+
 const setPasscode = async (userBody) => {
     try {
         const user = await getUserById(userBody.userId);
@@ -545,5 +559,6 @@ module.exports = {
     updateGroupPreference,
     getTransactions,
     findCommonGroups,
-    getGroupWalletByGroupId
+    getGroupWalletByGroupId,
+    getGroupById,
 };
