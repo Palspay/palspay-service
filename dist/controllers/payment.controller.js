@@ -53,6 +53,7 @@ var httpStatus = require('http-status');
 var catchAsync = require('./../utills/catchAsync');
 var paymentInitated = catchAsync(function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var mergedBody, data;
+    console.log('controller user ID 2', req.userId);
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:

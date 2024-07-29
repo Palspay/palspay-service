@@ -3,6 +3,7 @@ const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
 
 const paymentInitated = catchAsync(async (req, res) => {
+    console.log('controller user ID', req.userId);
     const mergedBody = {
         ...req.body,
         userId: req.userId,
