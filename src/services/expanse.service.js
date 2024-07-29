@@ -202,7 +202,7 @@ const getGroupExpanse = async (userData) => {
             var youOwe = 0;
             const amountPaid = memberAmounts[memberId];
             // @ts-ignore
-            const balances = parseFloat(equalShare).toFixed(2) - parseFloat(amountPaid).toFixed(2);
+            const balances = parseFloat(equalShare) - parseFloat(amountPaid);
             const balance = balances.toFixed(2);
             // @ts-ignore
             if (balance > 0) {
