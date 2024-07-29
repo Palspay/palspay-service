@@ -52,22 +52,17 @@ const createExpanse = async (expanseData) => {
 };
 
 
-const createGroupPayment = async (req, res) => {
-    const { IndividualPaymentAmount, members } = req.body;
+const createGroupPayment = async (gpMergedBody) => {
   
     try {
-      // Create the group payment document
-      const newGroupPayment = new GroupPayment({
-        IndividualPaymentAmount,
-        members
-      });
+        const newGroupPayment = new GroupPayment(gpMergedBody);
   
       // Save the group payment document to the database
       await newGroupPayment.save();
   
-      res.status(201).json({ message: 'Group payment created successfully', groupPayment: newGroupPayment });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create group payment', details: error.message });
+        console.log(error);
+        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
   };
   
