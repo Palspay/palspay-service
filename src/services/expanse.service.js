@@ -299,7 +299,11 @@ const fetchExpanse = async (data) => {
                         }
                     } else {
                         non_group.push({ type: "owes", memberId: per.memberId, amount: per.amount })
+                        console.log(`Member ID: ${per.memberId}, Amount: ${per.amount}`);
+                        console.log(`Before Addition - Lent Amount: ${lentAmount}`);
                         lentAmount += parseFloat(per.amount);
+                        console.log(`After Addition - Lent Amount: ${lentAmount}`);
+
                     }
                 }
             }
