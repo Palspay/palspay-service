@@ -496,7 +496,8 @@ const getTransactions = async (userId) => {
                         _id: '$paidToUser._id', // Include the paidTo ID
                         name: '$paidToUser.name' // Include the name of the user
                     },
-                    created_at: 1
+                    'paymentData.created_at': 1, // Include created_at from paymentData
+                    createdAt: { $dateToString: { format: "%Y-%m-%d %H:%M:%S", date: { $toDate: '$paymentData.created_at' }, timezone: "Asia/Kolkata" } }
                 }
             }
         ]);
