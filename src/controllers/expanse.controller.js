@@ -16,27 +16,33 @@ const addExpanse = catchAsync(async (req, res) => {
 });
 
 const addGroupExpanse = catchAsync(async (req, res) => {
-    console.log('api called');
-    console.log('req.body:', req.body);
+    console.log('API called');
+    console.log('req.body:', req.body); // Log the request body
+
     const mergedBody = {
         ...req.body,
         userId: req.userId,
         currentDate: req.currentDate,
-    }; 
-    console.log('mergeBody', mergedBody);
+    };
+    console.log('mergedBody:', mergedBody); // Log the merged body
 
     const gpMergedBody = {
         expanseId: req.body._id,
-        IndividualPaymentAmount: req.body.totalExpense,      
-        members: req.body.gpMemberList
-    }; 
-    console.log('gpMergeBody', gpMergedBody);
-    //  IndividualPaymentAmount: req.body.totalExpense.value / req.body.groupMemberList.length,
+        IndividualPaymentAmount: req.body.totalExpanse,
+        members: req.body.gpMembers,
+    };
+    console.log('gpMergedBody:', gpMergedBody); // Log the gpMergedBody
 
-    const groupPayment_id = await userExpanse.createGroupPayment(gpMergedBody);
-    const expanse_id = await userExpanse.createExpanse(mergedBody);
-    res.status(httpStatus.CREATED).send({ message: 'Group Expenses added succesfully', data: { expanse_id: expanse_id._id, groupPayment_id: groupPayment_id } });
+    try {
+        const groupPayment_id = await userExpanse.createGroupPayment(gpMergedBody);
+        const expanse_id = await userExpanse.createExpanse(mergedBody);
+        res.status(httpStatus.CREATED).send({ message: 'Group Expenses added successfully', data: { expanse_id: expanse_id._id, groupPayment_id: groupPayment_id } });
+    } catch (error) {
+        console.error('Error creating group payment or expense:', error);
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Error creating group payment or expense' });
+    }
 });
+
 
 const updateExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;

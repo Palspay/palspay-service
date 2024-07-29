@@ -53,12 +53,11 @@ const createExpanse = async (expanseData) => {
 
 
 const createGroupPayment = async (req, res) => {
-    const { expanseId, IndividualPaymentAmount, members } = req.body;
+    const { IndividualPaymentAmount, members } = req.body;
   
     try {
       // Create the group payment document
       const newGroupPayment = new GroupPayment({
-        expanseId,
         IndividualPaymentAmount,
         members
       });
