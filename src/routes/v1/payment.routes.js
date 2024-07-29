@@ -4,7 +4,7 @@ const { auth } = require('../../middlewares/auth');
 const paymentController = require('../../controllers/payment.controller');
 const router = express.Router();
 
-router.post('/initiatePayment', auth, paymentController.paymentInitated); /*auth, validateVPA,*/
+router.post('/initiatePayment', auth, validateVPA,  paymentController.paymentInitated); /*auth, validateVPA,*/
 router.post('/payout', auth, paymentController.payoutInitated);
 router.post('/refund', auth, paymentController.refundInitiated);
 router.post('/addToWallet', auth, paymentController.addToWallet);
