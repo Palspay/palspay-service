@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const expanseSchema = new mongoose.Schema({
-    groupId: { type: String, default: '' },
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'groups' },     // groupId: { type: String, default: '' },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
     // @ts-ignore
     totalExpanse: {

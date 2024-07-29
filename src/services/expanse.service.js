@@ -4,6 +4,7 @@ const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const Expanse = require('../models/expanse.model');
+const GroupPayment = require('../models/groupPayment.model');
 const mongoose = require('mongoose');
 // @ts-ignore
 const GroupMember = require('../models/group-members.model');
@@ -24,17 +25,55 @@ const createExpanse = async (expanseData) => {
         }
         expanseData['imagesArray'] = imagesArray;
         const expense = new Expanse(expanseData);
-        const obj = {
-            description: 'You added an expense ' + expanseData.description,
-            user_id: expanseData.userId
+        if(expanseData.expenseType == 'Group Payment'){
+            const obj = {
+                description: 'You added a Group Payment -' + expanseData.description,
+                user_id: expanseData.userId
+            }
+            await activityService.createActivity(obj);
+        } else if(expanseData.expenseType == 'Wallet Payment'){
+            const obj = {
+                description: 'You have made a payment from Group Wallet ' + expanseData.description,
+                user_id: expanseData.userId
+            }
+            await activityService.createActivity(obj);
+        } else {
+            const obj = {
+                description: 'You added an expense ' + expanseData.description,
+                user_id: expanseData.userId
+            }
+            await activityService.createActivity(obj);
         }
-        await activityService.createActivity(obj);
         return await expense.save();
     } catch (error) {
         console.log(error);
         throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
     }
 };
+
+
+const createGroupPayment = async (req, res) => {
+    const { expanseId, IndividualPaymentAmount, members } = req.body;
+  
+    try {
+      // Create the group payment document
+      const newGroupPayment = new GroupPayment({
+        expanseId,
+        IndividualPaymentAmount,
+        members
+      });
+  
+      // Save the group payment document to the database
+      await newGroupPayment.save();
+  
+      res.status(201).json({ message: 'Group payment created successfully', groupPayment: newGroupPayment });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create group payment', details: error.message });
+    }
+  };
+  
+
+
 const updateExpanse = async (expanseData) => {
     try {
         expanseData['userId'] = expanseData.userId;
@@ -617,6 +656,7 @@ const getGroupByUser = async (userData) => {
 
 module.exports = {
     createExpanse,
+    createGroupPayment,
     updateExpanse,
     getGroupExpanse,
     fetchExpanse,

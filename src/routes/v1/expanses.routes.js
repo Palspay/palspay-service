@@ -5,6 +5,7 @@ const {auth} = require('../../middlewares/auth');
 const router = express.Router();
 
 router.post('/createExpanse', auth, expanseController.addExpanse);
+router.post('/createGroupExpanse', auth, expanseController.addGroupExpanse);
 router.put('/updateExpanse/:id', auth, expanseController.updateExpanse);
 router.delete('/deleteExpanse/:id', auth, expanseController.deleteExpanse);
 router.get('/fetchExpanse/:id', auth, expanseController.fetchExpanse);

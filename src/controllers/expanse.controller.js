@@ -15,6 +15,18 @@ const addExpanse = catchAsync(async (req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Expanses add succesfully', data: { expanse_id: expanse_id._id } });
 });
 
+const addGroupExpanse = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    }; 
+
+    const groupPayment_id = await userExpanse.createGroupExpanse(mergedBody);
+    const expanse_id = await userExpanse.createExpanse(mergedBody);
+    res.status(httpStatus.CREATED).send({ message: 'Group Expenses added succesfully', data: { expanse_id: expanse_id._id, groupPayment_id: groupPayment_id } });
+});
+
 const updateExpanse = catchAsync(async (req, res) => {
     const expanseId = req.params.id;
     const mergedBody = {
@@ -198,6 +210,7 @@ const individualExpanse = catchAsync(async (req, res) => {
 });
 module.exports = {
     addExpanse,
+    addGroupExpanse,
     updateExpanse,
     getExpanse,
     fetchExpanse,
