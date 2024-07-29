@@ -88,15 +88,17 @@ const getExpanse = catchAsync(async (req, res) => {
             let borrowed = parseFloat(item.expanseData.you_borrowed)
             let lent = parseFloat(item.expanseData.you_lent)
 
-            if (borrowed > 0) {
-                owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
-            }
-            if (lent > 0) {
-                for await (let payer of item.expanseData.expanse_details) {
-                    if (payer.type == "owes")
-                        owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+            if(item.addPayer.length > 0 ){
+                if (borrowed > 0) {
+                    owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
                 }
-            }
+                if (lent > 0) {
+                    for await (let payer of item.expanseData.expanse_details) {
+                        if (payer.type == "owes")
+                            owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                    }
+                }
+            }   
         }
         data.overall = total_lent - total_borrowed;
         // @ts-ignore
@@ -177,15 +179,17 @@ const individualExpanse = catchAsync(async (req, res) => {
 
             groupDetails = await userExpanse.getGroupByUser(mergedBody); //group details for linked user
 
-            if (borrowed > 0) {
-                owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
-            }
-            if (lent > 0) {
-                for await (let payer of item.expanse_details) {
-                    if (payer.type == "owes")
-                        owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+            if(item.addPayer.length > 0 ){
+                if (borrowed > 0) {
+                    owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
                 }
-            }
+                if (lent > 0) {
+                    for await (let payer of item.expanse_details) {
+                        if (payer.type == "owes")
+                            owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                    }
+                }
+            }    
         }
         expanse.overall = total_lent - total_borrowed;
         expanse.total_lent = total_lent;
