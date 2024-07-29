@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const memberSchema = new mongoose.Schema({
-    userId: {
+    memberId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true
@@ -10,8 +10,8 @@ const memberSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    PaymentId: {
-        type: String,
+    paymentId: {
+        type: Number,
         required: true
     }
 }, { _id: false });
