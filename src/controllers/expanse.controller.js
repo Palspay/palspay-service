@@ -17,6 +17,7 @@ const addExpanse = catchAsync(async (req, res) => {
 
 const addGroupExpanse = catchAsync(async (req, res) => {
     console.log('api called');
+    console.log('req.body:', req.body);
     const mergedBody = {
         ...req.body,
         userId: req.userId,
