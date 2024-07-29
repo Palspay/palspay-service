@@ -25,17 +25,17 @@ const addGroupExpanse = catchAsync(async (req, res) => {
         currentDate: req.currentDate,
     };
     console.log('mergedBody:', mergedBody); // Log the merged body
-
+    const expanse_id = await userExpanse.createExpanse(mergedBody);
     const gpMergedBody = {
-        expanseId: req.body._id,
-        IndividualPaymentAmount: req.body.totalExpanse,
+        expanseId: expanse_id,
+        IndividualPaymentAmount: req.body.totalExpanse / req.body.members.length,
         members: req.body.gpMembers,
     };
     console.log('gpMergedBody:', gpMergedBody); // Log the gpMergedBody
 
     try {
         const groupPayment_id = await userExpanse.createGroupPayment(gpMergedBody);
-        const expanse_id = await userExpanse.createExpanse(mergedBody);
+
         res.status(httpStatus.CREATED).send({ message: 'Group Expenses added successfully', data: { expanse_id: expanse_id._id, groupPayment_id: groupPayment_id } });
     } catch (error) {
         console.error('Error creating group payment or expense:', error);
