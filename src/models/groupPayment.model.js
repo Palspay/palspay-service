@@ -4,15 +4,13 @@ const memberSchema = new mongoose.Schema({
     memberId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
-        required: true
     },
     paid: {
         type: Boolean,
         default: false
     },
     paymentId: {
-        type: Number,
-        required: true
+        type: String,
     }
 }, { _id: false });
 
