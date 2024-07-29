@@ -13,6 +13,7 @@ var {
 } = require("razorpay/dist/utils/razorpay-utils");
 const paymentInitated = async (paymentData) => {
   const { amount, paidTo, userId, groupId } = paymentData;
+  console.log('Payment Initiated for userId:', userId); 
   try {
     const order = await razorpay.orders.create({
       amount: amount,
@@ -30,7 +31,10 @@ const paymentInitated = async (paymentData) => {
       status: PaymentStatus.PAYMENT_INITIATED,
       paymentData: order,
     };
+    console.log('Order Data:', orderData); 
+
     const data = await Transaction.create(orderData);
+    console.log('Transaction Created:', data);
     return {
       // @ts-ignore
       orderId: data?.paymentData?.id,

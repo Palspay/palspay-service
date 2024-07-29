@@ -218,9 +218,12 @@ const getActivity = catchAsync(async (req, res) => {
 })
 
 const getTransactions = catchAsync(async (req, res) => {
-    const transactions = await userService.getTransactions(req.userId);
+    const { userId } = req.params;
+    console.log('userId from params:', userId);
+    const transactions = await userService.getTransactions(userId);
     res.status(httpStatus.OK).send({ message: 'Transactions Fetched', data: { transactions } });
-})
+});
+
 
 const getCommonGroups = async (req, res, next) => {
     console.log('GET common-groups  route was called');
