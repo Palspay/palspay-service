@@ -136,17 +136,17 @@ const expanseSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    expenseType: {
+        type: String,
+        enum: ['Normal Expense', 'Group Payment', 'Wallet Payment'],
+        required: true
+    }
 }, {
     timestamps: true
 });
 
-
 expanseSchema.set('versionKey', false);
 
-
-// /**
-//  * @typedef Groups
-//  */
 const Expanse = mongoose.model('expanse', expanseSchema);
 
 module.exports = Expanse;

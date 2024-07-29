@@ -109,6 +109,7 @@ const getGroupExpanse = async (userData) => {
                             },
                             addPayer: "$addPayer",
                             createdAt: "$createdAt",
+                            expenseType: "$expenseType"
                         }
                     },
                     groupsMembers: { $first: "$membersDetails._id" },
@@ -246,7 +247,8 @@ const fetchExpanse = async (data) => {
                     is_deleted: 1,
                     members: 1,
                     currency: 1,
-                    createdAt: 1
+                    createdAt: 1,
+                    expenseType: 1
                 }
             }
         ];
