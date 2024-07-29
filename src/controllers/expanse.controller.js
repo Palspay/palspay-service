@@ -21,7 +21,7 @@ const addGroupExpanse = catchAsync(async (req, res) => {
         userId: req.userId,
         currentDate: req.currentDate,
     }; 
-
+    console.log('valuesss', req.body.totalExpense.value, req.body.groupMemberList.length);
     const gpMergedBody = {
         ...req.body,
         userId: req.userId,
