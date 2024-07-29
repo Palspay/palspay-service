@@ -496,7 +496,7 @@ const getTransactions = async (userId) => {
                         _id: '$paidToUser._id', // Include the paidTo ID
                         name: '$paidToUser.name' // Include the name of the user
                     },
-                    createdAt: '$paymentData.created_at_date'
+                    createdAt: '$paymentData.created_at'
                 }
             }
         ]);
