@@ -16,18 +16,20 @@ const addExpanse = catchAsync(async (req, res) => {
 });
 
 const addGroupExpanse = catchAsync(async (req, res) => {
+    console.log('api called');
     const mergedBody = {
         ...req.body,
         userId: req.userId,
         currentDate: req.currentDate,
     }; 
-    console.log('valuesss', req.body.totalExpense.value, req.body.groupMemberList.length);
+    console.log('mergeBody', mergedBody);
+
     const gpMergedBody = {
-        userId: req.userId,
-        IndividualPaymentAmount: req.body.totalExpense.value,      
+        IndividualPaymentAmount: req.body.totalExpense,      
         members: req.body.gpMemberList
     }; 
-        //  IndividualPaymentAmount: req.body.totalExpense.value / req.body.groupMemberList.length,
+    console.log('gpMergeBody', gpMergedBody);
+    //  IndividualPaymentAmount: req.body.totalExpense.value / req.body.groupMemberList.length,
 
     const groupPayment_id = await userExpanse.createGroupExpanse(gpMergedBody);
     const expanse_id = await userExpanse.createExpanse(mergedBody);
