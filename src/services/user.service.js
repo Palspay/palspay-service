@@ -491,10 +491,12 @@ const getTransactions = async (userId) => {
                 $project: {
                     _id: 1,
                     amount: 1,
+                    status: 1,
                     paidTo: {
                         _id: '$paidToUser._id', // Include the paidTo ID
                         name: '$paidToUser.name' // Include the name of the user
-                    }
+                    },
+                    created_at: 1
                 }
             }
         ]);
