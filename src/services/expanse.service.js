@@ -201,21 +201,16 @@ const getGroupExpanse = async (userData) => {
             var owesYou = 0;
             var youOwe = 0;
             const amountPaid = memberAmounts[memberId];
-            // @ts-ignore
             const balances = parseFloat(equalShare) - parseFloat(amountPaid);
-            const balance = balances.toFixed(2);
-            // @ts-ignore
+            const balance = parseFloat(balances.toFixed(2));
             if (balance > 0) {
-                // @ts-ignore
                 owesYou = balance;
-            // @ts-ignore
             } else if (balance < 0) {
-                // @ts-ignore
-                youOwe = balance;
+                youOwe = Math.abs(balance);
             }
             resultArray.push({ memberId, amountPaid, equalShare: Number(equalShare.toFixed(2)), owesYou: Number(owesYou), youOwe: Number(youOwe) });
         }
-        // expanse[0].youOwe = resultArray
+                // expanse[0].youOwe = resultArray
         return expanse[0];
     } catch (error) {
         console.log(error, "<<<error")
