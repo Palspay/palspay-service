@@ -155,7 +155,7 @@ const fetchExpanse = catchAsync(async (req, res) => {
 
 
 const getGroupPaymentExpense = async (req, res) => {
-    const userId = req.user.id; // Assuming req.user contains authenticated user info
+    const userId = req.userId; // Assuming req.user contains authenticated user info
     const isPaymentCompleted = req.query.IsPaymentCompleted;
   
     try {
