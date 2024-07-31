@@ -24,6 +24,10 @@ const groupPaymentSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    IsPaymentCompleted:{
+        type: Boolean,
+        default: false
+    },
     members: [memberSchema]
 }, {
     timestamps: true
