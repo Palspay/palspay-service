@@ -647,6 +647,27 @@ const getGroupByUser = async (userData) => {
     }
 };
 
+const getGroupPaymentExpense = async (userId, isPaymentCompleted) => {
+    try {
+      const query = {
+        'members.memberId': userId
+      };
+      
+      if (typeof isPaymentCompleted !== 'undefined') {
+        query.IsPaymentCompleted = isPaymentCompleted;
+      }
+  
+      const groupPayments = await GroupPayment.find(query)
+        .populate('members.memberId', 'name email')
+        .populate('expanseId');
+  
+      return groupPayments;
+    } catch (error) {
+      throw new Error(`Could not fetch group payments: ${error.message}`);
+    }
+  };
+
+
 module.exports = {
     createExpanse,
     createGroupPayment,
@@ -655,5 +676,6 @@ module.exports = {
     fetchExpanse,
     deleteExpanse,
     individualExpanse,
-    getGroupByUser
+    getGroupByUser,
+    getGroupPaymentExpense
 };

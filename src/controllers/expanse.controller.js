@@ -152,6 +152,20 @@ const fetchExpanse = catchAsync(async (req, res) => {
         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
     }
 });
+
+
+const getGroupPaymentExpense = async (req, res) => {
+    const userId = req.user.id; // Assuming req.user contains authenticated user info
+    const isPaymentCompleted = req.query.IsPaymentCompleted;
+  
+    try {
+      const groupPayments = await userExpanse.getGroupPaymentExpense(userId, isPaymentCompleted);
+      res.status(200).json(groupPayments);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+
 const individualExpanse = catchAsync(async (req, res) => {
     let friendId = (req.query.friendId) ? new ObjectId(req.query.friendId) : null;
 
@@ -236,6 +250,7 @@ module.exports = {
     updateExpanse,
     getExpanse,
     fetchExpanse,
+    getGroupPaymentExpense,
     deleteExpanse,
     individualExpanse,
 };
