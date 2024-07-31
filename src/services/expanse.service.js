@@ -659,8 +659,11 @@ const getGroupPaymentExpense = async (userId, isPaymentCompleted) => {
   
       const groupPayments = await GroupPayment.find(query)
         .populate('members.memberId', 'name email')
-        .populate('expanseId.description');
-  
+        .populate({
+            path: 'expanseId',
+            select: 'description' // Only include the 'description' field
+          });
+          
       return groupPayments;
     } catch (error) {
       throw new Error(`Could not fetch group payments: ${error.message}`);
