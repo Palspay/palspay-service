@@ -659,7 +659,7 @@ const getGroupPaymentExpense = async (userId, isPaymentCompleted) => {
   
       const groupPayments = await GroupPayment.find(query)
         .populate('members.memberId', 'name email')
-        .populate('expanseId');
+        // .populate('expanseId');
   
       return groupPayments;
     } catch (error) {
