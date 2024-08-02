@@ -670,6 +670,28 @@ const getGroupPaymentExpense = async (userId, isPaymentCompleted) => {
     }
   };
 
+  const updateGroupPaymentStatus = async (groupPaymentId, memberId, paid) => {
+    try {
+      const updateResult = await GroupPayment.updateOne(
+        { _id: groupPaymentId, 'members.memberId': memberId },
+        { $set: { 'members.$.paid': paid } }
+      );
+  
+      // Check if the update was successful
+      if (updateResult.modifiedCount === 0) {
+        throw new Error('No matching group payment or member found, or status already set.');
+      }
+  
+      // Fetch the updated group payment document
+      const updatedPayment = await GroupPayment.findById(groupPaymentId);
+  
+      return updatedPayment;
+    } catch (error) {
+      throw new Error(`Could not update payment status: ${error.message}`);
+    }
+  };
+  
+
 
 module.exports = {
     createExpanse,
@@ -680,5 +702,6 @@ module.exports = {
     deleteExpanse,
     individualExpanse,
     getGroupByUser,
-    getGroupPaymentExpense
+    getGroupPaymentExpense,
+    updateGroupPaymentStatus
 };

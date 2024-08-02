@@ -155,7 +155,7 @@ const fetchExpanse = catchAsync(async (req, res) => {
 
 
 const getGroupPaymentExpense = async (req, res) => {
-    const userId = req.userId; // Assuming req.user contains authenticated user info
+    const userId = req.userId; 
     const isPaymentCompleted = req.query.IsPaymentCompleted;
   
     try {
@@ -163,6 +163,22 @@ const getGroupPaymentExpense = async (req, res) => {
       res.status(200).json(groupPayments);
     } catch (error) {
       res.status(500).json({ message: error.message });
+    }
+  };
+
+const updateGroupPaymentStatus = async (req, res) => {
+    const { groupPaymentId } = req.params;
+    const { memberId, paid } = req.body;
+    
+  
+    try {
+      const updatedPayment = await userExpanse.updateGroupPaymentStatus(groupPaymentId, memberId, paid);
+      if (!updatedPayment) {
+        return res.status(404).json({ message: 'Group payment not found or update failed' });
+      }
+      res.status(200).json({ message: 'Payment status updated successfully', data: updatedPayment });
+    } catch (error) {
+      res.status(500).json({ message: `Failed to update payment status: ${error.message}` });
     }
   };
 
@@ -253,4 +269,5 @@ module.exports = {
     getGroupPaymentExpense,
     deleteExpanse,
     individualExpanse,
+    updateGroupPaymentStatus
 };

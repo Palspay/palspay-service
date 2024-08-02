@@ -11,6 +11,7 @@ router.delete('/deleteExpanse/:id', auth, expanseController.deleteExpanse);
 router.get('/fetchExpanse/:id', auth, expanseController.fetchExpanse);
 router.post('/getexpanse', auth, expanseController.getExpanse); // by getExpanse by group 
 router.get('/groupPayments', auth, expanseController.getGroupPaymentExpense);
-router.get('/individualExpanse', auth, expanseController.individualExpanse); //TODO - fix you borrowed money && remove current user expanse from response list
+router.get('/individualExpanse', auth, expanseController.individualExpanse);
+router.put('/updateGroupPayment/:groupPaymentId', auth, expanseController.updateGroupPaymentStatus);
  
 module.exports = router;
