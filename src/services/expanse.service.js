@@ -661,7 +661,7 @@ const getGroupPaymentExpense = async (userId, isPaymentCompleted) => {
         .populate('members.memberId', 'name email')
         .populate({
             path: 'expanseId',
-            select: 'description totalExpanse' // Only include the 'description' field
+            select: 'description totalExpanse userId' // Only include the 'description' field
           });
 
       return groupPayments;
