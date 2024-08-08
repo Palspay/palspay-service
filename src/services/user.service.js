@@ -449,6 +449,7 @@ const takePlan = async (data, id) => {
     if (!planValid) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan not exits in our database');
     }
+    const originalTimestamp = new Date(data.modification_date);
     const originalDate = new Date(data.modification_date);
     if (data.plan_type === 'Yearly') {
         originalDate.setFullYear(originalDate.getFullYear() + 1);
