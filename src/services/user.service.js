@@ -447,25 +447,29 @@ const removeFriend = async (data, id) => {
 const takePlan = async (data, id) => {
     const planValid = await Plans.findOne({ _id: data.plan_id, is_deleted: false }).exec();
     if (!planValid) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan not exits in our database');
+        throw new ApiError(httpStatus.BAD_REQUEST, 'Sorry, this plan does not exist in our database');
     }
+    
     const originalTimestamp = new Date(data.modification_date);
     const originalDate = new Date(data.modification_date);
+
     if (data.plan_type === 'Yearly') {
         originalDate.setFullYear(originalDate.getFullYear() + 1);
         data['plan_expired'] = originalDate.getTime();
     } else if (data.plan_type === 'Monthly') {
         originalDate.setMonth(originalDate.getMonth() + 1);
-        // @ts-ignore
+
         if (originalDate.getDate() !== new Date(originalTimestamp).getDate()) {
-            originalDate.setDate(0);
+            originalDate.setDate(0); // Adjusts for month overflow
         }
-        // @ts-ignore
-        data['plan_expired'] = Date.parse(originalDate.getTime());
+
+        data['plan_expired'] = originalDate.getTime();
     }
+
     const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();
-    return updateData
-}
+    return updateData;
+};
+
 
 const getTransactions = async (userId) => {
     try {
