@@ -73,7 +73,6 @@ const userSchema = new mongoose.Schema({
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
     creation_date: {
         type: Number,
-        default: null
     },
     modification_date: {
         type: Number,

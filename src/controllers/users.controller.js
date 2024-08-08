@@ -17,7 +17,7 @@ const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
-        currentDate: req.currentDate
+        currentDate: req.currentDate 
     };
     const invite_details = await userService.addFriends(mergedBody);
     res.status(httpStatus.CREATED).send({ message: 'Add friend succesfully', data: { invite_details } });
