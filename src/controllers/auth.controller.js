@@ -5,11 +5,7 @@ import { generateToken } from '../services/auth.service';
 import admin from 'firebase-admin';
 
 export const register = catchAsync(async (req, res) => {
-    const mergedBody = {
-        ...req.body,
-        creation_date: req.currentDate 
-    };
-    const data = await authService.createUser(mergedBody);
+    const data = await authService.createUser(req.body);
     res.status(httpStatus.CREATED).send({ message: 'User Registered', data: data });
 });
 

@@ -26,6 +26,7 @@ const createUser = async (userBody) => {
     if (!isTempReg) {
         userBody['otp'] = otp;
         userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        userBody['creation_date'] = await getCurrentDateTime();
         user = await User.create(userBody);
     } else if (isTempReg.is_temp_registered === false) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Mobile number already registred');
