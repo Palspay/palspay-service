@@ -82,6 +82,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'USER',
     },
+    plan_active: {
+        type: Boolean,
+        },
     plan_id: { type: mongoose.Schema.Types.ObjectId, ref: 'plans' },
     plan_expired: {
         type: Number,

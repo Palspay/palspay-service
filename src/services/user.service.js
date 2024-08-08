@@ -466,6 +466,8 @@ const takePlan = async (data, id) => {
         data['plan_expired'] = originalDate.getTime();
     }
 
+    data['plan_active'] = true;
+
     const updateData = await User.findByIdAndUpdate({ _id: id }, { $set: data }, { new: true }).lean();
     return updateData;
 };
