@@ -201,7 +201,7 @@ const removeFriend = catchAsync(async (req, res) => {
 
 
 const getAvailablePlans = async (req, res) => {
-      const plans = await UserService.getAvailablePlans();
+      const plans = await userService.getAvailablePlans();
       res.status(httpStatus.OK).json(plans);
   };
 
