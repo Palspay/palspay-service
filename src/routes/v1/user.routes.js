@@ -37,6 +37,7 @@ router.delete('/delete-group/:group_id', auth, userController.deleteGroup);
 router.delete('/remove-friend', auth, userController.removeFriend);
 router.delete('/remove-friend/:user_id', auth, userController.removeFriend);
 
+router.get('/plans', userController.getAvailablePlans);
 // @ts-ignore
 router.post('/take-plan', auth, validate(uservalidation.takePlan), userController.takePlan);
 

@@ -199,6 +199,16 @@ const removeFriend = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Delete succesfully', data: {} });
 });
 
+
+const getAvailablePlans = async (req, res) => {
+    try {
+      const plans = await UserService.getAvailablePlans();
+      res.status(httpStatus.OK).json(plans);
+    } catch (error) {
+      next(error);
+    }
+  };
+
 const takePlan = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -282,6 +292,7 @@ module.exports = {
     leaveGroup,
     deleteGroup,
     removeFriend,
+    getAvailablePlans,
     takePlan,
     getActivity,
     getUserDetails,

@@ -444,6 +444,12 @@ const removeFriend = async (data, id) => {
     return updateData;
 }
 
+const getAvailablePlans = async () => {
+    // Fetch plans that are not deleted
+    const plans = await Plans.find({ is_deleted: false }).select('_id plan_name plan_amount currency plan_type').lean();
+    return plans;
+  };
+
 const takePlan = async (data, id) => {
     const planValid = await Plans.findOne({ _id: data.plan_id, is_deleted: false }).exec();
     if (!planValid) {
@@ -562,6 +568,7 @@ module.exports = {
     leaveGroup,
     deleteGroup,
     removeFriend,
+    getAvailablePlans,
     takePlan,
     getUserDetails,
     getGroupDetails,

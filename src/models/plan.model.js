@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const planSchema = new mongoose.Schema({
     plan_name: { type: String },
-    plan_amount: { type: String, default: 'abcgd.png' },
+    plan_amount: { type: String, default: '0' },
     currency: { type: String, default: '₹' },
     plan_type: { type: String, default: 'Yealy' },
     created_by: {
