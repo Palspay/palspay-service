@@ -72,6 +72,10 @@ const loginUserWithEmailAndPassword = async (userBody) => {
         user_id: user._id,
         // @ts-ignore
         currency: user.currency || 'INR',
+        // @ts-ignore
+        plan_active: user.plan_active || false,
+        // @ts-ignore
+        plan_expired: user.plan_expired || 0,                
     };
 }
 
