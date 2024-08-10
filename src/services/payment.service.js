@@ -221,6 +221,38 @@ const makePayment = async (paymentData) => {
 
 };
 
+  const payToPalspay = async (paymentData) => {
+    const { paymentId, signature, transactionId } = paymentData;
+    let transaction;
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const paymentInfo = {
+        status: PaymentStatus.PAYMENT_COMPLETED
+      };
+      transaction = await Transaction.findOneAndUpdate(
+        { _id: transactionId },
+        { $set: { ...paymentInfo } }
+      ).lean();
+      await validatePayment(transaction, paymentId, signature);
+      return transaction;
+    }
+    catch (error) {
+      if (transaction) {
+        const refundData = {
+          paymentId,
+          amount: transaction.amount,
+          reason: "Error in adding to wallet",
+        }
+        await initiateRefund(refundData);
+        await session.commitTransaction();
+        session.endSession();
+      }
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, error);
+    }
+  };
+
+
 const checkStatus = async (body) => {
   const merchantTransactionId = body.txnId;
   const merchantId = process.env.MERCHANT_ID;
@@ -342,4 +374,4 @@ async function razorpayPayout(data) {
 }
 
 
-export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment };
+export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment, payToPalspay }; 

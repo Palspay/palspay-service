@@ -64,7 +64,7 @@ export const googleLogin = catchAsync(async (req, res) => {
         const existingUser = await userService.getUserByEmail(email, false);
         if (existingUser) {
             const access_token = await generateToken(existingUser);
-            const data = {
+            const data = { 
                 access_token,
                 // @ts-ignore
                 is_passcode_enter: existingUser.is_passcode_enter,
@@ -75,6 +75,12 @@ export const googleLogin = catchAsync(async (req, res) => {
                 user_id: existingUser.id,
                 // @ts-ignore
                 currency: existingUser.currency,
+                // @ts-ignore        
+                vpa: existingUser.vpa || '',
+                // @ts-ignore
+                plan_active: existingUser.plan_active || false,
+                // @ts-ignore
+                plan_expired: existingUser.plan_expired || 0,                
 
             }
             res.status(httpStatus.OK).send({ message: 'Login Sucessfully', data });
