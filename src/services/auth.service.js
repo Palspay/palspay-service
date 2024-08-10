@@ -72,6 +72,8 @@ const loginUserWithEmailAndPassword = async (userBody) => {
         user_id: user._id,
         // @ts-ignore
         currency: user.currency || 'INR',
+        // @ts-ignore        
+        vpa: user.vpa || '',
         // @ts-ignore
         plan_active: user.plan_active || false,
         // @ts-ignore
