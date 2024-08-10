@@ -10,6 +10,7 @@ router.post('/refund', auth, paymentController.refundInitiated);
 router.post('/addToWallet', auth, paymentController.addToWallet);
 router.post('/pay', auth, paymentController.makePayment);
 router.post('/payToPalspay', auth, paymentController.payToPalspay);
+router.post('/initiatePaymentWithourVPA', auth,  paymentController.paymentInitated);
 // router.get('/checkStatus', auth, paymentController.checkStatus);
 // router.get('/checkStatus/:txnId', auth, paymentController.checkStatus);
 module.exports = router;
