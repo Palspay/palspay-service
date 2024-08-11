@@ -66,7 +66,7 @@ const loginUserWithEmailAndPassword = async (userBody) => {
         // @ts-ignore
         email: user.email,
         // @ts-ignore
-        mobile_no: user.mobile_no,
+        mobile_no: user.mobile,
         name: user.name,
         // @ts-ignore
         user_id: user._id,
