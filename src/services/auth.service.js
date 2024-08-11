@@ -23,10 +23,19 @@ const createUser = async (userBody) => {
     const isTempReg = await userService.getUserByMobile(userBody.mobile);
     let user;
     const otp = await generateOtp(6);
+
+    const currentDate = new Date();    
+    const planExpiredDate = new Date(currentDate);
+    planExpiredDate.setMonth(planExpiredDate.getMonth() + 3);
+
     if (!isTempReg) {
         userBody['otp'] = otp;
         userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
         userBody['creation_date'] = await getCurrentDateTime();
+        userBody['plan_expired'] = planExpiredDate.toISOString();
+        userBody['plan_id'] = '66b5f7ae85005b28f97bfcfe';
+        userBody['plan_selected_date'] = await getCurrentDateTime();
+        userBody['plan_active'] = true;         
         user = await User.create(userBody);
     } else if (isTempReg.is_temp_registered === false) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Mobile number already registred');
@@ -36,6 +45,7 @@ const createUser = async (userBody) => {
         isTempReg.is_temp_registered = false;
         isTempReg.name = userBody.name;
         isTempReg.otp = otp;
+
         user = await isTempReg.save();
     }
     // @ts-ignore
