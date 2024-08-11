@@ -25,14 +25,24 @@ const createUser = async (userBody) => {
     const otp = await generateOtp(6);
 
     const currentDate = new Date();    
-    const planExpiredDate = new Date(currentDate);
+    let planExpiredDate = new Date(currentDate);
+    // Add 3 months
     planExpiredDate.setMonth(planExpiredDate.getMonth() + 3);
+
+    // Check if the day of the new month is invalid
+    if (planExpiredDate.getDate() < currentDate.getDate()) {
+        // Set to the last valid day of the month
+        planExpiredDate = new Date(planExpiredDate.getFullYear(), planExpiredDate.getMonth() + 1, 0);
+    }
+
+    // Convert to ISO string for consistency
+    const planExpiredTimestamp = planExpiredDate.getTime();
 
     if (!isTempReg) {
         userBody['otp'] = otp;
         userBody['timezone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
         userBody['creation_date'] = await getCurrentDateTime();
-        userBody['plan_expired'] = planExpiredDate.toISOString();
+        userBody['plan_expired'] = planExpiredTimestamp;
         userBody['plan_id'] = '66b5f7ae85005b28f97bfcfe';
         userBody['plan_selected_date'] = await getCurrentDateTime();
         userBody['plan_active'] = true;         

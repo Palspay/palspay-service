@@ -65,7 +65,7 @@ const payToPalspay = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data = await paymentService.payToPalspay(mergedBody);
-    res.status(httpStatus.OK).send({ message: 'Added to wallet', data });
+    res.status(httpStatus.OK).send({ message: 'Payment Successful', data });
 });
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
