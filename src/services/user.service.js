@@ -95,7 +95,12 @@ const addFriends = async (userData) => {
         const currentUserGroupMember = await GroupMember.findOne({ group_id: userData.group_id, member_id: userData.userId, is_friendship: true }).exec();
         const group = await Groups.findOne({ _id: new mongoose.Types.ObjectId(userData.group_id) }).exec();
         for (const mobileNumber of userData.mobile) {
-            const { name, mobile } = mobileNumber;
+            let { name, mobile } = mobileNumber;
+
+            if (!mobile.startsWith('+91')) {
+                mobile = `+91${mobile}`;
+            }
+
             const isExits = await getUserByMobile(mobile);
             if (isExits) {
                 const isFriend = await areFriends(userData.userId);
