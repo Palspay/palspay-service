@@ -12,8 +12,8 @@ router.post('/pay', auth, paymentController.makePayment);
 router.post('/payToPalspay', auth, paymentController.payToPalspay);
 router.post('/initiatePaymentWithourVPA', auth,  paymentController.paymentInitated);
 router.post('/settlement', auth, paymentController.settlementInitiated);
-router.get('/settlements/user', auth, paymentController.getUserSettlements);
-router.get('/settlements/group', auth, paymentController.getGroupSettlements);
+router.get('/settlements/user/:user_id', auth, paymentController.getUserSettlements);
+router.get('/settlements/group/:group_id', auth, paymentController.getGroupSettlements);
 
 // router.get('/checkStatus', auth, paymentController.checkStatus);
 // router.get('/checkStatus/:txnId', auth, paymentController.checkStatus);
