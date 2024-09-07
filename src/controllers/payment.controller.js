@@ -67,6 +67,19 @@ const payToPalspay = catchAsync(async (req, res) => {
     const data = await paymentService.payToPalspay(mergedBody);
     res.status(httpStatus.OK).send({ message: 'Payment Successful', data });
 });
+
+
+const settlementInitiated = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    const data = await paymentService.settlementInitiated(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Settlement successfully recorded', data });
+});
+
+
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
 //     const mergedBody = {
@@ -86,4 +99,5 @@ const payToPalspay = catchAsync(async (req, res) => {
 //     // checkStatus
 // };
 
-export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment, payToPalspay }
+export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment, 
+    payToPalspay, settlementInitiated }

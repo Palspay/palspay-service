@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import ApiError from "../utills/ApiError";
 import mongoose from "mongoose";
 import { Transaction, PaymentStatus } from "../models/transaction.model";
+import Settlement from "../models/settlement.model";
 import crypto from "crypto";
 import axios from "axios";
 import razorpay from "../utills/razorpay";
@@ -374,4 +375,30 @@ async function razorpayPayout(data) {
 }
 
 
-export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment, payToPalspay }; 
+const settlementInitiated = async (settlementData) => {
+  const { amount, paidBy, paidTo, userId, groupId } = settlementData;
+  try {
+    // Here you would add logic to save settlement data to the database
+    const settlementRecord = {
+      userId,
+      paidBy,
+      paidTo,
+      amount,
+      groupId,
+      date: new Date(),
+      status: 'SETTLED', // Example status, you can modify as needed
+    };
+
+    // Save to database
+    const data = await Settlement.create(settlementRecord); // Assuming `Settlement` is your model for settlements
+
+    return data;
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal Server Error');
+  }
+};
+
+
+export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment, 
+  payToPalspay, settlementInitiated }; 
