@@ -1,48 +1,22 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose';
 
-// Define the Settlement Schema
-const SettlementSchema = new Schema({
-  paidBy_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming you have a User model
-    required: true
-  },
-  paidTo_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the user receiving the payment
-    required: true
-  },
-  amount: {
-    type: Number,
-    required: true
-  },
-  transaction_date: {
-    type: Date,
-    default: Date.now
-  },
-  remaining_balance_before: {
-    type: Number,
-    required: true
-  },
-  remaining_balance_after: {
-    type: Number,
-    required: true
-  },
-  status: {
+const settlementSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  paidTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  amount: { type: Number, required: true },
+  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+  creation_date: {
     type: String,
-    enum: ['pending', 'completed', 'failed'],
-    default: 'pending'
   },
-  group_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Group', // Assuming you have a Group model
-    required: false, // Not all settlements will be done in groups
-    default: null
-  }
+  status: { type: String, enum: ['SETTLED', 'PENDING'], default: 'PENDING' },
+  settleUpBy: {
+    type: String,
+    enum: ['razorpay', 'cash'],
+    required: true,
+  },
 });
 
-// Create the Settlement model
-const Settlement = mongoose.model('Settlement', SettlementSchema);
+const Settlement = mongoose.model('Settlement', settlementSchema);
 
-module.exports = Settlement;
+export default Settlement;

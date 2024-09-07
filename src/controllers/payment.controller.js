@@ -73,7 +73,8 @@ const settlementInitiated = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
         userId: req.userId,
-        currentDate: req.currentDate
+        paidBy: req.userId,
+        creation_date: req.currentDate
     };
     const data = await paymentService.settlementInitiated(mergedBody);
     res.status(httpStatus.OK).send({ message: 'Settlement successfully recorded', data });

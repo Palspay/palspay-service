@@ -376,7 +376,7 @@ async function razorpayPayout(data) {
 
 
 const settlementInitiated = async (settlementData) => {
-  const { amount, paidBy, paidTo, userId, groupId } = settlementData;
+  const { amount, paidBy, paidTo, userId, groupId, settleUpBy, creation_date} = settlementData;
   try {
     // Here you would add logic to save settlement data to the database
     const settlementRecord = {
@@ -385,8 +385,10 @@ const settlementInitiated = async (settlementData) => {
       paidTo,
       amount,
       groupId,
-      date: new Date(),
-      status: 'SETTLED', // Example status, you can modify as needed
+      creation_date,
+      status: 'SETTLED',
+      settleUpBy
+       // Example status, you can modify as needed
     };
 
     // Save to database
