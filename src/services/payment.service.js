@@ -380,7 +380,6 @@ const settlementInitiated = async (settlementData) => {
   try {
     // Here you would add logic to save settlement data to the database
     const settlementRecord = {
-      userId,
       paidBy,
       paidTo,
       amount,

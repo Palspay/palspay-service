@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 const settlementSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   paidTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   amount: { type: Number, required: true },

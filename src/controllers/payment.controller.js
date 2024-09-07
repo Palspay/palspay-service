@@ -72,7 +72,6 @@ const payToPalspay = catchAsync(async (req, res) => {
 const settlementInitiated = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
-        userId: req.userId,
         paidBy: req.userId,
         creation_date: req.currentDate
     };
