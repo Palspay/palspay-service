@@ -1,6 +1,7 @@
 import { paymentService, userService } from '../services';
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
+import Settlement from "../models/settlement.model";
 
 const paymentInitated = catchAsync(async (req, res) => {
     console.log('controller user ID', req.userId);
@@ -79,6 +80,29 @@ const settlementInitiated = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Settlement successfully recorded', data });
 });
 
+const getUserSettlements = catchAsync(async (req, res) => {
+    const { friendUserId } = req.query;
+    const userId = req.userId;
+  
+    const settlements = await Settlement.find({
+      $or: [
+        { paidBy: userId, paidTo: friendUserId },
+        { paidBy: friendUserId, paidTo: userId }
+      ]
+    });
+  
+    res.status(httpStatus.OK).send({ message: 'Settlements fetched successfully', data: settlements });
+  });
+  
+
+  const getGroupSettlements = catchAsync(async (req, res) => {
+    const { groupId } = req.query;
+  
+    const settlements = await Settlement.find({ groupId });
+  
+    res.status(httpStatus.OK).send({ message: 'Group settlements fetched successfully', data: settlements });
+  });
+  
 
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
@@ -100,4 +124,5 @@ const settlementInitiated = catchAsync(async (req, res) => {
 // };
 
 export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment, 
-    payToPalspay, settlementInitiated }
+    payToPalspay, settlementInitiated ,  getUserSettlements, 
+    getGroupSettlements }
