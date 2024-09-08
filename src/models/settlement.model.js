@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const settlementSchema = new mongoose.Schema({
-  paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-  paidTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+  paidBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
+  paidTo: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   amount: { type: Number, required: true },
-  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Groups' },
+  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'groups' },
   creation_date: {
     type: String,
   },
