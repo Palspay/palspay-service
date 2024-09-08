@@ -81,7 +81,7 @@ const settlementInitiated = catchAsync(async (req, res) => {
 });
 
 const getUserSettlements = catchAsync(async (req, res) => {
-    const { friendUserId } = req.query;
+    const { user_id: friendUserId } = req.params;
     const userId = req.userId;
   
     const settlements = await Settlement.find({
@@ -96,7 +96,7 @@ const getUserSettlements = catchAsync(async (req, res) => {
   
 
   const getGroupSettlements = catchAsync(async (req, res) => {
-    const { groupId } = req.query;
+    const { group_id: groupId } = req.params; 
   
     const settlements = await Settlement.find({ groupId });
   
