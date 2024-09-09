@@ -89,20 +89,22 @@ const getUserSettlements = catchAsync(async (req, res) => {
         { paidBy: userId, paidTo: friendUserId },
         { paidBy: friendUserId, paidTo: userId }
       ]
-    });
+    }).populate('paidBy', 'name')  // Populate the 'paidBy' field with the user's name
+      .populate('paidTo', 'name');  // Populate the 'paidTo' field with the user's name
   
     res.status(httpStatus.OK).send({ message: 'Settlements fetched successfully', data: settlements });
   });
   
-
   const getGroupSettlements = catchAsync(async (req, res) => {
-    const { group_id: groupId } = req.params; 
+    const { group_id: groupId } = req.params;
   
-    const settlements = await Settlement.find({ groupId });
+    const settlements = await Settlement.find({ groupId })
+      .populate('paidBy', 'name')  // Populate the 'paidBy' field with the user's name
+      .populate('paidTo', 'name');  // Populate the 'paidTo' field with the user's name
   
     res.status(httpStatus.OK).send({ message: 'Group settlements fetched successfully', data: settlements });
   });
-  
+    
 
 // const checkStatus = catchAsync(async (req, res) => {
 //     const txnId = req.query.txnId;
