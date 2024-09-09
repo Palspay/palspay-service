@@ -63,13 +63,18 @@ const createUser = async (userBody) => {
 
         // Call sendOtp function here to send OTP via MSG91
         try {
-            await msg91Service.sendOtp(userBody.mobile, otp);
-            console.log('otp num -', userBody.mobile);
+            // Remove the '+' sign from the mobile number if it exists
+            const mobileWithoutPlus = userBody.mobile.startsWith('+') ? userBody.mobile.slice(1) : userBody.mobile;
+            
+            // Send the OTP to the sanitized mobile number
+            await msg91Service.sendOtp(mobileWithoutPlus, otp);
+        
+            console.log('OTP sent to:', mobileWithoutPlus);
         } catch (error) {
             console.error('Failed to send OTP:', error);
             throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send OTP');
         }
-    
+            
 
     // @ts-ignore
     return { userId: user._id, otp: user.otp };
