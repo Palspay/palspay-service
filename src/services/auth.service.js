@@ -2,6 +2,8 @@ const httpStatus = require('http-status');
 const ApiError = require('../utills/ApiError');
 const User = require('../models/user.model');
 const userService = require('./user.service');
+const msg91Service = require('./msg91.service');
+
 const config = require('../config/config');
 // @ts-ignore
 const jwt = require('jsonwebtoken');
@@ -58,6 +60,17 @@ const createUser = async (userBody) => {
 
         user = await isTempReg.save();
     }
+
+        // Call sendOtp function here to send OTP via MSG91
+        try {
+            await msg91Service.sendOtp(userBody.mobile, otp);
+            console.log('otp num -', userBody.mobile);
+        } catch (error) {
+            console.error('Failed to send OTP:', error);
+            throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send OTP');
+        }
+    
+
     // @ts-ignore
     return { userId: user._id, otp: user.otp };
 };

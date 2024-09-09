@@ -8,7 +8,7 @@ const sendOtp = async (mobileNumber, otp) => {
     mobile: mobileNumber,
     otp: otp,
     authkey: process.env.MSG91_API_KEY,
-    template_id: process.env.MSG91_TEMPLATE_ID,  // Optional, based on your setup
+    template_id: process.env.MSG91_OTP_TEMPLATE_ID,  // Optional, based on your setup
   };
 
   try {
