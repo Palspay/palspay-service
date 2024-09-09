@@ -3,6 +3,7 @@ const catchAsync = require('../utills/catchAsync');
 const { userExpanse } = require('../services');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
+import Settlement from "../models/settlement.model";
 
 const addExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -200,6 +201,26 @@ const individualExpanse = catchAsync(async (req, res) => {
             owes_arr = [],
             expanse = {},
             groupDetails = {};
+         
+        // Fetch settlements between users
+        const userSettlements = await Settlement.find({
+            $or: [
+                { paidBy: mergedBody.userId, paidTo: friendId },
+                { paidBy: friendId, paidTo: mergedBody.userId }
+            ]
+        });
+
+        // Calculate total paid amounts between users
+        let totalPaidByUser = 0;
+        let totalPaidByFriend = 0;
+        userSettlements.forEach(settlement => {
+            if (settlement.paidBy.equals(mergedBody.userId)) {
+                totalPaidByUser += settlement.amount;
+            } else if (settlement.paidBy.equals(friendId)) {
+                totalPaidByFriend += settlement.amount;
+            }
+        });
+            
         for await (let item of data) {
             mergedBody.expanseId = item._id;
             // item.expanseData = await userExpanse.fetchExpanse(mergedBody);
@@ -222,9 +243,16 @@ const individualExpanse = catchAsync(async (req, res) => {
                 }
             }    
         }
+
+        // Adjust lent/borrowed based on settlements
+        total_lent -= totalPaidByFriend;
+        total_borrowed -= totalPaidByUser;
+
+        // Calculate final overall after settlements
         expanse.overall = total_lent - total_borrowed;
         expanse.total_lent = total_lent;
         expanse.total_borrowed = total_borrowed;
+        
         if (owes_arr.length > 0) {
             owes_arr.forEach(item => {
                 const key = `${item.from_id}_${item.from}`;
