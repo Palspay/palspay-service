@@ -193,6 +193,7 @@ const individualExpanse = catchAsync(async (req, res) => {
         currentDate: req.currentDate
     };
     const data = await userExpanse.individualExpanse(mergedBody);
+
     if (data.length > 0) {
         const sums = {};
         let total_lent = 0,
@@ -201,47 +202,56 @@ const individualExpanse = catchAsync(async (req, res) => {
             owes_arr = [],
             expanse = {},
             groupDetails = {};
-         
-        // Fetch settlements between users
-        const userSettlements = await Settlement.find({
-            $or: [
-                { paidBy: mergedBody.userId, paidTo: friendId },
-                { paidBy: friendId, paidTo: mergedBody.userId }
-            ]
-        });
 
-        // Calculate total paid amounts between users
+        // Fetch settlements based on the presence of friendId
+        const userSettlements = friendId 
+            ? await Settlement.find({
+                $or: [
+                    { paidBy: mergedBody.userId, paidTo: friendId },
+                    { paidBy: friendId, paidTo: mergedBody.userId }
+                ]
+            })
+            : await Settlement.find({
+                $or: [
+                    { paidBy: mergedBody.userId }, // All settlements where the user is the payer
+                    { paidTo: mergedBody.userId }  // All settlements where the user is the payee
+                ]
+            });
+
+        // Calculate total paid amounts
         let totalPaidByUser = 0;
         let totalPaidByFriend = 0;
         userSettlements.forEach(settlement => {
             if (settlement.paidBy.equals(mergedBody.userId)) {
                 totalPaidByUser += settlement.amount;
-            } else if (settlement.paidBy.equals(friendId)) {
+            } else if (friendId && settlement.paidBy.equals(friendId)) {
+                totalPaidByFriend += settlement.amount;
+            } else if (!friendId) {
                 totalPaidByFriend += settlement.amount;
             }
         });
-            
+
         for await (let item of data) {
             mergedBody.expanseId = item._id;
-            // item.expanseData = await userExpanse.fetchExpanse(mergedBody);
             total_lent += parseFloat(item.you_lent);
             total_borrowed += parseFloat(item.you_borrowed);
-            let borrowed = parseFloat(item.you_borrowed)
-            let lent = parseFloat(item.you_lent)
+            let borrowed = parseFloat(item.you_borrowed);
+            let lent = parseFloat(item.you_lent);
 
-            groupDetails = await userExpanse.getGroupByUser(mergedBody); //group details for linked user
+            groupDetails = await userExpanse.getGroupByUser(mergedBody); // Group details for linked user
 
-            if(item.addPayer.length > 0 ){
+            if (item.addPayer.length > 0) {
                 if (borrowed > 0) {
-                    owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
+                    owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() });
                 }
                 if (lent > 0) {
                     for await (let payer of item.expanse_details) {
-                        if (payer.type == "owes")
-                            owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
+                        if (payer.type === "owes") {
+                            owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() });
+                        }
                     }
                 }
-            }    
+            }
         }
 
         // Adjust lent/borrowed based on settlements
@@ -252,43 +262,45 @@ const individualExpanse = catchAsync(async (req, res) => {
         expanse.overall = total_lent - total_borrowed;
         expanse.total_lent = total_lent;
         expanse.total_borrowed = total_borrowed;
-        
+
+        // Prepare owes_arr
         if (owes_arr.length > 0) {
             owes_arr.forEach(item => {
                 const key = `${item.from_id}_${item.from}`;
                 sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
             });
 
-            const result = Object.keys(sums).map(key => {
+            expanse.owes_arr = Object.keys(sums).map(key => {
                 const [from_id, from] = key.split('_');
                 return { from_id, from, amount: sums[key], to: "You" };
             });
-            expanse.owes_arr = result;
         } else {
             expanse.owes_arr = [];
         }
+
+        // Prepare owe_arr
         if (owe_arr.length > 0) {
             owe_arr.forEach(item => {
                 const key = `${item.to_id}_${item.to}`;
-                // @ts-ignore
                 sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
             });
 
-            const owe_result = Object.keys(sums).map(key => {
+            expanse.owe_arr = Object.keys(sums).map(key => {
                 const [to_id, to] = key.split('_');
                 return { to_id, from: "You", amount: sums[key], to };
             });
-            expanse.owe_arr = owe_result;
         } else {
             expanse.owe_arr = [];
         }
 
-        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data, expanse, groupDetails });
+        res.status(httpStatus.OK).send({ message: 'Expanse list load successfully', data, expanse, groupDetails });
     } else {
-        res.status(httpStatus.OK).send({ message: 'Expanse list load succesfully', data: [] });
+        res.status(httpStatus.OK).send({ message: 'Expanse list load successfully', data: [] });
     }
 });
-module.exports = {
+
+
+  module.exports = {
     addExpanse,
     addGroupExpanse,
     updateExpanse,
