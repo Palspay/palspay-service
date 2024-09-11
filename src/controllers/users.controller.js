@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
 const { userService } = require('./../services');
+const msgService = require('./../services/msg91.service');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -274,6 +275,22 @@ const reportUser = async (req, res) => {
     }
 };
 
+const sendReminderFriend = async (req, res) => {
+    const { mobileNumber, friendName, amount, link } = req.body;
+  
+    if (!mobileNumber || !friendName || !amount || !link) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+  
+    try {
+      const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, link);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      res.status(500).json({ error: 'An error occurred while sending the reminder.' });
+    }
+  };
+
 
 module.exports = {
     addFriends,
@@ -298,5 +315,6 @@ module.exports = {
     getGroupWallet,
     reportUser,
     uploadUserProfilePicture,
-    getGroup 
+    getGroup,
+    sendReminderFriend 
 };
