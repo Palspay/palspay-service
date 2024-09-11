@@ -19,7 +19,7 @@ export const login = catchAsync(async (req, res) => {
 });
 
 export const verifyUser = catchAsync(async (req, res) => { //verifyUser and send sms
-    var otp = 123456 // Math.floor(100000 + Math.random() * 9000).toString();
+    var otp; // Math.floor(100000 + Math.random() * 9000).toString();
     const mergedBody = {
         ...req.body,
         otp: otp
@@ -105,3 +105,63 @@ export const googleLogin = catchAsync(async (req, res) => {
         res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
     }
 })
+
+
+export const facebookLogin = catchAsync(async (req, res) => {
+    try {
+        const adminAuth = admin.auth();
+        // Decode the Firebase ID token sent from the frontend
+        const decodedToken = await adminAuth.verifyIdToken(req.body.token);
+        const uid = decodedToken.uid;
+
+        // Retrieve the user record from Firebase
+        const user = await admin.auth().getUser(uid);
+        const email = user.email;
+        const name = user.displayName;
+        const mobile = user.phoneNumber;
+        const dp = user.photoURL;
+
+        // Check if the user already exists in your database
+        const existingUser = await userService.getUserByEmail(email, false);
+        if (existingUser) {
+            // Generate access token for existing user
+            const access_token = await generateToken(existingUser);
+            const data = {
+                access_token,
+                // @ts-ignore
+                is_passcode_enter: existingUser.is_passcode_enter,
+                name: existingUser.name,
+                // @ts-ignore
+                email: existingUser.email,
+                // @ts-ignore
+                user_id: existingUser.id,
+                // @ts-ignore
+                currency: existingUser.currency,
+                // @ts-ignore
+                vpa: existingUser.vpa || '',
+                // @ts-ignore
+                plan_active: existingUser.plan_active || false,
+                // @ts-ignore
+                plan_expired: existingUser.plan_expired || 0,
+            };
+            res.status(httpStatus.OK).send({ message: 'Login Successfully', data });
+        } else {
+            // Create a new user in the database if they don't exist
+            const userCreated = await authService.createUserWithoutOTP({ email, name, mobile, dp, facebook_id: uid });
+            const access_token = await generateToken(userCreated);
+            const data = {
+                access_token,
+                is_passcode_enter: userCreated.is_passcode_enter,
+                name: userCreated.name,
+                email: userCreated.email,
+                user_id: userCreated.id,
+                currency: userCreated.currency,
+            };
+            res.status(httpStatus.CREATED).send({ message: 'User Created', data });
+        }
+    } catch (error) {
+        // Handle error
+        console.log(error);
+        res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
+    }
+});

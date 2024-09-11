@@ -18,4 +18,6 @@ router.post('/forgot-password', validate(authValidation.createPassword), authCon
 
 router.post('/googleLogin', validate(authValidation.googleLogin), authController.googleLogin);
 
+router.post('/facebookLogin', validate(authValidation.googleLogin), authController.facebookLogin);
+
 module.exports = router;
