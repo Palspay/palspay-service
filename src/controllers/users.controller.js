@@ -276,13 +276,39 @@ const reportUser = async (req, res) => {
 };
 
 const sendReminderFriend = async (req, res) => {
-    const { mobileNumber, friendName, amount, link } = req.body;
+    const { friendId, amount } = req.body;
+
+
   
-    if (!mobileNumber || !friendName || !amount || !link) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!friendId || !amount) {
+      return res.status(400).json({ error: 'friendId and amount are required.' });
     }
+
+      // Function to generate a random 6-character code
+    const generateRandomCode = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters[randomIndex];
+        }
+        return result;
+    };
   
     try {
+        // Find the friend by friendId from MongoDB
+        const friend = await User.findById(friendId); // Assuming 'User' is your MongoDB user model
+
+        if (!friend) {
+        return res.status(404).json({ error: 'Friend not found.' });
+        }        
+
+        const { name: friendName, mobile: mobileNumber } = friend;
+        console.log('reminder data', friendName, mobileNumber);
+
+        const link = generateRandomCode();
+        console.log('link', link);
+
       const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, link);
       res.status(200).json(result);
     } catch (error) {
