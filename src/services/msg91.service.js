@@ -20,4 +20,34 @@ const sendOtp = async (mobileNumber, otp) => {
   }
 };
 
-module.exports = { sendOtp };
+const sendReminderFriend = async (mobileNumber, friendName, amount, link) => {
+  const url = 'https://control.msg91.com/api/v5/flow';
+
+  const data = {
+    template_id: '66e15eafd6fc053b4324efa1',  // Template ID provided
+    recipients: [
+      {
+        mobiles: mobileNumber,
+        amount: amount,  
+        description: friendName,  
+        link: link
+      }
+    ]
+  };
+
+  const headers = {
+    'authkey': process.env.MSG91_API_KEY,
+    'Accept': 'application/json'
+  };
+
+  try {
+    const response = await axios.post(url, data, { headers });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending reminder:', error);
+    throw error;
+  }
+};
+
+
+module.exports = { sendOtp, sendReminderFriend };

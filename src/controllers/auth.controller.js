@@ -109,10 +109,11 @@ export const googleLogin = catchAsync(async (req, res) => {
 
 export const facebookLogin = catchAsync(async (req, res) => {
     try {
-        console.log('fbtoken', req.body.token);
+        console.log('Received token:', req.body.token);
         const adminAuth = admin.auth();
         // Decode the Firebase ID token sent from the frontend
         const decodedToken = await adminAuth.verifyIdToken(req.body.token);
+        console.log('Decoded token:', decodedToken); 
         const uid = decodedToken.uid;
 
         // Retrieve the user record from Firebase

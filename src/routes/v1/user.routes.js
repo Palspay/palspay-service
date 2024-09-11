@@ -2,6 +2,8 @@ const express = require('express');
 const validate = require('../../middlewares/validate');
 const uservalidation = require('../../validations/user.validations');
 const userController = require('../../controllers/users.controller');
+const msgService = require('../../services/msg91.service');
+
 const { auth, authGroupOwner } = require('../../middlewares/auth');
 const router = express.Router();
 const path = require('path');
@@ -64,4 +66,7 @@ router.get('/uploads/:imageName', (req, res) => {
     }
   });
 });
+
+router.post('/send-palsReminder', auth, msgService.sendReminderFriend);
+
 module.exports = router;
