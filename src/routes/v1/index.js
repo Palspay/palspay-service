@@ -4,6 +4,7 @@ const userRoute = require('./user.routes');
 const expaseRoute = require('./expanses.routes');
 const adminRoutes=require('./admin.routes');
 const paymentRoutes=require('./payment.routes');
+const paymentLinkRoutes=require('./paymentLink.routes');
 
 const router = express.Router();
 const defaultRoutes = [{
@@ -26,6 +27,10 @@ const defaultRoutes = [{
         path: '/payments',
         route: paymentRoutes,
     },
+    {
+        path: '/links',
+        route: paymentLinkRoutes,
+    }
 ];
 
 defaultRoutes.forEach((route) => {
