@@ -1,4 +1,5 @@
 const paymentLinkService = require('../services/paymentLink.service');
+const PaymentLink = require('../models/paymentLink.model');
 
 // Controller function to handle the creation of the payment link
 async function createPaymentLink(req, res) {
@@ -24,6 +25,12 @@ async function createPaymentLink(req, res) {
   }
 }
 
+async function getPaymentLinkDetails(code) {
+    // Find the payment link using the code
+    const paymentLink = await PaymentLink.findOne({ code });
+    return paymentLink;
+  }
+
 module.exports = {
-  createPaymentLink,
+  createPaymentLink, getPaymentLinkDetails
 };
