@@ -59,13 +59,14 @@ export const verifyUser = catchAsync(async (req, res) => {
 
 
 export const createNewPassword = catchAsync(async (req, res) => { //Create a new password
+    console.log('new pass body',req.body);
 
     if (req.body.confirmPassword != req.body.newPassword) {
         return res.status(httpStatus.NOT_ACCEPTABLE).send({ message: 'New password and confirm password is not matched!', data: [] });
     }
     const mergedBody = {
         ...req.body,
-        userId: req.userId,
+        userId: req.body.userId,
     };
     const isUser = await authService.createNewPassword(mergedBody);
     if (isUser) {

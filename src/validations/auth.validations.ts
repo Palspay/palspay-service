@@ -35,6 +35,7 @@ export const createPassword = {
     body: Joi.object().keys({
         newPassword: Joi.string().required().custom(password),
         confirmPassword: Joi.string().required().custom(password),
+        userId: Joi.string().required(),
     }),
 }
 
