@@ -11,8 +11,17 @@ export const register = catchAsync(async (req, res) => {
 });
 
 export const verifyOtp = catchAsync(async (req, res) => {
-    const data = await authService.verifyOtp(req.body);
-    res.status(httpStatus.CREATED).send({ message: 'Otp Verify Successfuly', data: data });
+
+
+    try {
+        console.log(req.body); // Log the body data
+        // Proceed with OTP verification logic
+        const data = await authService.verifyOtp(req.body);
+        res.status(httpStatus.CREATED).send({ message: 'Otp Verify Successfuly', data: data });
+      } catch (error) {
+        console.error(error); // Log validation errors or server errors
+        return res.status(400).json({ message: error.message || 'Bad Request' });
+      }
 })
 export const login = catchAsync(async (req, res) => {
     const access_token = await authService.loginUserWithEmailAndPassword(req.body);
