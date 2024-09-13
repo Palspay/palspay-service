@@ -3,6 +3,7 @@ import catchAsync from './../utills/catchAsync';
 import { authService, userService } from './../services';
 import { generateToken } from '../services/auth.service';
 import admin from 'firebase-admin';
+const msg91Service = require('../services/msg91.service');
 
 export const register = catchAsync(async (req, res) => {
     const data = await authService.createUser(req.body);
@@ -18,19 +19,44 @@ export const login = catchAsync(async (req, res) => {
     res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data: access_token });
 });
 
-export const verifyUser = catchAsync(async (req, res) => { //verifyUser and send sms
-    var otp; // Math.floor(100000 + Math.random() * 9000).toString();
-    const mergedBody = {
-        ...req.body,
-        otp: otp
-    };
-    const isUser = await authService.verifyUser(mergedBody);
-    if (isUser) {
-        res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data: isUser });
+// export const verifyUser = catchAsync(async (req, res) => { //verifyUser and send sms
+//     var otp; // Math.floor(100000 + Math.random() * 9000).toString();
+//     const mergedBody = {
+//         ...req.body,
+//         otp: otp
+//     };
+//     const isUser = await authService.verifyUser(mergedBody);
+//     if (isUser) {
+//         res.status(httpStatus.CREATED).send({ message: 'Login Sucessfully', data: isUser });
+//     } else {
+//         res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
+//     }
+// });
+
+export const verifyUser = catchAsync(async (req, res) => {
+    const { mobile } = req.body;
+    const user = await userService.getUserByMobile(mobile);
+
+    if (user) {
+        const otp = await generateOtp(6);
+        // Assuming msg91Service.sendOtp is a service that sends OTP via SMS
+        try {
+            await msg91Service.sendOtp(mobile, otp);
+            // Save the OTP in the user's data for verification later
+            user.otp = otp;
+            await user.save();
+            res.status(httpStatus.CREATED).send({
+                message: 'OTP sent successfully!',
+                data: { otp, _id: user._id } // Sending OTP for testing; you can skip sending the OTP to frontend in production
+            });
+        } catch (error) {
+            res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Failed to send OTP', error });
+        }
     } else {
-        res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
+        res.status(httpStatus.NOT_FOUND).send({ message: 'User not found with this mobile number' });
     }
 });
+
 
 export const createNewPassword = catchAsync(async (req, res) => { //Create a new password
 
@@ -167,3 +193,13 @@ export const facebookLogin = catchAsync(async (req, res) => {
         res.status(httpStatus.NOT_FOUND).send({ message: 'Not a valid user!', data: [] });
     }
 });
+
+
+const generateOtp = async (length) => {
+    const digits = '0123456789';
+    let OTP = '';
+    for (let i = 0; i < length; i++) {
+        OTP += digits[Math.floor(Math.random() * 10)];
+    }
+    return OTP;
+}
