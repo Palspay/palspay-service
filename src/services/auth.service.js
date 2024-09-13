@@ -149,8 +149,8 @@ const verifyOtp = async (data) => {
     if (!user || user.otp !== data.otp) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid Otp');
     }
-    if (user.is_otp_verify) {
-        throw new ApiError(httpStatus.BAD_REQUEST, 'Bad Request');
+    if (data.callFrom !== 'PassWordReset' && user.is_otp_verify) {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'User Is Already Verified');
     }
     user.is_otp_verify = true;
     user.modification_date = await getCurrentDateTime();
