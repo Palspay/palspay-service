@@ -281,8 +281,8 @@ const sendReminderFriend = async (req, res) => {
   const { friendId, amount, orderId, userId, groupId, reminderType, senderName } = req.body;
 
   // Validate input
-  if (!friendId || !amount || !orderId || !userId) {
-    return res.status(400).json({ error: 'friendId, amount, orderId, and userId are required.' });
+  if (!friendId || !amount || !senderName) {
+    return res.status(400).json({ error: 'friendId, amount, orderId, and senderName are required.' });
   }
 
   // Function to generate a random 6-character code
