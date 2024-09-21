@@ -11,11 +11,13 @@ const paymentLinkSchema = new mongoose.Schema({
     required: false,
   },
   ReminderBy: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'users',
     required: true,
   },
   ReminderFor: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'users',
     required: true,
   },
   reminderType: {
@@ -26,12 +28,12 @@ const paymentLinkSchema = new mongoose.Schema({
   },
   groupId: {
     type: String,
-    ref: 'Groups',
+    ref: 'groups',
     required: false, // Only needed for 'Group' or 'GroupPayment' reminders
   },
   groupPayment: {
     type: mongoose.Schema.Types.ObjectId, // Reference to the group payment object
-    ref: 'GroupPayment',
+    ref: 'grouppayments',
     required: false, // Assuming 'GroupPayment' is another model in your app
   },
 }, { timestamps: true });

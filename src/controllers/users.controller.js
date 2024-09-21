@@ -342,17 +342,22 @@ const fetchReminderByCode = async (req, res) => {
     const { code } = req.params;
   
     try {
-      // Find the payment link by the provided code
-      const reminder = await PaymentLink.findOne({ code }).populate('groupPayment');
+      // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
+      const reminder = await PaymentLink.findOne({ code })
+        .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
+        .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
+        .populate('groupPayment'); // Populate groupPayment if needed
   
       if (!reminder) {
         return res.status(404).json({ error: 'Reminder not found' });
       }
   
-      // Build the response object with the necessary fields
+      // Build the response object with the ObjectId as is and separate names
       const reminderDetails = {
-        reminderBy: reminder.ReminderBy,
-        reminderFor: reminder.ReminderFor,
+        reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+        reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+        reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+        reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
         reminderType: reminder.reminderType,
         groupId: reminder.groupId || null, // Include groupId if available
         groupPayment: reminder.groupPayment || null, // Include groupPayment if available
@@ -364,6 +369,7 @@ const fetchReminderByCode = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
     }
   };
+  
 
 module.exports = {
     addFriends,
