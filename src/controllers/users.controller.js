@@ -278,12 +278,13 @@ const reportUser = async (req, res) => {
 
 
 const sendReminderFriend = async (req, res) => {
-  const { friendId, amount, orderId, userId, groupId, reminderType, senderName } = req.body;
+  const { friendId, amount, orderId, groupId, reminderType, senderName} = req.body;
 
   // Validate input
   if (!friendId || !amount || !senderName) {
     return res.status(400).json({ error: 'friendId, amount, orderId, and senderName are required.' });
   }
+  const userId = req.userId;
 
   // Function to generate a random 6-character code
   const generateRandomCode = () => {

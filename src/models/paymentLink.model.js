@@ -8,7 +8,7 @@ const paymentLinkSchema = new mongoose.Schema({
   },
   orderId: {
     type: String,
-    required: true,
+    required: false,
   },
   ReminderBy: {
     type: String,
