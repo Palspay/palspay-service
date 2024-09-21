@@ -31,7 +31,8 @@ const paymentLinkSchema = new mongoose.Schema({
   },
   groupPayment: {
     type: mongoose.Schema.Types.ObjectId, // Reference to the group payment object
-    ref: 'GroupPayment', // Assuming 'GroupPayment' is another model in your app
+    ref: 'GroupPayment',
+    required: false, // Assuming 'GroupPayment' is another model in your app
   },
 }, { timestamps: true });
 
