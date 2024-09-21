@@ -338,6 +338,32 @@ const sendReminderFriend = async (req, res) => {
   }
 };
 
+const fetchReminderByCode = async (req, res) => {
+    const { code } = req.params;
+  
+    try {
+      // Find the payment link by the provided code
+      const reminder = await PaymentLink.findOne({ code }).populate('groupPayment');
+  
+      if (!reminder) {
+        return res.status(404).json({ error: 'Reminder not found' });
+      }
+  
+      // Build the response object with the necessary fields
+      const reminderDetails = {
+        reminderBy: reminder.ReminderBy,
+        reminderFor: reminder.ReminderFor,
+        reminderType: reminder.reminderType,
+        groupId: reminder.groupId || null, // Include groupId if available
+        groupPayment: reminder.groupPayment || null, // Include groupPayment if available
+      };
+  
+      res.status(200).json(reminderDetails);
+    } catch (error) {
+      console.error('Error fetching reminder:', error);
+      res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
+    }
+  };
 
 module.exports = {
     addFriends,
@@ -363,5 +389,6 @@ module.exports = {
     reportUser,
     uploadUserProfilePicture,
     getGroup,
-    sendReminderFriend 
+    sendReminderFriend,
+    fetchReminderByCode 
 };

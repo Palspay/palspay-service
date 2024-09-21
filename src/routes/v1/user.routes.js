@@ -66,5 +66,6 @@ router.get('/uploads/:imageName', (req, res) => {
 });
 
 router.post('/send-palsReminder', auth, userController.sendReminderFriend);
+router.get('/fetchReminder/:code', auth, userController.fetchReminderByCode);
 
 module.exports = router;
