@@ -20,7 +20,7 @@ const sendOtp = async (mobileNumber, otp) => {
   }
 };
 
-const sendReminderFriend = async (mobileNumber, friendName, amount, link) => {
+const sendReminderFriend = async (mobileNumber, friendName, amount, link, senderName) => {
   const url = 'https://control.msg91.com/api/v5/flow';
 
   const data = {
@@ -29,7 +29,7 @@ const sendReminderFriend = async (mobileNumber, friendName, amount, link) => {
       {
         mobiles: mobileNumber,
         amount: amount,  
-        description: friendName,  
+        description: senderName,  
         link: link
       }
     ]

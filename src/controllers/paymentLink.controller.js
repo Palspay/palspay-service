@@ -4,14 +4,19 @@ const PaymentLink = require('../models/paymentLink.model');
 // Controller function to handle the creation of the payment link
 async function createPaymentLink(req, res) {
   try {
-    const { orderId, userId, groupId, friendId } = req.body;
+    const { orderId, ReminderBy, groupId, ReminderFor } = req.body;
 
-    if (!orderId || !userId) {
-      return res.status(400).json({ message: 'Missing required fields: orderId, userId' });
+    if (!orderId || !ReminderBy) {
+      return res.status(400).json({ message: 'Missing required fields: orderId, ReminderBy' });
     }
 
+    if (!ReminderFor) {
+      return res.status(400).json({ message: 'Missing required fields: ReminderFor' });
+    }
+
+
     // Call the service to create a payment link
-    const paymentLink = await paymentLinkService.createPaymentLink(orderId, userId, groupId, friendId);
+    const paymentLink = await paymentLinkService.createPaymentLink(orderId, ReminderBy, groupId, ReminderFor);
 
     // Respond with the generated payment link details
     res.status(201).json({

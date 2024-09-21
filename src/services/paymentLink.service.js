@@ -6,7 +6,7 @@ function generateUniqueCode(length = 6) {
   return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
-async function createPaymentLink(orderId, userId, groupId, friendId) {
+async function createPaymentLink(orderId, ReminderBy, groupId, ReminderFor) {
   let code;
   let existingLink;
 
@@ -20,9 +20,9 @@ async function createPaymentLink(orderId, userId, groupId, friendId) {
   const newLink = new PaymentLink({
     code,
     orderId,
-    userId,
+    ReminderBy,
     groupId,
-    friendId,
+    ReminderFor,
   });
 
   await newLink.save();

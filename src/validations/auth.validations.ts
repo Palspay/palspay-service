@@ -22,7 +22,7 @@ export const verifyOtp = {
     body: Joi.object().keys({
         userId: Joi.string().required(),
         otp: Joi.string().required().custom(otp_length),
-        callFrom: Joi.string().optional().valid('PassWordReset'), // Add callFrom field
+        callFrom: Joi.string().optional().valid('PassWordReset', 'register'), // Add callFrom field
     }),
 }
 export const verifyUser = {

@@ -13,6 +13,7 @@ const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
 const ReportedUser = require('../models/reportedUser.model');
 const User = require('../models/user.model');
+const PaymentLink = require('../models/paymentLink.model'); 
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -275,47 +276,64 @@ const reportUser = async (req, res) => {
     }
 };
 
+
 const sendReminderFriend = async (req, res) => {
-    const { friendId, amount } = req.body;
+  const { friendId, amount, orderId, userId, groupId, reminderType, senderName } = req.body;
 
+  // Validate input
+  if (!friendId || !amount || !orderId || !userId) {
+    return res.status(400).json({ error: 'friendId, amount, orderId, and userId are required.' });
+  }
 
-  
-    if (!friendId || !amount) {
-      return res.status(400).json({ error: 'friendId and amount are required.' });
+  // Function to generate a random 6-character code
+  const generateRandomCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters[randomIndex];
     }
-
-      // Function to generate a random 6-character code
-    const generateRandomCode = () => {
-        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < 6; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters[randomIndex];
-        }
-        return result;
-    };
-  
-    try {
-        // Find the friend by friendId from MongoDB
-        const friend = await User.findById(friendId); // Assuming 'User' is your MongoDB user model
-
-        if (!friend) {
-        return res.status(404).json({ error: 'Friend not found.' });
-        }        
-
-        const { name: friendName, mobile: mobileNumber } = friend;
-        console.log('reminder data', friendName, mobileNumber);
-
-        const link = generateRandomCode();
-        console.log('link', link);
-
-      const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, link);
-      res.status(200).json(result);
-    } catch (error) {
-      console.error('Error sending reminder:', error);
-      res.status(500).json({ error: 'An error occurred while sending the reminder.' });
-    }
+    return result;
   };
+
+  try {
+    // Find the friend by friendId from MongoDB
+    const friend = await User.findById(friendId); // Assuming 'User' is your MongoDB user model
+    if (!friend) {
+      return res.status(404).json({ error: 'Friend not found.' });
+    }
+
+    const { name: friendName, mobile: mobileNumber } = friend;
+    console.log('Reminder data:', friendName, mobileNumber);
+
+    const linkCode = generateRandomCode();
+    console.log('Generated link code:', linkCode);
+
+    // Save payment link details to the database
+    const newPaymentLink = new PaymentLink({
+      code: linkCode,
+      orderId: orderId,
+      ReminderBy: userId,
+      ReminderFor: friendId,
+      groupId: groupId || null, // Optional groupId, null if not provided
+      reminderType: reminderType || 'Normal', // Default to 'Normal' if reminderType is not provided
+    });
+
+    // Save the newPaymentLink to the database
+    await newPaymentLink.save();
+
+    // Send the reminder using your messaging service (msgService)
+    const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, linkCode, senderName);
+    console.log('Message service response:', result);
+    
+
+    // Respond with the success message and saved link details
+    res.status(200).json({ message: 'Reminder sent and link saved successfully.', linkDetails: newPaymentLink });
+  } catch (error) {
+    console.error('Error sending reminder and saving link:', error);
+    res.status(500).json({ error: 'An error occurred while sending the reminder and saving the link.' });
+  }
+};
 
 
 module.exports = {
