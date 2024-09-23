@@ -36,5 +36,5 @@ const groupPaymentSchema = new mongoose.Schema({
 groupPaymentSchema.set('versionKey', false);
 
 const GroupPayment = mongoose.model('groupPayment', groupPaymentSchema);
-
+ 
 module.exports = GroupPayment;

@@ -27,13 +27,13 @@ const paymentLinkSchema = new mongoose.Schema({
     default: 'Normal', // Default reminder type is 'Normal'
   },
   groupId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'groups',
     required: false, // Only needed for 'Group' or 'GroupPayment' reminders
   },
   groupPayment: {
     type: mongoose.Schema.Types.ObjectId, // Reference to the group payment object
-    ref: 'grouppayments',
+    ref: 'groupPayment',
     required: false, // Assuming 'GroupPayment' is another model in your app
   },
 }, { timestamps: true });
