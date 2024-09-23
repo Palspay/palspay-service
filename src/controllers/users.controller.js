@@ -1,3 +1,5 @@
+import { Groups } from '../models';
+
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
 const { userService } = require('./../services');
@@ -307,6 +309,11 @@ const sendReminderFriend = async (req, res) => {
     const { name: friendName, mobile: mobileNumber } = friend;
     console.log('Reminder data:', friendName, mobileNumber);
 
+    if(groupId){
+        const group = await Groups.findById(groupId);
+        const { group_name: groupName } = group;
+    }
+
     const linkCode = generateRandomCode();
     console.log('Generated link code:', linkCode);
 
@@ -343,13 +350,18 @@ const fetchReminderByCode = async (req, res) => {
   
     try {
       // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
-      const reminder = await PaymentLink.findOne({ code })
+      let reminder = await PaymentLink.findOne({ code })
         .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
         .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
         .populate('groupPayment'); // Populate groupPayment if needed
   
       if (!reminder) {
         return res.status(404).json({ error: 'Reminder not found' });
+      }
+  
+      // Populate group details if it's a group reminder
+      if (reminder.reminderType === 'Group') {
+        reminder = await reminder.populate({ path: 'groupId', model: 'groups', select: 'group_name' });
       }
   
       // Build the response object with the ObjectId as is and separate names
@@ -359,7 +371,8 @@ const fetchReminderByCode = async (req, res) => {
         reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
         reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
         reminderType: reminder.reminderType,
-        groupId: reminder.groupId || null, // Include groupId if available
+        groupId: reminder.groupId?._id || null, // Include groupId if available
+        groupName: reminder.groupId?.group_name || null, // Include groupName if available
         groupPayment: reminder.groupPayment || null, // Include groupPayment if available
       };
   
@@ -369,6 +382,7 @@ const fetchReminderByCode = async (req, res) => {
       res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
     }
   };
+  
   
 
 module.exports = {
