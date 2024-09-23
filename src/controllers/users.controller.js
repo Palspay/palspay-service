@@ -278,7 +278,7 @@ const reportUser = async (req, res) => {
 
 
 const sendReminderFriend = async (req, res) => {
-  const { friendId, amount, orderId, groupId, reminderType, senderName, groupPayment} = req.body;
+  const { friendId, amount, orderId, groupId, reminderType, senderName, groupPaymentId} = req.body;
 
   // Validate input
   if (!friendId || !amount || !senderName) {
@@ -317,7 +317,7 @@ const sendReminderFriend = async (req, res) => {
       ReminderBy: userId,
       ReminderFor: friendId,
       groupId: groupId || null,
-      groupPayment: groupPayment || null,
+      groupPaymentId: groupPaymentId || null,
        // Optional groupId and groupPayment, null if not provided
       reminderType: reminderType || 'Normal', // Default to 'Normal' if reminderType is not provided
     });
