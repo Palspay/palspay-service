@@ -1,3 +1,4 @@
+import { inflateRaw } from 'zlib';
 import { Groups } from '../models';
 
 const httpStatus = require('http-status');
@@ -366,24 +367,37 @@ const fetchReminderByCode = async (req, res) => {
 
             // Prepare the mergedBody for fetching group expenses
             const mergedBody = {
+                id: reminder.ReminderBy._id,
                 groupId: reminder.groupId._id,
                 userId: reminder.ReminderFor._id, // The receiver user (ReminderFor)
                 currentDate: new Date() // Assuming you want to use the current date
             };
 
             // Fetch group expenses using the first function's logic
-            const data = await userExpanse.getGroupExpanse(mergedBody);
+            // const data = await userExpanse.getGroupExpanse(mergedBody);
 
             // Ensure data.owe_arr is an array, and set a default empty array if undefined
-            const owe_arr = data?.owe_arr ?? [];
+            // const owe_arr = data?.owe_arr ?? [];
+                let total_lent = 0,
+                    total_borrowed = 0,
+                    owe_arr = [],
+                    pendingAmount = 0
 
-            // Calculate the pending amount (borrowed) from owe_arr[]
-            let pendingAmount = 0;
-            owe_arr.forEach(item => {
-                if (item.to_id === reminder.ReminderBy._id.toString()) {
-                    pendingAmount += parseFloat(item.amount) || 0;
+                const expanseData = await userExpanse.fetchExpanse(mergedBody);
+
+                total_lent += parseFloat(expanseData.you_lent) || 0;
+                total_borrowed += parseFloat(expanseData.you_borrowed) || 0;
+    
+                console.log('total_lent:', total_lent);
+                console.log('total_borrowed:', total_borrowed);
+                pendingAmount = total_lent - total_borrowed;
+                console.log('pendingAmount:', pendingAmount);
+
+                if(pendingAmount > 0){
+                    pendingAmount = 0;
                 }
-            });
+
+                console.log('pendingAmount after check:', pendingAmount);
 
             // Build the response object with reminder details and pending amount
             const reminderDetails = {
@@ -394,7 +408,6 @@ const fetchReminderByCode = async (req, res) => {
                 reminderType: reminder.reminderType,
                 groupId: reminder.groupId?._id || null, // Include groupId if available
                 groupName: reminder.groupId?.group_name || null, // Include groupName if available
-                groupPayment: reminder.groupPayment || null, // Include groupPayment if available
                 pendingAmount: pendingAmount || 0, // Add the calculated pending amount
             };
 
