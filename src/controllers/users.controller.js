@@ -390,43 +390,40 @@ const fetchReminderByCode = async (req, res) => {
                     for (let item of data.expanseList) {
                         mergedBody.id = item._id;
                         item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-                        total_lent += parseFloat(item.expanseData.you_lent) || 0;
-                        total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
 
-                        let borrowed = parseFloat(item.expanseData.you_borrowed) || 0;
-                        let lent = parseFloat(item.expanseData.you_lent) || 0;
-            
-                        if(item.addPayer.length > 0 ){
-                            if (borrowed > 0) {
-                                owe_arr.push({ 
-                                    from: "You", 
-                                    amount: borrowed, 
-                                    to: item.addPayer[0].name, 
-                                    to_id: item.addPayer[0].from.toString() 
-                                });
-                            }
-                        }   
-                    }       
-                    
-                    owe_arr.forEach(item => {
-                        if(item.to_id == reminder.ReminderFor._id){
-                            pendingAmount = item.amount;
+                        if(item.to_id == reminder.ReminderBy._id){
+                            total_lent += parseFloat(item.expanseData.you_lent) || 0;
+                            total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
                         };
-                    });
-            
-                };
 
+                        // let borrowed = parseFloat(item.expanseData.you_borrowed) || 0;
+                        // let lent = parseFloat(item.expanseData.you_lent) || 0;
+            
+                        // if(item.addPayer.length > 0 ){
+                        //     if (borrowed > 0) {
+                        //         owe_arr.push({ 
+                        //             from: "You", 
+                        //             amount: borrowed, 
+                        //             to: item.addPayer[0].name, 
+                        //             to_id: item.addPayer[0].from.toString() 
+                        //         });
+                        //     }
+                        // }   
+                    }       
+                                
+                };
 
     
                 console.log('total_lent:', total_lent);
                 console.log('total_borrowed:', total_borrowed);
+
+                pendingAmount = total_lent - total_borrowed;
                 console.log('pendingAmount:', pendingAmount);
 
                 if(pendingAmount > 0){
                     pendingAmount = 0;
                 }
 
-                console.log('pendingAmount after check:', pendingAmount);
 
             // Build the response object with reminder details and pending amount
             const reminderDetails = {
