@@ -367,13 +367,11 @@ const fetchReminderByCode = async (req, res) => {
 
             // Prepare the mergedBody for fetching group expenses
             const mergedBody = {
-                id: reminder.ReminderBy._id.toString(),
                 groupId: reminder.groupId._id.toString(),
                 userId: reminder.ReminderFor._id.toString(), // The receiver user (ReminderFor)
-                currentDate: req.currentDate // Assuming you want to use the current date
+                currentDate: new Date() // Assuming you want to use the current date
             };
 
-            console.log('reminderById:',  mergedBody.id);
             console.log('mergedBody:',  mergedBody);
 
             // Fetch group expenses using the first function's logic
@@ -386,14 +384,42 @@ const fetchReminderByCode = async (req, res) => {
                     owe_arr = [],
                     pendingAmount = 0;
 
-                const expanseData = await userExpanse.fetchExpanse(mergedBody);
+                const data = await userExpanse.getGroupExpanse(mergedBody);
+                    
+                if (data) {
+                    for (let item of data.expanseList) {
+                        mergedBody.id = item._id;
+                        item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+                        total_lent += parseFloat(item.expanseData.you_lent) || 0;
+                        total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
 
-                total_lent += parseFloat(expanseData.you_lent) || 0;
-                total_borrowed += parseFloat(expanseData.you_borrowed) || 0;
+                        let borrowed = parseFloat(item.expanseData.you_borrowed) || 0;
+                        let lent = parseFloat(item.expanseData.you_lent) || 0;
+            
+                        if(item.addPayer.length > 0 ){
+                            if (borrowed > 0) {
+                                owe_arr.push({ 
+                                    from: "You", 
+                                    amount: borrowed, 
+                                    to: item.addPayer[0].name, 
+                                    to_id: item.addPayer[0].from.toString() 
+                                });
+                            }
+                        }   
+                    }       
+                    
+                    owe_arr.forEach(item => {
+                        if(item.to_id == reminder.ReminderFor._id){
+                            pendingAmount = item.amount;
+                        };
+                    });
+            
+                };
+
+
     
                 console.log('total_lent:', total_lent);
                 console.log('total_borrowed:', total_borrowed);
-                pendingAmount = total_lent - total_borrowed;
                 console.log('pendingAmount:', pendingAmount);
 
                 if(pendingAmount > 0){
