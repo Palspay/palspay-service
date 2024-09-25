@@ -374,15 +374,16 @@ const fetchReminderByCode = async (req, res) => {
             // Fetch group expenses using the first function's logic
             const data = await userExpanse.getGroupExpanse(mergedBody);
 
+            // Ensure data.owe_arr is an array, and set a default empty array if undefined
+            const owe_arr = data?.owe_arr ?? [];
+
             // Calculate the pending amount (borrowed) from owe_arr[]
             let pendingAmount = 0;
-            if (data && data.owe_arr.length > 0) {
-                data.owe_arr.forEach(item => {
-                    if (item.to_id === reminder.ReminderBy._id.toString()) {
-                        pendingAmount += parseFloat(item.amount) || 0;
-                    }
-                });
-            }
+            owe_arr.forEach(item => {
+                if (item.to_id === reminder.ReminderBy._id.toString()) {
+                    pendingAmount += parseFloat(item.amount) || 0;
+                }
+            });
 
             // Build the response object with reminder details and pending amount
             const reminderDetails = {
@@ -407,7 +408,6 @@ const fetchReminderByCode = async (req, res) => {
                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
                 reminderType: reminder.reminderType,
             };
-            
             // groupId: null,
             // groupName: null,
             // groupPayment: null,
