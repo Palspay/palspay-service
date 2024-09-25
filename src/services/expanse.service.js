@@ -382,7 +382,7 @@ const fetchExpanse = async (data) => {
                 // If the user is one of the payers, they lent money
                 item.you_lent = lentAmount.toFixed(2);
             } else {
-                console.log('lent - userId', data.userId.toString());
+                console.log('borrowed - userId', data.userId.toString());
                 // If the user is not a payer, they borrowed money
                 item.you_borrowed = borrowedAmount.toFixed(2);
             }
