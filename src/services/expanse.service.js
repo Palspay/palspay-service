@@ -369,11 +369,24 @@ const fetchExpanse = async (data) => {
                 }
             }
             item.expanse_details = non_group;
-            if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
-                item.you_borrowed = borrowedAmount.toFixed(2);
-            } else {
+
+
+            // if (item.addPayer.every(payer => data.userId.toString() !== payer.from.toString())) {
+            //     item.you_borrowed = borrowedAmount.toFixed(2);
+            // } else {
+            //     item.you_lent = lentAmount.toFixed(2);
+            // }
+
+            if (item.addPayer.some(payer => data.userId.toString() === payer.from.toString())) {
+                console.log('lent - userId', data.userId.toString());
+                // If the user is one of the payers, they lent money
                 item.you_lent = lentAmount.toFixed(2);
+            } else {
+                console.log('lent - userId', data.userId.toString());
+                // If the user is not a payer, they borrowed money
+                item.you_borrowed = borrowedAmount.toFixed(2);
             }
+            
         }
         for await (let item of expanse[0]?.expanse_details) {
             const data = await User.findOne(item.memberId, { name: 1 }).lean();
