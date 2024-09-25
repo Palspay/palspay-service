@@ -381,7 +381,6 @@ const fetchReminderByCode = async (req, res) => {
             // const owe_arr = data?.owe_arr ?? [];
                 let total_lent = 0,
                     total_borrowed = 0,
-                    owe_arr = [],
                     pendingAmount = 0;
 
                 const data = await userExpanse.getGroupExpanse(mergedBody);
@@ -391,9 +390,9 @@ const fetchReminderByCode = async (req, res) => {
                         mergedBody.id = item._id;
                         item.expanseData = await userExpanse.fetchExpanse(mergedBody);
 
-                        console.log('idOne:', item.to_id);
-                        console.log('idTwo:', reminder.ReminderBy._id);
-                        if(item.to_id == reminder.ReminderBy._id){
+                        console.log('idOne:', item);
+                        console.log('idTwo:', reminder.ReminderBy._id.toString() );
+                        if(item.to_id == reminder.ReminderBy._id.toString() ){
                             total_lent += parseFloat(item.expanseData.you_lent) || 0;
                             total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
                         };
