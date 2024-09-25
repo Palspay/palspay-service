@@ -2,7 +2,7 @@ import { Groups } from '../models';
 
 const httpStatus = require('http-status');
 const catchAsync = require('./../utills/catchAsync');
-const { userService } = require('./../services');
+const { userService, userExpanse } = require('./../services');
 const msgService = require('./../services/msg91.service');
 const multer = require('multer');
 const path = require('path');
@@ -345,44 +345,81 @@ const sendReminderFriend = async (req, res) => {
   }
 };
 
+
 const fetchReminderByCode = async (req, res) => {
     const { code } = req.params;
-  
+
     try {
-      // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
-      let reminder = await PaymentLink.findOne({ code })
-        .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
-        .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
-        .populate('groupPayment'); // Populate groupPayment if needed
-  
-      if (!reminder) {
-        return res.status(404).json({ error: 'Reminder not found' });
-      }
-  
-      // Populate group details if it's a group reminder
-      if (reminder.reminderType === 'Group') {
-        reminder = await reminder.populate({ path: 'groupId', model: 'groups', select: 'group_name' });
-      }
-  
-      // Build the response object with the ObjectId as is and separate names
-      const reminderDetails = {
-        reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
-        reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
-        reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
-        reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
-        reminderType: reminder.reminderType,
-        groupId: reminder.groupId?._id || null, // Include groupId if available
-        groupName: reminder.groupId?.group_name || null, // Include groupName if available
-        groupPayment: reminder.groupPayment || null, // Include groupPayment if available
-      };
-  
-      res.status(200).json(reminderDetails);
+        // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
+        let reminder = await PaymentLink.findOne({ code })
+            .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
+            .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
+            .populate('groupPayment'); // Populate groupPayment if needed
+
+        if (!reminder) {
+            return res.status(404).json({ error: 'Reminder not found' });
+        }
+
+        // Check if this is a group reminder and if groupId exists
+        if (reminder.reminderType === 'Group' && reminder.groupId) {
+            reminder = await reminder.populate({ path: 'groupId', model: 'groups', select: 'group_name' });
+
+            // Prepare the mergedBody for fetching group expenses
+            const mergedBody = {
+                groupId: reminder.groupId._id,
+                userId: reminder.ReminderFor._id, // The receiver user (ReminderFor)
+                currentDate: new Date() // Assuming you want to use the current date
+            };
+
+            // Fetch group expenses using the first function's logic
+            const data = await userExpanse.getGroupExpanse(mergedBody);
+
+            // Calculate the pending amount (borrowed) from owe_arr[]
+            let pendingAmount = 0;
+            if (data && data.owe_arr.length > 0) {
+                data.owe_arr.forEach(item => {
+                    if (item.to_id === reminder.ReminderBy._id.toString()) {
+                        pendingAmount += parseFloat(item.amount) || 0;
+                    }
+                });
+            }
+
+            // Build the response object with reminder details and pending amount
+            const reminderDetails = {
+                reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+                reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+                reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+                reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
+                reminderType: reminder.reminderType,
+                groupId: reminder.groupId?._id || null, // Include groupId if available
+                groupName: reminder.groupId?.group_name || null, // Include groupName if available
+                groupPayment: reminder.groupPayment || null, // Include groupPayment if available
+                pendingAmount: pendingAmount || 0, // Add the calculated pending amount
+            };
+
+            res.status(200).json(reminderDetails);
+        } else {
+            // Handle non-group reminders (if needed) or return basic reminder info
+            const reminderDetails = {
+                reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+                reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+                reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+                reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
+                reminderType: reminder.reminderType,
+            };
+            
+            // groupId: null,
+            // groupName: null,
+            // groupPayment: null,
+
+            res.status(200).json(reminderDetails);
+        }
     } catch (error) {
-      console.error('Error fetching reminder:', error);
-      res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
+        console.error('Error fetching reminder:', error);
+        res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
     }
-  };
-  
+};
+
   
 
 module.exports = {
