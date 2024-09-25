@@ -373,6 +373,7 @@ const fetchReminderByCode = async (req, res) => {
                 currentDate: new Date() // Assuming you want to use the current date
             };
 
+            console.log('reminderById:',  mergedBody.id);
             // Fetch group expenses using the first function's logic
             // const data = await userExpanse.getGroupExpanse(mergedBody);
 
@@ -381,7 +382,7 @@ const fetchReminderByCode = async (req, res) => {
                 let total_lent = 0,
                     total_borrowed = 0,
                     owe_arr = [],
-                    pendingAmount = 0
+                    pendingAmount = 0;
 
                 const expanseData = await userExpanse.fetchExpanse(mergedBody);
 
