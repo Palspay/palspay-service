@@ -367,13 +367,15 @@ const fetchReminderByCode = async (req, res) => {
 
             // Prepare the mergedBody for fetching group expenses
             const mergedBody = {
-                id: reminder.ReminderBy._id,
+                id: reminder.ReminderBy._id.toString(),
                 groupId: reminder.groupId._id,
                 userId: reminder.ReminderFor._id, // The receiver user (ReminderFor)
                 currentDate: new Date() // Assuming you want to use the current date
             };
 
             console.log('reminderById:',  mergedBody.id);
+            console.log('mergedBody:',  mergedBody);
+
             // Fetch group expenses using the first function's logic
             // const data = await userExpanse.getGroupExpanse(mergedBody);
 
