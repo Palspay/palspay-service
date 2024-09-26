@@ -151,7 +151,8 @@ const getExpanse = catchAsync(async (req, res) => {
         let total_lent = 0,
             total_borrowed = 0,
             owe_arr = [],
-            owes_arr = [];
+            owes_arr = [],
+            overall_arr = [];
         
         // Use regular for...of
         for (let item of data.expanseList) {
@@ -212,8 +213,39 @@ const getExpanse = catchAsync(async (req, res) => {
             return { to_id, from: "You", amount: owe_sums[key], to };
         });
 
+        const overall_map = {};
+
+        owes_result.forEach((item) => {
+            const key = item.from_id;
+            overall_map[key] = overall_map[key] || {
+                user: item.from,
+                overall: 0,
+            };
+            overall_map[key].overall += parseInt(item.amount, 10); // they owe you, so positive balance
+        });
+
+        // Add owe (you owe them)
+        owe_result.forEach((item) => {
+            const key = item.to_id;
+            overall_map[key] = overall_map[key] || {
+                user: item.to,
+                overall: 0,
+            };
+            overall_map[key].overall -= parseInt(item.amount, 10); // you owe them, so negative balance
+        });
+
+        // Creating the final overall_arr
+        overall_arr = Object.keys(overall_map).map((key) => {
+            return {
+                user_id: key,
+                user: overall_map[key].user,
+                overall: overall_map[key].overall,
+            };
+        });
+
         data.owe_arr = owe_result;
         data.owes_arr = owes_result;
+        data.overall_arr = overall_arr;
 
         if (data.overall > 0) { 
             data.owed_overall = data.overall;
