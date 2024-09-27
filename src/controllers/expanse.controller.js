@@ -70,75 +70,7 @@ const deleteExpanse = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Delete expanse succesfully', data: { expanseData } });
 });
 
-// const getExpanse = catchAsync(async (req, res) => {
-//     const mergedBody = {
-//         ...req.body,
-//         userId: req.userId,
-//         currentDate: req.currentDate
-//     };
-//     const data = await userExpanse.getGroupExpanse(mergedBody);
-//     if (data) {
-//         let total_lent = 0,
-//             total_borrowed = 0,
-//             owe_arr = [],
-//             owes_arr = [];
-//         for await (let item of data.expanseList) {
-//             mergedBody.id = item._id;
-//             item.expanseData = await userExpanse.fetchExpanse(mergedBody);
-//             total_lent += parseFloat(item.expanseData.you_lent);
-//             total_borrowed += parseFloat(item.expanseData.you_borrowed);
-//             let borrowed = parseFloat(item.expanseData.you_borrowed)
-//             let lent = parseFloat(item.expanseData.you_lent)
 
-//             if(item.addPayer.length > 0 ){
-//                 if (borrowed > 0) {
-//                     owe_arr.push({ from: "You", amount: borrowed, to: item.addPayer[0].name, to_id: item.addPayer[0].from.toString() })
-//                 }
-//                 if (lent > 0) {
-//                     for await (let payer of item.expanseData.expanse_details) {
-//                         if (payer.type == "owes")
-//                             owes_arr.push({ from: payer.name, amount: payer.amount, to: "You", from_id: payer.memberId.toString() })
-//                     }
-//                 }
-//             }   
-//         }
-//         data.overall = total_lent - total_borrowed;
-//         // @ts-ignore
-//         const owe_sums = {};
-//         const sums = {};
-
-//         // Iterate through the owes_arr
-//         owes_arr.forEach(item => {
-//             const key = `${item.from_id}_${item.from}`;
-//             sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
-//         });
-
-//         const result = Object.keys(sums).map(key => {
-//             const [from_id, from] = key.split('_');
-//             return { from_id, from, amount: sums[key], to: "You" };
-//         });
-
-//         owe_arr.forEach(item => {
-//             const key = `${item.to_id}_${item.to}`;
-//             // @ts-ignore
-//             sums[key] = (sums[key] || 0) + parseInt(item.amount, 10);
-//         });
-
-//         const owe_result = Object.keys(sums).map(key => {
-//             const [to_id, to] = key.split('_');
-//             return { to_id, from: "You", amount: sums[key], to };
-//         });
-
-
-//         data.owe_arr = owe_result;
-
-//         data.owes_arr = result;
-//         // if (overall > 0) { data.owed_overall = overall } else { data.owe_overall = overall }
-//         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data });
-//     } else {
-//         res.status(httpStatus.OK).send({ message: 'Expanse Load succesfully', data: {} });
-//     }
-// });
 
 const getExpanse = catchAsync(async (req, res) => {
     const mergedBody = {

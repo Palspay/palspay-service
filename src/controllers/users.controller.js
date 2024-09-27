@@ -14,9 +14,11 @@ const activityService = require('./../services/activity.service');
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
 const { findCommonGroups } = require('../services/user.service');
 const { getGroupWalletByGroupId } = require('../services/user.service');
+const expenseController = require('../controllers/expanse.controller.js');
 const ReportedUser = require('../models/reportedUser.model');
 const User = require('../models/user.model');
 const PaymentLink = require('../models/paymentLink.model'); 
+
 
 const addFriends = catchAsync(async (req, res) => {
     const mergedBody = {
@@ -347,6 +349,74 @@ const sendReminderFriend = async (req, res) => {
 };
 
 
+// const fetchReminderByCode = async (req, res) => {
+//     const { code } = req.params;
+
+//     try {
+//         // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
+//         let reminder = await PaymentLink.findOne({ code })
+//             .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
+//             .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
+//             .populate('groupPayment'); // Populate groupPayment if needed
+
+//         if (!reminder) {
+//             return res.status(404).json({ error: 'Reminder not found' });
+//         }
+
+//         // Check if this is a group reminder and if groupId exists
+//         if (reminder.reminderType === 'Group' && reminder.groupId) {
+//             reminder = await reminder.populate({ path: 'groupId', model: 'groups', select: 'group_name' });
+
+//             // Prepare the mergedBody for fetching group expenses
+//             const mergedBody = {
+//                 groupId: reminder.groupId._id.toString(),
+//                 userId: reminder.ReminderFor._id.toString(), // The receiver user (ReminderFor)
+//                 currentDate: new Date() // Assuming you want to use the current date
+//             };
+
+//             console.log('mergedBody:',  mergedBody);
+
+//                 let total_lent = 0,
+//                     total_borrowed = 0,
+//                     pendingAmount = 0;
+
+//                 const data = await userExpanse.getGroupExpanse(mergedBody);
+                    
+                                
+//             };
+
+//             // Build the response object with reminder details and pending amount
+//             const reminderDetails = {
+//                 reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+//                 reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+//                 reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+//                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
+//                 reminderType: reminder.reminderType,
+//                 groupId: reminder.groupId?._id || null, // Include groupId if available
+//                 groupName: reminder.groupId?.group_name || null, // Include groupName if available
+//                 pendingAmount: pendingAmount || 0, // Add the calculated pending amount
+//             };
+
+//             res.status(200).json(reminderDetails);
+//         } else {
+//             // Handle non-group reminders (if needed) or return basic reminder info
+//             const reminderDetails = {
+//                 reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+//                 reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+//                 reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+//                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
+//                 reminderType: reminder.reminderType,
+//             };
+
+//             res.status(200).json(reminderDetails);
+//         }
+//     } catch (error) {
+//         console.error('Error fetching reminder:', error);
+//         res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
+//     }
+// };
+
+
 const fetchReminderByCode = async (req, res) => {
     const { code } = req.params;
 
@@ -372,73 +442,121 @@ const fetchReminderByCode = async (req, res) => {
                 currentDate: new Date() // Assuming you want to use the current date
             };
 
-            console.log('mergedBody:',  mergedBody);
+            console.log('mergedBody:', mergedBody);
 
-            // Fetch group expenses using the first function's logic
-            // const data = await userExpanse.getGroupExpanse(mergedBody);
-
-            // Ensure data.owe_arr is an array, and set a default empty array if undefined
-            // const owe_arr = data?.owe_arr ?? [];
+            const data = await userExpanse.getGroupExpanse(mergedBody);
+            if (data) {
                 let total_lent = 0,
                     total_borrowed = 0,
-                    pendingAmount = 0;
+                    owe_arr = [],
+                    owes_arr = [],
+                    overall_arr = [];
 
-                const data = await userExpanse.getGroupExpanse(mergedBody);
-                    
-                if (data) {
-                    for (let item of data.expanseList) {
-                        mergedBody.id = item._id;
-                        item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+                // Use regular for...of to process each expense item
+                for (let item of data.expanseList) {
+                    mergedBody.id = item._id;
+                    item.expanseData = await userExpanse.fetchExpanse(mergedBody);
+                    total_lent += parseFloat(item.expanseData.you_lent) || 0;
+                    total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
 
-                        console.log('idOne:', item);
-                        console.log('idTwo:', reminder.ReminderBy._id.toString() );
-                        if(item.to_id == reminder.ReminderBy._id.toString() ){
-                            total_lent += parseFloat(item.expanseData.you_lent) || 0;
-                            total_borrowed += parseFloat(item.expanseData.you_borrowed) || 0;
-                        };
+                    let borrowed = parseFloat(item.expanseData.you_borrowed) || 0;
+                    let lent = parseFloat(item.expanseData.you_lent) || 0;
 
-                        // let borrowed = parseFloat(item.expanseData.you_borrowed) || 0;
-                        // let lent = parseFloat(item.expanseData.you_lent) || 0;
-            
-                        // if(item.addPayer.length > 0 ){
-                        //     if (borrowed > 0) {
-                        //         owe_arr.push({ 
-                        //             from: "You", 
-                        //             amount: borrowed, 
-                        //             to: item.addPayer[0].name, 
-                        //             to_id: item.addPayer[0].from.toString() 
-                        //         });
-                        //     }
-                        // }   
-                    }       
-                                
-                };
-
-    
-                console.log('total_lent:', total_lent);
-                console.log('total_borrowed:', total_borrowed);
-
-                pendingAmount = total_lent - total_borrowed;
-                console.log('pendingAmount:', pendingAmount);
-
-                if(pendingAmount > 0){
-                    pendingAmount = 0;
+                    if (item.addPayer.length > 0) {
+                        if (borrowed > 0) {
+                            owe_arr.push({
+                                from: "You",
+                                amount: borrowed,
+                                to: item.addPayer[0].name,
+                                to_id: item.addPayer[0].from.toString()
+                            });
+                        }
+                        if (lent > 0) {
+                            for (let payer of item.expanseData.expanse_details) {
+                                if (payer.type === "owes")
+                                    owes_arr.push({
+                                        from: payer.name,
+                                        amount: payer.amount,
+                                        to: "You",
+                                        from_id: payer.memberId.toString()
+                                    });
+                            }
+                        }
+                    }
                 }
 
+                data.overall = total_lent - total_borrowed;
 
-            // Build the response object with reminder details and pending amount
-            const reminderDetails = {
-                reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
-                reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
-                reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
-                reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
-                reminderType: reminder.reminderType,
-                groupId: reminder.groupId?._id || null, // Include groupId if available
-                groupName: reminder.groupId?.group_name || null, // Include groupName if available
-                pendingAmount: pendingAmount || 0, // Add the calculated pending amount
-            };
+                // Separate sums for owe_arr and owes_arr
+                const owe_sums = {};
+                const owes_sums = {};
 
-            res.status(200).json(reminderDetails);
+                owes_arr.forEach(item => {
+                    const key = `${item.from_id}_${item.from}`;
+                    owes_sums[key] = (owes_sums[key] || 0) + parseInt(item.amount, 10);
+                });
+
+                const owes_result = Object.keys(owes_sums).map(key => {
+                    const [from_id, from] = key.split('_');
+                    return { from_id, from, amount: owes_sums[key], to: "You" };
+                });
+
+                owe_arr.forEach(item => {
+                    const key = `${item.to_id}_${item.to}`;
+                    owe_sums[key] = (owe_sums[key] || 0) + parseInt(item.amount, 10);
+                });
+
+                const owe_result = Object.keys(owe_sums).map(key => {
+                    const [to_id, to] = key.split('_');
+                    return { to_id, from: "You", amount: owe_sums[key], to };
+                });
+
+                const overall_map = {};
+
+                owes_result.forEach(item => {
+                    const key = item.from_id;
+                    overall_map[key] = overall_map[key] || {
+                        user: item.from,
+                        overall: 0,
+                    };
+                    overall_map[key].overall += parseInt(item.amount, 10); // they owe you, so positive balance
+                });
+
+                // Add owe (you owe them)
+                owe_result.forEach(item => {
+                    const key = item.to_id;
+                    overall_map[key] = overall_map[key] || {
+                        user: item.to,
+                        overall: 0,
+                    };
+                    overall_map[key].overall -= parseInt(item.amount, 10); // you owe them, so negative balance
+                });
+
+                overall_arr = Object.keys(overall_map).map(key => ({
+                    user_id: key,
+                    user: overall_map[key].user,
+                    overall: overall_map[key].overall,
+                }));
+
+                // Find the overall value for ReminderFor user
+                const reminderForOverall = overall_arr.find(item => item.user_id === reminder.ReminderFor._id.toString());
+
+                const pendingAmount = reminderForOverall ? reminderForOverall.overall : 0;
+
+                // Build the response object with reminder details and pending amount
+                const reminderDetails = {
+                    reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
+                    reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
+                    reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
+                    reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
+                    reminderType: reminder.reminderType,
+                    groupId: reminder.groupId?._id || null, // Include groupId if available
+                    groupName: reminder.groupId?.group_name || null, // Include groupName if available
+                    pendingAmount: pendingAmount, // Add the calculated pending amount
+                };
+
+                return res.status(200).json(reminderDetails);
+            }
         } else {
             // Handle non-group reminders (if needed) or return basic reminder info
             const reminderDetails = {
@@ -448,17 +566,15 @@ const fetchReminderByCode = async (req, res) => {
                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
                 reminderType: reminder.reminderType,
             };
-            // groupId: null,
-            // groupName: null,
-            // groupPayment: null,
 
-            res.status(200).json(reminderDetails);
+            return res.status(200).json(reminderDetails);
         }
     } catch (error) {
         console.error('Error fetching reminder:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
+        return res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
     }
 };
+
 
   
 
