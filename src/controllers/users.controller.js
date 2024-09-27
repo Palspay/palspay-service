@@ -539,7 +539,7 @@ const fetchReminderByCode = async (req, res) => {
                 }));
 
                 // Find the overall value for ReminderFor user
-                const reminderForOverall = overall_arr.find(item => item.user_id === reminder.ReminderFor._id.toString());
+                const reminderForOverall = overall_arr.find(item => item.user_id === reminder.ReminderBy._id.toString());
 
                 const pendingAmount = reminderForOverall ? reminderForOverall.overall : 0;
 
