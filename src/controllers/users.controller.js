@@ -283,7 +283,7 @@ const reportUser = async (req, res) => {
 
 
 const sendReminderFriend = async (req, res) => {
-  const { friendId, amount, orderId, groupId, reminderType, senderName, groupPaymentId} = req.body;
+  const { friendId, amount, orderId, groupId, reminderType, senderName, groupPaymentId, description} = req.body;
 
   // Validate input
   if (!friendId || !amount || !senderName) {
@@ -312,9 +312,14 @@ const sendReminderFriend = async (req, res) => {
     const { name: friendName, mobile: mobileNumber } = friend;
     console.log('Reminder data:', friendName, mobileNumber);
 
-    if(groupId){
-        const group = await Groups.findById(groupId);
-        const { group_name: groupName } = group;
+    // Declare groupName outside the if block
+    let groupName = null;
+
+    if (groupId) {
+    const group = await Groups.findById(groupId);
+    if (group) {
+        groupName = group.group_name; // Assign the groupName from the group document
+    }
     }
 
     const linkCode = generateRandomCode();
@@ -326,8 +331,9 @@ const sendReminderFriend = async (req, res) => {
       orderId: orderId,
       ReminderBy: userId,
       ReminderFor: friendId,
-      groupId: groupId || null,
-      groupPaymentId: groupPaymentId || null,
+      groupId: groupId,
+      groupPaymentId: groupPaymentId,
+      description: description,
        // Optional groupId and groupPayment, null if not provided
       reminderType: reminderType || 'Normal', // Default to 'Normal' if reminderType is not provided
     });
@@ -336,7 +342,8 @@ const sendReminderFriend = async (req, res) => {
     await newPaymentLink.save();
 
     // Send the reminder using your messaging service (msgService)
-    const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, linkCode, senderName);
+    const result = await msgService.sendReminderFriend(mobileNumber, friendName, amount, linkCode, 
+        senderName, description, reminderType, groupName);
     console.log('Message service response:', result);
     
 
@@ -348,73 +355,6 @@ const sendReminderFriend = async (req, res) => {
   }
 };
 
-
-// const fetchReminderByCode = async (req, res) => {
-//     const { code } = req.params;
-
-//     try {
-//         // Find the payment link by the provided code and populate ReminderBy and ReminderFor from 'users' collection
-//         let reminder = await PaymentLink.findOne({ code })
-//             .populate({ path: 'ReminderBy', model: 'users', select: 'name' }) // Only populate name from ReminderBy
-//             .populate({ path: 'ReminderFor', model: 'users', select: 'name' }) // Only populate name from ReminderFor
-//             .populate('groupPayment'); // Populate groupPayment if needed
-
-//         if (!reminder) {
-//             return res.status(404).json({ error: 'Reminder not found' });
-//         }
-
-//         // Check if this is a group reminder and if groupId exists
-//         if (reminder.reminderType === 'Group' && reminder.groupId) {
-//             reminder = await reminder.populate({ path: 'groupId', model: 'groups', select: 'group_name' });
-
-//             // Prepare the mergedBody for fetching group expenses
-//             const mergedBody = {
-//                 groupId: reminder.groupId._id.toString(),
-//                 userId: reminder.ReminderFor._id.toString(), // The receiver user (ReminderFor)
-//                 currentDate: new Date() // Assuming you want to use the current date
-//             };
-
-//             console.log('mergedBody:',  mergedBody);
-
-//                 let total_lent = 0,
-//                     total_borrowed = 0,
-//                     pendingAmount = 0;
-
-//                 const data = await userExpanse.getGroupExpanse(mergedBody);
-                    
-                                
-//             };
-
-//             // Build the response object with reminder details and pending amount
-//             const reminderDetails = {
-//                 reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
-//                 reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
-//                 reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
-//                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
-//                 reminderType: reminder.reminderType,
-//                 groupId: reminder.groupId?._id || null, // Include groupId if available
-//                 groupName: reminder.groupId?.group_name || null, // Include groupName if available
-//                 pendingAmount: pendingAmount || 0, // Add the calculated pending amount
-//             };
-
-//             res.status(200).json(reminderDetails);
-//         } else {
-//             // Handle non-group reminders (if needed) or return basic reminder info
-//             const reminderDetails = {
-//                 reminderBy: reminder.ReminderBy._id, // Keep the ObjectId as it is
-//                 reminderByName: reminder.ReminderBy.name, // Separate field for ReminderBy's name
-//                 reminderFor: reminder.ReminderFor._id, // Keep the ObjectId as it is
-//                 reminderForName: reminder.ReminderFor.name, // Separate field for ReminderFor's name
-//                 reminderType: reminder.reminderType,
-//             };
-
-//             res.status(200).json(reminderDetails);
-//         }
-//     } catch (error) {
-//         console.error('Error fetching reminder:', error);
-//         res.status(500).json({ error: 'An error occurred while fetching the reminder details.' });
-//     }
-// };
 
 
 const fetchReminderByCode = async (req, res) => {

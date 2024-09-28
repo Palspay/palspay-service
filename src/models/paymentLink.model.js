@@ -36,6 +36,10 @@ const paymentLinkSchema = new mongoose.Schema({
     ref: 'groupPayment',
     required: false, // Assuming 'GroupPayment' is another model in your app
   },
+  description: {
+    type: String,
+    required: false,
+  },
 }, { timestamps: true });
 
 const PaymentLink = mongoose.model('PaymentLink', paymentLinkSchema);

@@ -20,20 +20,52 @@ const sendOtp = async (mobileNumber, otp) => {
   }
 };
 
-const sendReminderFriend = async (mobileNumber, friendName, amount, link, senderName) => {
+const sendReminderFriend = async (mobileNumber, friendName, amount, link, senderName, 
+  description, reminderType, groupName
+) => {
   const url = 'https://control.msg91.com/api/v5/flow';
+  let data = {};
 
-  const data = {
-    template_id: '66e15eafd6fc053b4324efa1',  // Template ID provided
-    recipients: [
-      {
-        mobiles: mobileNumber,
-        amount: amount,  
-        description: senderName,  
-        link: link
-      }
-    ]
-  };
+  if(reminderType == 'Group'){
+    data = {
+      template_id: '66f7687bd6fc0551d82d7794',  // Group Template ID provided
+      recipients: [
+        {
+          mobiles: mobileNumber,
+          amount: amount,  
+          groupName: groupName,
+          senderName: senderName,  
+          link: link
+        }
+      ]
+    };
+  } else if (reminderType == 'GroupPayment'){
+    data = {
+      template_id: '66f768bbd6fc0574187d2c42',  // group payment Template ID provided
+      recipients: [
+        {
+          mobiles: mobileNumber,
+          amount: amount,  
+          description: description,
+          link: link
+        }
+      ]
+    };
+  } else {
+      data = {
+        template_id: '66f76820d6fc054c0a17efe2', // '66e15eafd6fc053b4324efa1',  // Normal Template ID provided
+        recipients: [
+          {
+            mobiles: mobileNumber,
+            amount: amount,  
+            description: senderName,  
+            link: link
+          }
+        ]
+      };
+  }
+
+
 
   const headers = {
     'authkey': process.env.MSG91_API_KEY,
