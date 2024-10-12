@@ -9,6 +9,7 @@ import razorpay from "../utills/razorpay";
 import GroupWallet from "../models/group-wallet.modal";
 import { User } from "../models";
 import { email } from "../config/config";
+import GroupPayment from "../models/groupPayment.model";
 var {
   validatePaymentVerification,
 } = require("razorpay/dist/utils/razorpay-utils");
@@ -222,6 +223,51 @@ const makePayment = async (paymentData) => {
 
 };
 
+const makeGroupPayment = async (paymentData) => {
+  const transactionInfo = {
+    type: "PAYMENT",
+    amount: paymentData.amount,
+    vendorId: paymentData.vpa
+  };
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
+      { $push: { transactions: transactionInfo } }, { new: true }
+    )
+    const razorpayPayoutData = {
+      amount: paymentData.amount,
+      vpa: paymentData.vpa,
+      name: paymentData.name,
+      userId: paymentData.vpa,
+      email: paymentData.email,
+      mobile: paymentData.mobile,
+      transactionId: ""
+    }
+    const payoutResponse = await razorpayPayout(razorpayPayoutData);
+    console.log('payoutResponse', payoutResponse);
+    if (payoutResponse.status === 200) {
+      await session.commitTransaction();
+      session.endSession();
+      await GroupPayment.findOneAndUpdate(
+        { _id: paymentData.gpPaymentId },
+        { $set: { IsPaymentCompleted: true } } // Use $set instead of $push
+      );
+      return { paymentStatus: payoutResponse?.data?.status };
+    }
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error, Payment failed.", error.message
+    );
+  }
+
+};
+
+
   const payToPalspay = async (paymentData) => {
     const { paymentId, signature, transactionId } = paymentData;
     let transaction;
@@ -402,4 +448,4 @@ const settlementInitiated = async (settlementData) => {
 
 
 export { paymentInitated, payoutInitated, initiateRefund, checkStatus, addToWallet, makePayment, 
-  payToPalspay, settlementInitiated }; 
+  makeGroupPayment, payToPalspay, settlementInitiated }; 

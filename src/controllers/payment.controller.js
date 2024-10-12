@@ -59,6 +59,17 @@ const makePayment = catchAsync(async (req, res) => {
     res.status(httpStatus.OK).send({ message: 'Payment successful', data });
 })
 
+const makeGroupPayment = catchAsync(async (req, res) => {
+    const mergedBody = {
+        ...req.body,
+        userId: req.userId,
+        currentDate: req.currentDate
+    };
+    // const group_details = await userService.getGroupDetails(mergedBody.groupId);
+    const data = await paymentService.makeGroupPayment(mergedBody);
+    res.status(httpStatus.OK).send({ message: 'Payment successful', data });
+})
+
 const payToPalspay = catchAsync(async (req, res) => {
     const mergedBody = {
         ...req.body,
@@ -125,6 +136,6 @@ const getUserSettlements = catchAsync(async (req, res) => {
 //     // checkStatus
 // };
 
-export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment, 
+export { paymentInitated, payoutInitated, refundInitiated, addToWallet, makePayment, makeGroupPayment,
     payToPalspay, settlementInitiated ,  getUserSettlements, 
     getGroupSettlements }
