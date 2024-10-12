@@ -236,7 +236,6 @@ const makeGroupPayment = async (paymentData) => {
     await GroupWallet.findOneAndUpdate({ group_id: paymentData.groupId },
       { $push: { transactions: transactionInfo } }, { new: true }
     )
-    console.log('vpa:', paymentData.vpa);
     const razorpayPayoutData = {
       amount: paymentData.amount,
       vpa: paymentData.vpa,
