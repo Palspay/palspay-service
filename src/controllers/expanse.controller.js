@@ -29,7 +29,7 @@ const addGroupExpanse = catchAsync(async (req, res) => {
     const expanse_id = await userExpanse.createExpanse(mergedBody);
     const gpMergedBody = {
         expanseId: expanse_id._id,
-        IndividualPaymentAmount: req.body.totalExpanse / req.body.members.length,
+        IndividualPaymentAmount: req.body.totalExpanse / req.body.gpMembers.length,
         members: req.body.gpMembers,
         IsPaymentCompleted: false
     };
