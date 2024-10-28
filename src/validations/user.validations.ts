@@ -37,6 +37,7 @@ const groupDetailsByGroupId = {
 const setPasscode = {
     body: Joi.object().keys({
         passcode: Joi.number().required().custom(passcode),
+        enable: Joi.bool(),
     }),
 }
 
