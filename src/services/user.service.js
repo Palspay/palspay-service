@@ -379,6 +379,7 @@ const setPasscode = async (userBody) => {
             throw new ApiError(httpStatus.BAD_REQUEST, 'Bad Request');
         }
         user.passcode = userBody.passcode;
+        user.is_passcode_enter = userBody.enable;
         user.modification_date = userBody.currentDate;
         return await user.save();
     } catch (error) {
