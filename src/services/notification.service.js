@@ -1,6 +1,6 @@
 // services/notification.service.js
 const admin = require('firebase-admin');
-const User = require('../../src/models/user.model'); // Adjust the path according to your project structure
+const User = require('../models/user.model'); // Adjust the path according to your project structure
 
 const sendNotification = async (userId, title, body) => {
   try {
