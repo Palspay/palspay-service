@@ -8,13 +8,15 @@ export const register = {
         name: Joi.string().required(),
         mobile: Joi.string().required(),
         user_type:Joi.string().optional(),
-        vpa:Joi.string().optional()
+        vpa:Joi.string().optional(),
+        fcmToken: Joi.string().optional()
     }),
 };
 export const login = {
     body: Joi.object().keys({
         email: Joi.string().required().email(),
         password: Joi.string().required().custom(password),
+        fcmToken: Joi.string().optional(),
     }),
 };
 
