@@ -14,6 +14,7 @@ const Activity = require('../models/activity.model');
 const { Transaction, PaymentStatus } = require('../models/transaction.model');
 const activityService = require('./activity.service');
 const GroupMembersList = require('../models/GroupMembersList.model'); 
+const { sendNotification } = require('./../services/notification.service');
 
 /**
  * Get user by email
@@ -113,6 +114,12 @@ const addFriends = async (userData) => {
                             user_id: userData.userId
                         })
                     );
+
+                     // Send notification to the friend added
+                     const title = 'New Friend Added';
+                     const body = `${userData.userId} has added you as a friend!`;
+                     await sendNotification(isExits._id, title, body);
+
                     tokenData.push({
                         mobile: mobileNumber.mobile,
                         name: mobileNumber.name,

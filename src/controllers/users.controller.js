@@ -12,8 +12,8 @@ const fs = require('fs');
 const activityService = require('./../services/activity.service');
 // @ts-ignore
 const { isGroupMember } = require('../validations/dynamicValidation/dynamic.validations');
-const { findCommonGroups } = require('../services/user.service');
-const { getGroupWalletByGroupId } = require('../services/user.service');
+const { findCommonGroups } = require('./../services/user.service');
+const { getGroupWalletByGroupId } = require('./../services/user.service');
 const expenseController = require('../controllers/expanse.controller.js');
 const ReportedUser = require('../models/reportedUser.model');
 const User = require('../models/user.model');
@@ -27,6 +27,7 @@ const addFriends = catchAsync(async (req, res) => {
         currentDate: req.currentDate 
     };
     const invite_details = await userService.addFriends(mergedBody);
+
     res.status(httpStatus.CREATED).send({ message: 'Add friend succesfully', data: { invite_details } });
 });
 
