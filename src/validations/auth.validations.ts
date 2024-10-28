@@ -44,5 +44,6 @@ export const createPassword = {
 export const googleLogin = {
     body: Joi.object().keys({
         token: Joi.string().required(),
+        fcmToken: Joi.string().optional(),
     })
 }
