@@ -47,7 +47,8 @@ const createUser = async (userBody) => {
         userBody['plan_expired'] = planExpiredTimestamp;
         userBody['plan_id'] = '66b5f7ae85005b28f97bfcfe';
         userBody['plan_selected_date'] = await getCurrentDateTime();
-        userBody['plan_active'] = true;         
+        userBody['plan_active'] = true;
+        userBody['fcmToken'] = userBody.fcmToken;       
         user = await User.create(userBody);
     } else if (isTempReg.is_temp_registered === false) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Mobile number already registred');
@@ -97,6 +98,13 @@ const loginUserWithEmailAndPassword = async (userBody) => {
     if (!user || !matched) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
+
+     // Update the FCM token if provided in the request
+     if (userBody.fcmToken) {
+        user.fcmToken = userBody.fcmToken;
+        await user.save();  // Save the updated user document to MongoDB
+    }
+
     return {
         access_token: await generateToken(user),
         // @ts-ignore
