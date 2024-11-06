@@ -47,8 +47,12 @@ const createExpanse = async (expanseData) => {
         // Send notifications to all members except the current user
         const title = "New Expense Added";
         const body = `'${expanseData.description}' was added. Check the details!`;
+        console.log(`current id', ${expanseData.userId}`);
+        console.log(`members', ${expanseData.members}`);
+
         for (const member of expanseData.members) {
             if (member.memberId !== expanseData.userId) {
+                console.log(`mem id', ${member.memberId}`);
                 await sendNotification(member.memberId, title, body);
             }
         }
