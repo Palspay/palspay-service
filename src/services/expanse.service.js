@@ -48,8 +48,8 @@ const createExpanse = async (expanseData) => {
         const title = "New Expense Added";
         const body = `'${expanseData.description}' was added. Check the details!`;
         for (const member of expanseData.members) {
-            if (member.userId !== expanseData.userId) {
-                await sendNotification(member.userId, title, body);
+            if (member.memberId !== expanseData.userId) {
+                await sendNotification(member.memberId, title, body);
             }
         }
 
