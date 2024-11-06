@@ -115,9 +115,14 @@ const addFriends = async (userData) => {
                         })
                     );
 
+                    const currentUser = await getUserById(userData.userId);
+                    if (!currentUser) {
+                        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+                    }
+
                      // Send notification to the friend added
                      const title = 'New Friend Added';
-                     const body = `${userData.userId} has added you as a friend!`;
+                     const body = `${currentUser.name} has added you as a friend!`;
                      await sendNotification(isExits._id, title, body);
 
                     tokenData.push({
