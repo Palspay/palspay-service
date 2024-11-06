@@ -51,7 +51,7 @@ const createExpanse = async (expanseData) => {
         console.log(`members', ${expanseData.members}`);
 
         for (const member of expanseData.members) {
-            if (member.memberId !== expanseData.userId) {
+            if (member.memberId != expanseData.userId) {
                 console.log(`mem id', ${member.memberId}`);
                 await sendNotification(member.memberId, title, body);
             }
