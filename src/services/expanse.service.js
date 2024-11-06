@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const GroupMember = require('../models/group-members.model');
 const { ObjectId } = mongoose.Types;
 const activityService = require('./activity.service');
+const { sendNotification } = require('./../services/notification.service');
 
 const createExpanse = async (expanseData) => {
     try {
@@ -25,25 +26,33 @@ const createExpanse = async (expanseData) => {
         }
         expanseData['imagesArray'] = imagesArray;
         const expense = new Expanse(expanseData);
-        if(expanseData.expenseType == 'Group Payment'){
-            const obj = {
-                description: 'You added a Group Payment -' + expanseData.description,
-                user_id: expanseData.userId
-            }
-            await activityService.createActivity(obj);
-        } else if(expanseData.expenseType == 'Wallet Payment'){
-            const obj = {
-                description: 'You have made a payment from Group Wallet ' + expanseData.description,
-                user_id: expanseData.userId
-            }
-            await activityService.createActivity(obj);
+
+        // Set activity description based on expense type
+        let activityDescription;
+        if (expanseData.expenseType == 'Group Payment') {
+            activityDescription = 'You added a Group Payment - ' + expanseData.description;
+        } else if (expanseData.expenseType == 'Wallet Payment') {
+            activityDescription = 'You have made a payment from Group Wallet - ' + expanseData.description;
         } else {
-            const obj = {
-                description: 'You added an expense ' + expanseData.description,
-                user_id: expanseData.userId
-            }
-            await activityService.createActivity(obj);
+            activityDescription = 'You added an expense - ' + expanseData.description;
         }
+
+        // Log the activity
+        const activityObj = {
+            description: activityDescription,
+            user_id: expanseData.userId
+        };
+        await activityService.createActivity(activityObj);
+
+        // Send notifications to all members except the current user
+        const title = "New Expense Added";
+        const body = `'${expanseData.description}' was added. Check the details!`;
+        for (const member of expanseData.members) {
+            if (member.userId !== expanseData.userId) {
+                await sendNotification(member.userId, title, body);
+            }
+        }
+
         return await expense.save();
     } catch (error) {
         console.log(error);
