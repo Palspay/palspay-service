@@ -11,6 +11,10 @@ const expanseSchema = new mongoose.Schema({
     description: {
         type: String,
         default: ''
+    }, 
+    category: {
+        type: String,
+        default: ''
     },
     currency: {
         type: String,
