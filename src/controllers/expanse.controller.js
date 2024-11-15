@@ -353,6 +353,67 @@ const individualExpanse = catchAsync(async (req, res) => {
 });
 
 
+const getGraphData = catchAsync(async (req, res) => {
+    const { groupId, userId, startDate, endDate, interval } = req.query;
+
+    if (!interval) {
+        return res.status(httpStatus.BAD_REQUEST).send({ message: 'Interval is required' });
+    }
+
+    // Create the date match filter
+    const dateFilter = {};
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+
+    // Match stage
+    const matchStage = {
+        is_deleted: false,
+    };
+    if (groupId) matchStage.groupId = groupId;
+    if (userId) matchStage.userId = new ObjectId(userId);
+    if (Object.keys(dateFilter).length > 0) {
+        matchStage.createdAt = dateFilter;
+    }
+
+    // Define the group stage
+    const groupBy =
+        interval === 'day'
+            ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+            : interval === 'week'
+            ? { $isoWeek: '$createdAt' }
+            : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+
+    const aggPipeline = [
+        { $match: matchStage },
+        {
+            $group: {
+                _id: groupBy,
+                totalExpense: { $sum: '$totalExpanse' },
+                count: { $sum: 1 },
+            },
+        },
+        {
+            $sort: { _id: 1 },
+        },
+        {
+            $project: {
+                period: '$_id',
+                totalExpense: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    const data = await Expanse.aggregate(aggPipeline);
+
+    res.status(httpStatus.OK).send({
+        message: 'Graph data fetched successfully',
+        data,
+    });
+});
+
+
   module.exports = {
     addExpanse,
     addGroupExpanse,
@@ -362,5 +423,6 @@ const individualExpanse = catchAsync(async (req, res) => {
     getGroupPaymentExpense,
     deleteExpanse,
     individualExpanse,
-    updateGroupPaymentStatus
+    updateGroupPaymentStatus,
+    getGraphData
 };

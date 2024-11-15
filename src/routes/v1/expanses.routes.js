@@ -13,5 +13,7 @@ router.post('/getexpanse', auth, expanseController.getExpanse); // by getExpanse
 router.get('/groupPayments', auth, expanseController.getGroupPaymentExpense);
 router.get('/individualExpanse', auth, expanseController.individualExpanse);
 router.put('/updateGroupPayment/:groupPaymentId', auth, expanseController.updateGroupPaymentStatus);
+router.get('/graphData', auth, expanseController.getGraphData);
+
  
 module.exports = router;
