@@ -16,7 +16,7 @@ export const login = {
     body: Joi.object().keys({
         email: Joi.string().required().email(),
         password: Joi.string().required().custom(password),
-        fcmToken: Joi.string().optional(),
+        fcmToken: Joi.string().required()
     }),
 };
 
