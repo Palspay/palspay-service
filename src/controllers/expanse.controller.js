@@ -377,10 +377,16 @@ const getGraphData = catchAsync(async (req, res) => {
 
     const groupBy =
         interval === 'day'
-            ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
+            ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } // No changes for day
             : interval === 'week'
             ? { year: { $isoWeekYear: '$createdAt' }, week: { $isoWeek: '$createdAt' } }
-            : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+            : interval === 'month'
+            ? { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }
+            : null;
+
+    if (!groupBy) {
+        return res.status(httpStatus.BAD_REQUEST).send({ message: 'Invalid interval provided' });
+    }
 
     const aggPipeline = [
         { $match: matchStage },
@@ -391,7 +397,7 @@ const getGraphData = catchAsync(async (req, res) => {
                 count: { $sum: 1 },
             },
         },
-        { $sort: { '_id.year': 1, '_id.week': 1 } },
+        { $sort: interval === 'day' ? { '_id': 1 } : { '_id.year': 1, '_id.week': 1, '_id.month': 1 } },
     ];
 
     let data = await Expanse.aggregate(aggPipeline);
@@ -407,13 +413,18 @@ const getGraphData = catchAsync(async (req, res) => {
 
             return {
                 ...entry,
-                period: startOfWeek.toISOString().split('T')[0], // Add start date as the period
+                period: startOfWeek.toISOString().split('T')[0], // Weekly period
             };
         });
     } else if (interval === 'month') {
         data = data.map(entry => ({
             ...entry,
-            period: `${entry._id.year}-${entry._id.month.toString().padStart(2, '0')}`,
+            period: `${entry._id.year}-${String(entry._id.month).padStart(2, '0')}`, // Monthly period
+        }));
+    } else if (interval === 'day') {
+        data = data.map(entry => ({
+            ...entry,
+            period: entry._id, // Directly use the day string (e.g., "2024-12-06")
         }));
     }
 
