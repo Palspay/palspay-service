@@ -362,12 +362,10 @@ const getGraphData = catchAsync(async (req, res) => {
         return res.status(httpStatus.BAD_REQUEST).send({ message: 'Interval is required' });
     }
 
-    // Create the date match filter
     const dateFilter = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
     if (endDate) dateFilter.$lte = new Date(endDate);
 
-    // Match stage
     const matchStage = {
         is_deleted: false,
     };
@@ -377,12 +375,11 @@ const getGraphData = catchAsync(async (req, res) => {
         matchStage.createdAt = dateFilter;
     }
 
-    // Define the group stage
     const groupBy =
         interval === 'day'
             ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
             : interval === 'week'
-            ? { $dateToString: { format: '%G-W%V', date: '$createdAt' } }
+            ? { $isoWeek: '$createdAt' } // Change this
             : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
 
     const aggPipeline = [
@@ -403,6 +400,15 @@ const getGraphData = catchAsync(async (req, res) => {
                 totalExpense: 1,
                 count: 1,
                 _id: 0,
+                startDate: {
+                    $switch: {
+                        branches: [
+                            { case: { $eq: [interval, 'week'] }, then: { $dateFromString: { dateString: '$_id', format: '%G-W%V' } } },
+                            { case: { $eq: [interval, 'month'] }, then: { $dateFromString: { dateString: '$_id-01', format: '%Y-%m-%d' } } },
+                        ],
+                        default: null,
+                    },
+                },
             },
         },
     ];
