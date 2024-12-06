@@ -382,7 +382,7 @@ const getGraphData = catchAsync(async (req, res) => {
         interval === 'day'
             ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
             : interval === 'week'
-            ? { $isoWeek: '$createdAt' }
+            ? { $dateToString: { format: '%G-W%V', date: '$createdAt' } }
             : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
 
     const aggPipeline = [
@@ -414,6 +414,7 @@ const getGraphData = catchAsync(async (req, res) => {
         data,
     });
 });
+
 
 
   module.exports = {
