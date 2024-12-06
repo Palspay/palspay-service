@@ -379,7 +379,7 @@ const getGraphData = catchAsync(async (req, res) => {
         interval === 'day'
             ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
             : interval === 'week'
-            ? { $isoWeek: '$createdAt' } // Change this
+            ? { year: { $isoWeekYear: '$createdAt' }, week: { $isoWeek: '$createdAt' } }
             : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
 
     const aggPipeline = [
@@ -391,35 +391,38 @@ const getGraphData = catchAsync(async (req, res) => {
                 count: { $sum: 1 },
             },
         },
-        {
-            $sort: { _id: 1 },
-        },
-        {
-            $project: {
-                period: '$_id',
-                totalExpense: 1,
-                count: 1,
-                _id: 0,
-                startDate: {
-                    $switch: {
-                        branches: [
-                            { case: { $eq: [interval, 'week'] }, then: { $dateFromString: { dateString: '$_id', format: '%G-W%V' } } },
-                            { case: { $eq: [interval, 'month'] }, then: { $dateFromString: { dateString: '$_id-01', format: '%Y-%m-%d' } } },
-                        ],
-                        default: null,
-                    },
-                },
-            },
-        },
+        { $sort: { '_id.year': 1, '_id.week': 1 } },
     ];
 
-    const data = await Expanse.aggregate(aggPipeline);
+    let data = await Expanse.aggregate(aggPipeline);
+
+    if (interval === 'week') {
+        data = data.map(entry => {
+            const year = entry._id.year;
+            const week = entry._id.week;
+
+            const firstDayOfYear = new Date(year, 0, 1);
+            const daysOffset = firstDayOfYear.getDay() <= 4 ? firstDayOfYear.getDay() - 1 : firstDayOfYear.getDay() - 8;
+            const startOfWeek = new Date(firstDayOfYear.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000 - daysOffset * 24 * 60 * 60 * 1000);
+
+            return {
+                ...entry,
+                period: startOfWeek.toISOString().split('T')[0], // Add start date as the period
+            };
+        });
+    } else if (interval === 'month') {
+        data = data.map(entry => ({
+            ...entry,
+            period: `${entry._id.year}-${entry._id.month.toString().padStart(2, '0')}`,
+        }));
+    }
 
     res.status(httpStatus.OK).send({
         message: 'Graph data fetched successfully',
         data,
     });
 });
+
 
 
 
