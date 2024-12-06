@@ -375,16 +375,14 @@ const getGraphData = catchAsync(async (req, res) => {
         matchStage.createdAt = dateFilter;
     }
 
-    const groupBy =
-        interval === 'day'
-            ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } // No changes for day
-            : interval === 'week'
-            ? { year: { $isoWeekYear: '$createdAt' }, week: { $isoWeek: '$createdAt' } }
-            : interval === 'month'
-            ? { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } }
-            : null;
-
-    if (!groupBy) {
+    let groupBy;
+    if (interval === 'day') {
+        groupBy = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } };
+    } else if (interval === 'week') {
+        groupBy = { year: { $isoWeekYear: '$createdAt' }, week: { $isoWeek: '$createdAt' } };
+    } else if (interval === 'month') {
+        groupBy = { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } };
+    } else {
         return res.status(httpStatus.BAD_REQUEST).send({ message: 'Invalid interval provided' });
     }
 
@@ -402,30 +400,30 @@ const getGraphData = catchAsync(async (req, res) => {
 
     let data = await Expanse.aggregate(aggPipeline);
 
+    // Map `period` to the required string formats
     if (interval === 'week') {
         data = data.map(entry => {
-            const year = entry._id.year;
-            const week = entry._id.week;
-
-            const firstDayOfYear = new Date(year, 0, 1);
-            const daysOffset = firstDayOfYear.getDay() <= 4 ? firstDayOfYear.getDay() - 1 : firstDayOfYear.getDay() - 8;
-            const startOfWeek = new Date(firstDayOfYear.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000 - daysOffset * 24 * 60 * 60 * 1000);
-
             return {
                 ...entry,
-                period: startOfWeek.toISOString().split('T')[0], // Weekly period
+                period: `Week ${entry._id.week}`, // e.g., "Week 23"
             };
         });
     } else if (interval === 'month') {
-        data = data.map(entry => ({
-            ...entry,
-            period: `${entry._id.year}-${String(entry._id.month).padStart(2, '0')}`, // Monthly period
-        }));
+        data = data.map(entry => {
+            const month = new Date(entry._id.year, entry._id.month - 1).toLocaleString('default', { month: 'short' });
+            return {
+                ...entry,
+                period: `${month}`, // e.g., "Oct"
+            };
+        });
     } else if (interval === 'day') {
-        data = data.map(entry => ({
-            ...entry,
-            period: entry._id, // Directly use the day string (e.g., "2024-12-06")
-        }));
+        data = data.map(entry => {
+            const formattedDate = new Date(entry._id).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+            return {
+                ...entry,
+                period: formattedDate, // e.g., "21 Oct 2024"
+            };
+        });
     }
 
     res.status(httpStatus.OK).send({
@@ -433,6 +431,7 @@ const getGraphData = catchAsync(async (req, res) => {
         data,
     });
 });
+
 
 
 
