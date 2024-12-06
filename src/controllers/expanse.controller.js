@@ -4,6 +4,8 @@ const { userExpanse } = require('../services');
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Types;
 import Settlement from "../models/settlement.model";
+const Expanse = require('../models/expanse.model'); // Replace with the correct path to your model
+
 
 const addExpanse = catchAsync(async (req, res) => {
     const mergedBody = {
