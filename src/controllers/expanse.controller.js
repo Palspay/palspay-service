@@ -362,6 +362,11 @@ const getGraphData = catchAsync(async (req, res) => {
         return res.status(httpStatus.BAD_REQUEST).send({ message: 'Interval is required' });
     }
 
+    // Logging the received dates and interval for debugging
+    console.log('Start Date:', startDate);
+    console.log('End Date:', endDate);
+    console.log('Interval:', interval);
+
     // Create the date match filter
     const dateFilter = {};
     if (startDate) dateFilter.$gte = new Date(startDate);
@@ -377,7 +382,7 @@ const getGraphData = catchAsync(async (req, res) => {
         matchStage.createdAt = dateFilter;
     }
 
-    // Define the group stage
+    // Define the group stage based on interval
     const groupBy =
         interval === 'day'
             ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
@@ -407,12 +412,24 @@ const getGraphData = catchAsync(async (req, res) => {
         },
     ];
 
-    const data = await Expanse.aggregate(aggPipeline);
+    try {
+        const data = await Expanse.aggregate(aggPipeline);
+        
+        if (!data || data.length === 0) {
+            console.log('No data found for the given date range and interval');
+        }
 
-    res.status(httpStatus.OK).send({
-        message: 'Graph data fetched successfully',
-        data,
-    });
+        res.status(httpStatus.OK).send({
+            message: 'Graph data fetched successfully',
+            data,
+        });
+    } catch (error) {
+        console.error('Error in aggregation:', error);
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+            message: 'Error fetching graph data',
+            error: error.message,
+        });
+    }
 });
 
 
