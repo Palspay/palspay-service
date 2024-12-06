@@ -383,12 +383,21 @@ const getGraphData = catchAsync(async (req, res) => {
     }
 
     // Define the group stage based on interval
-    const groupBy =
-        interval === 'day'
-            ? { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }
-            : interval === 'week'
-            ? { $isoWeek: '$createdAt' }
-            : { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+    let groupBy;
+    if (interval === 'day') {
+        groupBy = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } };
+    } else if (interval === 'week') {
+        // Group by year and ISO week number to avoid splitting across years
+        groupBy = {
+            $concat: [
+                { $toString: { $isoWeekYear: '$createdAt' } },
+                '-',
+                { $toString: { $isoWeek: '$createdAt' } }
+            ]
+        };
+    } else if (interval === 'month') {
+        groupBy = { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+    }
 
     const aggPipeline = [
         { $match: matchStage },
